@@ -1,0 +1,13 @@
+# Editors
+*.sublime-*
+*.swp
+
+# VS 2022 related things
+.vs/
+
+# Build artefacts
+out/
+*.obj
+*.exe
+Build/
+build/
