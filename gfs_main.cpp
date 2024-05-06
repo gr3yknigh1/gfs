@@ -40,7 +40,7 @@ GlobalVar struct {
 GlobalVar struct {
     Rect Rect;
     Color4 Color;
-    Vec2i Input;
+    V2S Input;
 } box;
 
 #define PLAYER_INIT_X 100

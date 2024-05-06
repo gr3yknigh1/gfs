@@ -133,11 +133,11 @@ namespace BMR {
                             *pixel = color;
                         } break;
                         case (RenderCommandType::LINE): {
-                            Vec2u p1 = *(Vec2u*)(Inst.CommandQueue.Begin + offset);
-                            offset += sizeof(Vec2u);
+                            V2U p1 = *(V2U*)(Inst.CommandQueue.Begin + offset);
+                            offset += sizeof(V2U);
 
-                            Vec2u p2 = *(Vec2u*)(Inst.CommandQueue.Begin + offset);
-                            offset += sizeof(Vec2u);
+                            V2U p2 = *(V2U*)(Inst.CommandQueue.Begin + offset);
+                            offset += sizeof(V2U);
 
                         } break;
                         case (RenderCommandType::RECT): {
@@ -152,8 +152,8 @@ namespace BMR {
                             }
                         } break;
                         case (RenderCommandType::GRADIENT): {
-                            Vec2u v = *(Vec2u*)(Inst.CommandQueue.Begin + offset);
-                            offset += sizeof(Vec2u);
+                            V2U v = *(V2U*)(Inst.CommandQueue.Begin + offset);
+                            offset += sizeof(V2U);
 
                             *pixel = Color4(x + v.X, y + v.Y, 0);
                         } break;
@@ -277,8 +277,8 @@ namespace BMR {
     }
 
     struct _DrawLine_Payload {
-        Vec2u p1;
-        Vec2u p2;
+        V2U p1;
+        V2U p2;
     };
 
     void 
@@ -286,13 +286,13 @@ namespace BMR {
     {
         _PushRenderCommand(
             RenderCommandType::LINE, 
-            _DrawLine_Payload{Vec2u(x1, y1), Vec2u(x2, y2)}
+            _DrawLine_Payload{V2U(x1, y1), V2U(x2, y2)}
         );
     }
 
 
     void
-    DrawLine(Vec2u p1, Vec2u p2) noexcept
+    DrawLine(V2U p1, V2U p2) noexcept
     {
         _PushRenderCommand(
             RenderCommandType::LINE, 
@@ -330,12 +330,12 @@ namespace BMR {
     {
         _PushRenderCommand(
             RenderCommandType::GRADIENT, 
-            Vec2u(xOffset, yOffset)
+            V2U(xOffset, yOffset)
         );
     }
 
     void 
-    DrawGrad(Vec2u offset) noexcept 
+    DrawGrad(V2U offset) noexcept 
     {
         _PushRenderCommand(
             RenderCommandType::GRADIENT, 

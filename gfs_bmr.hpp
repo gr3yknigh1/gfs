@@ -56,13 +56,13 @@ namespace BMR {
     void Clear() noexcept;
 
     void DrawLine(U32 x1, U32 y1, U32 x2, U32 y2) noexcept;
-    void DrawLine(Vec2u p1, Vec2u p2) noexcept;
+    void DrawLine(V2U p1, V2U p2) noexcept;
 
 	void DrawRect(const Rect &r, const Color4 &c) noexcept;
 	void DrawRect(U32 x, U32 y, U32 w, U32 h, const Color4 &c) noexcept;
 
 	void DrawGrad(U32 xOffset, U32 yOffset) noexcept;
-	void DrawGrad(Vec2u offset) noexcept;
+	void DrawGrad(V2U offset) noexcept;
 
 };  // namespace BMR
 
