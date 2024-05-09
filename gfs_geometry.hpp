@@ -1,7 +1,7 @@
 /*
  * GFS. Geometry lib.
  *
- * FILE    gfs_macros.hpp
+ * FILE    gfs_geometry.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
  * LICENSE Copyright (c) 2024 Ilya Akkuzin
  * */
