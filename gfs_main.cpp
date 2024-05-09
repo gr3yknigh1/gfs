@@ -21,7 +21,7 @@
 #include "gfs_linalg.hpp"
 #include "gfs_geometry.hpp"
 #include "gfs_color.hpp"
-#include "gfs_bmr.hpp"
+#include "gfs_win32_bmr.hpp"
 #include "gfs_win32_keys.hpp"
 #include "gfs_win32_misc.hpp"
 
@@ -186,7 +186,8 @@ WinMain(_In_ HINSTANCE instance,
         nullptr,        // windowParent
         nullptr,        // menu
         instance,
-        nullptr);
+        nullptr
+    );
 
     if (window == nullptr) {
         OutputDebugString("Failed to initialize window!\n");
@@ -240,6 +241,12 @@ WinMain(_In_ HINSTANCE instance,
         } else {
             player.Color = PLAYER_COLOR;
         }
+#endif
+
+#ifdef OFFSET_TESTING
+        V2U offset = BMR::GetOffset();  
+        BMR::SetXOffset(PLAYER_SPEED * box.Input.X + offset.X);
+        BMR::SetYOffset(PLAYER_SPEED * box.Input.Y + offset.Y);
 #endif
 
         BMR::BeginDrawing(window);

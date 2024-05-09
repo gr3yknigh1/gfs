@@ -8,7 +8,7 @@
 
 #include <Windows.h>
 
-#include "gfs_bmr.hpp"
+#include "gfs_win32_bmr.hpp"
 
 #include "gfs_types.hpp"
 #include "gfs_linalg.hpp"
@@ -21,9 +21,8 @@
 
 #define BMR_RENDER_COMMAND_CAPACITY 1024
 
-
 /*
- * Bitmap Renderer.
+ * Actuall Bitmap Renderer State.
  */
 GlobalVar struct {
     Color4 ClearColor;
@@ -47,7 +46,8 @@ GlobalVar struct {
 } Inst;
 
 
-namespace BMR {
+namespace BMR 
+{
 
     InternalFunc void
     _UpdateWindow(HDC dc,
@@ -64,8 +64,6 @@ namespace BMR {
             DIB_RGB_COLORS, SRCCOPY
         );
     }
-
-
 
     void 
     Init() noexcept 
@@ -250,6 +248,20 @@ namespace BMR {
         }
     }
 
+    V2U GetOffset() noexcept
+    {
+        return V2U(Inst.XOffset, Inst.YOffset); 
+    }
+
+    void SetXOffset(U64 offset) noexcept
+    {
+        Inst.XOffset = offset;
+    }
+
+    void SetYOffset(U64 offset) noexcept
+    {
+        Inst.YOffset = offset;
+    }
 
     // TODO(ilya.a): Find better way to provide payload.
     template<typename T> InternalFunc void 

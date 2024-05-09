@@ -1,5 +1,7 @@
 /*
  * GFS. Bitmap renderer.
+ * 
+ * Keeps one global backbuffer.
  *
  * FILE    gfs_bmr.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
@@ -17,9 +19,11 @@
 // TODO(ilya.a): Parametrize it, if will be neccesery to change bytes per pixel
 #define BMR_BPP 4
 
-namespace BMR {
+namespace BMR 
+{
 
-	enum class RenderCommandType {
+	enum class RenderCommandType 
+    {
 	    NOP      = 00,
 	    CLEAR    = 01,
 
@@ -30,7 +34,8 @@ namespace BMR {
 
 
 	template<typename T>
-	struct RenderCommand {
+	struct RenderCommand
+    {
 	    RenderCommandType Type;
 	    T Payload;
 
@@ -47,6 +52,10 @@ namespace BMR {
 
 	void Update(HWND window) noexcept;
 	void Resize(S32 w, S32 h) noexcept;
+
+    V2U GetOffset() noexcept;
+    void SetXOffset(U64 offset) noexcept;
+    void SetYOffset(U64 offset) noexcept;
 
     void BeginDrawing(HWND window) noexcept;
 	void EndDrawing() noexcept;

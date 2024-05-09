@@ -8,10 +8,9 @@ add_executable(
     ${PROJECT_NAME}
     WIN32
     ${PROJECT_SOURCE_DIR}/gfs_main.cpp
-    ${PROJECT_SOURCE_DIR}/gfs_bmr.cpp
     ${PROJECT_SOURCE_DIR}/gfs_string.cpp
+    ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.cpp
 
-    ${PROJECT_SOURCE_DIR}/gfs_bmr.hpp
     ${PROJECT_SOURCE_DIR}/gfs_color.hpp
     ${PROJECT_SOURCE_DIR}/gfs_geometry.hpp
     ${PROJECT_SOURCE_DIR}/gfs_linalg.hpp
@@ -20,6 +19,7 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_string.hpp
     ${PROJECT_SOURCE_DIR}/gfs_string_view.hpp
     ${PROJECT_SOURCE_DIR}/gfs_types.hpp
+    ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.hpp
     ${PROJECT_SOURCE_DIR}/gfs_win32_keys.hpp
     ${PROJECT_SOURCE_DIR}/gfs_win32_misc.hpp
     ${PROJECT_SOURCE_DIR}/gfs_win32_scoped_dc.hpp
