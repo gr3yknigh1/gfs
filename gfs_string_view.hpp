@@ -1,5 +1,5 @@
 /*
- * GFS. String slice/view. Doen't take ownership of string.
+ * GFS. String slice/view. Doesn't take ownership of string.
  *
  * FILE    gfs_string_view.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
