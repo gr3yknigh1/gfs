@@ -9,6 +9,8 @@
 #ifndef GFS_TYPES_HPP_INCLUDED
 #define GFS_TYPES_HPP_INCLUDED
 
+/* First layer types. Aka base types. */
+
 typedef signed char     S8;
 typedef signed short    S16;
 typedef signed int      S32;
@@ -27,7 +29,12 @@ typedef unsigned long   U64;
 typedef float           F32;
 typedef double          F64;
 
-typedef unsigned long   Size;
-typedef const char *    CStr;
+/* Second layer types */
+
+typedef U8           Byte;
+typedef S8           Char;
+typedef U64          Size;
+
+typedef const S8 *   CStr;
 
 #endif // GFS_TYPES_HPP_INCLUDED
