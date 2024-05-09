@@ -1,0 +1,1 @@
+- [ ] You dump-dump: replace `State s` with `State *s` and fix `.` to `->`.

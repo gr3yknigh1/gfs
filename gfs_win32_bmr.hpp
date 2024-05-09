@@ -11,6 +11,8 @@
 #ifndef GFS_BMR_HPP_INCLUDED
 #define GFS_BMR_HPP_INCLUDED
 
+#include <Windows.h>
+
 #include "gfs_types.hpp"
 #include "gfs_color.hpp"
 #include "gfs_linalg.hpp"
@@ -21,6 +23,34 @@
 
 namespace BMR 
 {
+    /*
+     * Actuall BitMap Renderer State.
+     */
+    struct State 
+    {
+        Color4 ClearColor;
+
+        struct 
+        {
+            U8 *Begin;
+            U8 *End;
+        } CommandQueue;
+
+        U64 CommandCount;
+
+        U8 BPP;
+        U64 XOffset;
+        U64 YOffset;
+
+        struct {
+            void *Buffer;
+            U64 Width;
+            U64 Height;
+        } Pixels;
+
+        BITMAPINFO Info;
+        HWND Window;
+    };
 
 	enum class RenderCommandType 
     {
@@ -47,31 +77,27 @@ namespace BMR
 	};
 
 
-	void Init() noexcept;
-	void DeInit() noexcept;
+	State Init(Color4 clearColor = COLOR_BLACK) noexcept;
+	void DeInit(State s) noexcept;
 
-	void Update(HWND window) noexcept;
-	void Resize(S32 w, S32 h) noexcept;
+	void Update(State s, HWND window) noexcept;
+	void Resize(State s, S32 w, S32 h) noexcept;
 
-    V2U GetOffset() noexcept;
-    void SetXOffset(U64 offset) noexcept;
-    void SetYOffset(U64 offset) noexcept;
+    void BeginDrawing(State s, HWND window) noexcept;
+	void EndDrawing(State s) noexcept;
 
-    void BeginDrawing(HWND window) noexcept;
-	void EndDrawing() noexcept;
+	void SetClearColor(State s, Color4 c) noexcept;
 
-	void SetClearColor(const Color4 &c) noexcept;
+    void Clear(State s) noexcept;
 
-    void Clear() noexcept;
+    void DrawLine(State s, U32 x1, U32 y1, U32 x2, U32 y2) noexcept;
+    void DrawLine(State s, V2U p1, V2U p2) noexcept;
 
-    void DrawLine(U32 x1, U32 y1, U32 x2, U32 y2) noexcept;
-    void DrawLine(V2U p1, V2U p2) noexcept;
+	void DrawRect(State s, Rect r, Color4 c) noexcept;
+	void DrawRect(State s, U32 x, U32 y, U32 w, U32 h, Color4 c) noexcept;
 
-	void DrawRect(const Rect &r, const Color4 &c) noexcept;
-	void DrawRect(U32 x, U32 y, U32 w, U32 h, const Color4 &c) noexcept;
-
-	void DrawGrad(U32 xOffset, U32 yOffset) noexcept;
-	void DrawGrad(V2U offset) noexcept;
+	void DrawGrad(State s, U32 xOffset, U32 yOffset) noexcept;
+	void DrawGrad(State s, V2U offset) noexcept;
 
 };  // namespace BMR
 

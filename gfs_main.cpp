@@ -25,6 +25,8 @@
 #include "gfs_win32_keys.hpp"
 #include "gfs_win32_misc.hpp"
 
+
+GlobalVar BMR::State renderState;
 GlobalVar bool shouldStop = false;
 
 GlobalVar struct {
@@ -76,11 +78,11 @@ Win32_MainWindowProc(HWND   window,
             OutputDebugString("WM_SIZE\n");
             S32 width = LOWORD(lParam);
             S32 height = HIWORD(lParam);
-            BMR::Resize(width, height);
+            BMR::Resize(renderState, width, height);
         } break;
         case WM_PAINT: {
             OutputDebugString("WM_PAINT\n");
-            BMR::Update(window);
+            BMR::Update(renderState, window);
         } break;
         case WM_KEYDOWN: {
             switch (wParam) {
@@ -158,7 +160,7 @@ WinMain(_In_ HINSTANCE instance,
         _In_ int showMode)
 {
 
-    BMR::Init();
+    renderState = BMR::Init();
 
     PersistVar LPCSTR CLASS_NAME = "GFS";
     PersistVar LPCSTR WINDOW_TITLE = "GFS";
@@ -208,7 +210,7 @@ WinMain(_In_ HINSTANCE instance,
     box.Rect = Rect(0, 0, 100, 100);
     box.Color = COLOR_RED;
 
-    BMR::SetClearColor(COLOR_WHITE);
+    BMR::SetClearColor(renderState, COLOR_WHITE);
 
     while (!shouldStop) {
 
@@ -244,18 +246,17 @@ WinMain(_In_ HINSTANCE instance,
 #endif
 
 #ifdef OFFSET_TESTING
-        V2U offset = BMR::GetOffset();  
-        BMR::SetXOffset(PLAYER_SPEED * box.Input.X + offset.X);
-        BMR::SetYOffset(PLAYER_SPEED * box.Input.Y + offset.Y);
+        renderState.XOffset += PLAYER_SPEED * box.Input.X;
+        renderState.YOffset += PLAYER_SPEED * box.Input.Y;
 #endif
 
-        BMR::BeginDrawing(window);
+        BMR::BeginDrawing(renderState, window);
 
-        BMR::Clear();
-        BMR::DrawGrad(xOffset, yOffset);
-        BMR::DrawRect(player.Rect, player.Color);
+        BMR::Clear(renderState);
+        BMR::DrawGrad(renderState, xOffset, yOffset);
+        BMR::DrawRect(renderState, player.Rect, player.Color);
 
-        BMR::DrawLine(100, 200, 500, 600);
+        BMR::DrawLine(renderState, 100, 200, 500, 600);
 
 #ifdef BLOCKS_RENDERING
         // NOTE(ilya.a): This is really dog-slow :c
@@ -264,22 +265,25 @@ WinMain(_In_ HINSTANCE instance,
                 U32 blockXCoord = blockXGrid * BLOCK_WIDTH + BLOCKS_XOFFSET + BLOCKS_XPADDING * blockXGrid;
                 U32 blockYCoord = blockYGrid * BLOCK_HEIGHT + BLOCKS_YOFFSET + BLOCKS_YPADDING * blockYGrid;
                 BMR::DrawRect(
-                    blockXCoord, blockYCoord, BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_COLOR);
+                    renderState,
+                    blockXCoord, blockYCoord, 
+                    BLOCK_WIDTH, BLOCK_HEIGHT, 
+                    BLOCK_COLOR);
             }
         }
 #endif
 
 #ifdef COLLISSION_TESTING
-        BMR::DrawRect(box.Rect, box.Color);
+        BMR::DrawRect(renderState, box.Rect, box.Color);
 #endif
 
-        BMR::EndDrawing();
+        BMR::EndDrawing(renderState);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR::DeInit();
+    BMR::DeInit(renderState);
 
     return 0;
 }
