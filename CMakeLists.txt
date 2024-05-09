@@ -13,9 +13,10 @@ add_executable(
 
     ${PROJECT_SOURCE_DIR}/gfs_bmr.hpp
     ${PROJECT_SOURCE_DIR}/gfs_color.hpp
-    ${PROJECT_SOURCE_DIR}/gfs_geom.hpp
-    ${PROJECT_SOURCE_DIR}/gfs_lin.hpp
+    ${PROJECT_SOURCE_DIR}/gfs_geometry.hpp
+    ${PROJECT_SOURCE_DIR}/gfs_linalg.hpp
     ${PROJECT_SOURCE_DIR}/gfs_macros.hpp
+    ${PROJECT_SOURCE_DIR}/gfs_memory.hpp
     ${PROJECT_SOURCE_DIR}/gfs_string.hpp
     ${PROJECT_SOURCE_DIR}/gfs_string_view.hpp
     ${PROJECT_SOURCE_DIR}/gfs_types.hpp

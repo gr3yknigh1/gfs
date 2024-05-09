@@ -11,8 +11,8 @@
 
 #include "gfs_types.hpp"
 #include "gfs_color.hpp"
-#include "gfs_lin.hpp"
-#include "gfs_geom.hpp"
+#include "gfs_linalg.hpp"
+#include "gfs_geometry.hpp"
 
 // TODO(ilya.a): Parametrize it, if will be neccesery to change bytes per pixel
 #define BMR_BPP 4

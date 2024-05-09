@@ -11,8 +11,8 @@
 #include "gfs_bmr.hpp"
 
 #include "gfs_types.hpp"
-#include "gfs_lin.hpp"
-#include "gfs_geom.hpp"
+#include "gfs_linalg.hpp"
+#include "gfs_geometry.hpp"
 #include "gfs_color.hpp"
 #include "gfs_macros.hpp"
 #include "gfs_win32_misc.hpp"
@@ -68,7 +68,8 @@ namespace BMR {
 
 
     void 
-    Init() noexcept {
+    Init() noexcept 
+    {
         Inst.ClearColor = COLOR_BLACK;
         Inst.CommandQueue.Begin = (U8 *)VirtualAlloc(
             nullptr, BMR_RENDER_COMMAND_CAPACITY, MEM_COMMIT, PAGE_READWRITE);
