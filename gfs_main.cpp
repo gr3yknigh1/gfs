@@ -26,10 +26,10 @@
 #include "gfs_win32_misc.hpp"
 
 
-GlobalVar BMR::State renderState;
-GlobalVar bool shouldStop = false;
+global_var BMR::Renderer renderer;
+global_var bool shouldStop = false;
 
-GlobalVar struct {
+global_var struct {
     Rect Rect; 
     Color4 Color;
 
@@ -39,7 +39,7 @@ GlobalVar struct {
     } Input;
 } player;
 
-GlobalVar struct {
+global_var struct {
     Rect Rect;
     Color4 Color;
     V2S Input;
@@ -78,11 +78,11 @@ Win32_MainWindowProc(HWND   window,
             OutputDebugString("WM_SIZE\n");
             S32 width = LOWORD(lParam);
             S32 height = HIWORD(lParam);
-            BMR::Resize(renderState, width, height);
+            BMR::Resize(&renderer, width, height);
         } break;
         case WM_PAINT: {
             OutputDebugString("WM_PAINT\n");
-            BMR::Update(renderState, window);
+            BMR::Update(&renderer, window);
         } break;
         case WM_KEYDOWN: {
             switch (wParam) {
@@ -160,10 +160,10 @@ WinMain(_In_ HINSTANCE instance,
         _In_ int showMode)
 {
 
-    renderState = BMR::Init();
+    renderer = BMR::Init();
 
-    PersistVar LPCSTR CLASS_NAME = "GFS";
-    PersistVar LPCSTR WINDOW_TITLE = "GFS";
+    persist_var LPCSTR CLASS_NAME = "GFS";
+    persist_var LPCSTR WINDOW_TITLE = "GFS";
 
     WNDCLASS windowClass = {0};
     windowClass.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
@@ -210,7 +210,7 @@ WinMain(_In_ HINSTANCE instance,
     box.Rect = Rect(0, 0, 100, 100);
     box.Color = COLOR_RED;
 
-    BMR::SetClearColor(renderState, COLOR_WHITE);
+    renderer.ClearColor = COLOR_WHITE;
 
     while (!shouldStop) {
 
@@ -246,17 +246,17 @@ WinMain(_In_ HINSTANCE instance,
 #endif
 
 #ifdef OFFSET_TESTING
-        renderState.XOffset += PLAYER_SPEED * box.Input.X;
-        renderState.YOffset += PLAYER_SPEED * box.Input.Y;
+        renderer->XOffset += PLAYER_SPEED * box.Input.X;
+        renderer->YOffset += PLAYER_SPEED * box.Input.Y;
 #endif
 
-        BMR::BeginDrawing(renderState, window);
+        BMR::BeginDrawing(&renderer, window);
 
-        BMR::Clear(renderState);
-        BMR::DrawGrad(renderState, xOffset, yOffset);
-        BMR::DrawRect(renderState, player.Rect, player.Color);
+        BMR::Clear(&renderer);
+        BMR::DrawGrad(&renderer, xOffset, yOffset);
+        BMR::DrawRect(&renderer, player.Rect, player.Color);
 
-        BMR::DrawLine(renderState, 100, 200, 500, 600);
+        BMR::DrawLine(&renderer, 100, 200, 500, 600);
 
 #ifdef BLOCKS_RENDERING
         // NOTE(ilya.a): This is really dog-slow :c
@@ -265,7 +265,7 @@ WinMain(_In_ HINSTANCE instance,
                 U32 blockXCoord = blockXGrid * BLOCK_WIDTH + BLOCKS_XOFFSET + BLOCKS_XPADDING * blockXGrid;
                 U32 blockYCoord = blockYGrid * BLOCK_HEIGHT + BLOCKS_YOFFSET + BLOCKS_YPADDING * blockYGrid;
                 BMR::DrawRect(
-                    renderState,
+                    &renderer,
                     blockXCoord, blockYCoord, 
                     BLOCK_WIDTH, BLOCK_HEIGHT, 
                     BLOCK_COLOR);
@@ -274,16 +274,16 @@ WinMain(_In_ HINSTANCE instance,
 #endif
 
 #ifdef COLLISSION_TESTING
-        BMR::DrawRect(renderState, box.Rect, box.Color);
+        BMR::DrawRect(&renderer, box.Rect, box.Color);
 #endif
 
-        BMR::EndDrawing(renderState);
+        BMR::EndDrawing(&renderer);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR::DeInit(renderState);
+    BMR::DeInit(&renderer);
 
     return 0;
 }

@@ -9,12 +9,12 @@
 #ifndef GFS_MACROS_HPP_INCLUDED
 #define GFS_MACROS_HPP_INCLUDED
 
-#define InternalFunc static
-#define GlobalVar static
-#define PersistVar static
-#define ClassMethod static
+#define internal static
+#define global_var static
+#define persist_var static
 
-#define ConstMethod const
+#define class_method static
+#define const_method const
 
 #define Out
 #define In

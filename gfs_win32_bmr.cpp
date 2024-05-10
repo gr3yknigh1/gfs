@@ -20,13 +20,11 @@
 #define BMR_RENDER_COMMAND_CAPACITY 1024
 
 
-
 namespace BMR 
 {
-
-    InternalFunc void
+    internal void
     _UpdateWindow(
-        State s,
+        Renderer *r,
         HDC dc,
         S32 windowXOffset,
         S32 windowYOffset,
@@ -35,114 +33,118 @@ namespace BMR
     {
         StretchDIBits(
             dc,
-            s.XOffset,     s.YOffset,     s.Pixels.Width, s.Pixels.Height,
-            windowXOffset, windowYOffset, windowWidth,    windowHeight,
-            s.Pixels.Buffer, &s.Info,
+            r->XOffset,    r->YOffset,    r->Pixels.Width, r->Pixels.Height,
+            windowXOffset, windowYOffset, windowWidth,     windowHeight,
+            r->Pixels.Buffer, &r->Info,
             DIB_RGB_COLORS, SRCCOPY
         );
     }
 
-    State
+    Renderer
     Init(Color4 clearColor) noexcept
     {
-        State s;
+        Renderer r;
 
-        s.ClearColor = clearColor;
-        s.CommandQueue.Begin = (Byte *)VirtualAlloc(
+        r.ClearColor = clearColor;
+        r.CommandQueue.Begin = (Byte *)VirtualAlloc(
             nullptr, BMR_RENDER_COMMAND_CAPACITY, MEM_COMMIT, PAGE_READWRITE);
-        s.CommandQueue.End = s.CommandQueue.Begin;
-        s.CommandCount = 0;
+        r.CommandQueue.End = r.CommandQueue.Begin;
+        r.CommandCount = 0;
 
-        s.BPP = BMR_BPP;
-        s.XOffset = 0;
-        s.YOffset = 0;
+        r.BPP = BMR_BPP;
+        r.XOffset = 0;
+        r.YOffset = 0;
 
-        s.Pixels.Buffer = nullptr;
-        s.Pixels.Width = 0;
-        s.Pixels.Height = 0;
+        r.Pixels.Buffer = nullptr;
+        r.Pixels.Width = 0;
+        r.Pixels.Height = 0;
 
-        return s;
+        return r;
     }
 
     void 
-    DeInit(State s) noexcept
+    DeInit(Renderer *r) noexcept
     { 
-        if (s.CommandQueue.Begin != nullptr && VirtualFree(s.CommandQueue.Begin, 0, MEM_RELEASE) == 0) 
+        if (r->CommandQueue.Begin != nullptr && VirtualFree(r->CommandQueue.Begin, 0, MEM_RELEASE) == 0) 
         {
             // TODO(ilya.a): Handle memory free error.
         }
         else 
         {
-            s.CommandQueue.Begin = nullptr;
-            s.CommandQueue.End   = nullptr;
+            r->CommandQueue.Begin = nullptr;
+            r->CommandQueue.End   = nullptr;
         }
 
-        if (s.Pixels.Buffer != nullptr && VirtualFree(s.Pixels.Buffer, 0, MEM_RELEASE) == 0) 
+        if (r->Pixels.Buffer != nullptr && VirtualFree(r->Pixels.Buffer, 0, MEM_RELEASE) == 0) 
         {
             // TODO(ilya.a): Handle memory free error.
         } else {
-            s.Pixels.Buffer = nullptr;
+            r->Pixels.Buffer = nullptr;
         }
     }
 
     void 
-    BeginDrawing(State s, HWND window) noexcept 
+    BeginDrawing(Renderer *r, HWND window) noexcept 
     {
-        s.Window = window;
+        r->Window = window;
     }
 
     void 
-    EndDrawing(State s) noexcept
+    EndDrawing(Renderer *r) noexcept
     {
-        Size pitch = s.Pixels.Width * s.BPP;
-        U8 * row = (U8 *) s.Pixels.Buffer;
+        Size pitch = r->Pixels.Width * r->BPP;
+        U8 * row = (U8 *) r->Pixels.Buffer;
 
-        for (U64 y = 0; y < s.Pixels.Height; ++y) {
+        for (U64 y = 0; y < r->Pixels.Height; ++y)
+        {
             Color4 *pixel = (Color4 *)row;
 
-            for (U64 x = 0; x < s.Pixels.Width; ++x) {
+            for (U64 x = 0; x < r->Pixels.Width; ++x) 
+            {
                 Size offset = 0;
 
-                for (U64 commandIdx = 0; commandIdx < s.CommandCount; ++commandIdx) {
+                for (U64 commandIdx = 0; commandIdx < r->CommandCount; ++commandIdx)
+                {
                     RenderCommandType type = 
-                        *((RenderCommandType *)(s.CommandQueue.Begin + offset));
+                        *((RenderCommandType *)(r->CommandQueue.Begin + offset));
 
                     offset += sizeof(RenderCommandType);
 
                     switch (type) {
                         case (RenderCommandType::CLEAR): {
-                            Color4 color = *(Color4*)(s.CommandQueue.Begin + offset);
+                            Color4 color = *(Color4*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(Color4);
                             *pixel = color;
                         } break;
                         case (RenderCommandType::LINE): {
-                            V2U p1 = *(V2U*)(s.CommandQueue.Begin + offset);
+                            V2U p1 = *(V2U*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(V2U);
 
-                            V2U p2 = *(V2U*)(s.CommandQueue.Begin + offset);
+                            V2U p2 = *(V2U*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(V2U);
 
                         } break;
                         case (RenderCommandType::RECT): {
-                            Rect rect = *(Rect*)(s.CommandQueue.Begin + offset);
+                            Rect rect = *(Rect*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(rect);
 
-                            Color4 color = *(Color4*)(s.CommandQueue.Begin + offset);
+                            Color4 color = *(Color4*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(Color4);
 
-                            if (rect.IsInside(x, y)) {
+                            if (rect.IsInside(x, y)) 
+                            {
                                 *pixel = color;
                             }
                         } break;
                         case (RenderCommandType::GRADIENT): {
-                            V2U v = *(V2U*)(s.CommandQueue.Begin + offset);
+                            V2U v = *(V2U*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(V2U);
 
                             *pixel = Color4(x + v.X, y + v.Y, 0);
                         } break;
                         case (RenderCommandType::NOP):
                         default: {
-                            *pixel = s.ClearColor;
+                            *pixel = r->ClearColor;
                         } break;
                     };
                 }
@@ -154,25 +156,25 @@ namespace BMR
 
         {
             // TODO(ilya.a): Check how it's differs with event thing.
-            auto dc = ScopedDC(s.Window);
+            auto dc = ScopedDC(r->Window);
 
             RECT windowRect;
-            GetClientRect(s.Window, &windowRect);
+            GetClientRect(r->Window, &windowRect);
             S32 x = windowRect.left;
             S32 y = windowRect.top;
             S32 width = 0, height = 0;
             GetRectSize(&windowRect, &width, &height);
 
-            _UpdateWindow(s, dc.Handle, x, y, width, height);
+            _UpdateWindow(r, dc.Handle, x, y, width, height);
         }
 
-        s.CommandQueue.End = s.CommandQueue.Begin;
-        s.CommandCount = 0;
+        r->CommandQueue.End = r->CommandQueue.Begin;
+        r->CommandCount = 0;
     }
 
 
     void 
-    Update(State s, HWND window) noexcept 
+    Update(Renderer *r, HWND window) noexcept 
     {
         PAINTSTRUCT ps = {0};
         HDC dc = BeginPaint(window, &ps);
@@ -184,7 +186,7 @@ namespace BMR
             S32 y = ps.rcPaint.top;
             S32 width = 0, height = 0;
             GetRectSize(&(ps.rcPaint), &width, &height);
-            _UpdateWindow(s, dc, x, y, width, height);
+            _UpdateWindow(r, dc, x, y, width, height);
         }
 
         EndPaint(window, &ps);
@@ -192,11 +194,11 @@ namespace BMR
 
 
     void 
-    Resize(State s, S32 w, S32 h) noexcept
+    Resize(Renderer *r, S32 w, S32 h) noexcept
     {
-        if (s.Pixels.Buffer != nullptr && VirtualFree(s.Pixels.Buffer, 0, MEM_RELEASE) == 0) 
+        if (r->Pixels.Buffer != nullptr && VirtualFree(r->Pixels.Buffer, 0, MEM_RELEASE) == 0) 
         {
-            //                                                            ^^^^^^^^^^^
+            //                                                              ^^^^^^^^^^^
             // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead for 
             // MEM_RELEASE. Because in that case it's will be keep buffer around, until
             // we use it again.
@@ -208,54 +210,49 @@ namespace BMR
             //     - [ ] Handle allocation error.
             OutputDebugString("Failed to free backbuffer memory!\n");
         }
-        s.Pixels.Width = w;
-        s.Pixels.Height = h;
+        r->Pixels.Width = w;
+        r->Pixels.Height = h;
 
-        s.Info.bmiHeader.biSize          = sizeof(s.Info.bmiHeader);
-        s.Info.bmiHeader.biWidth         = w;
-        s.Info.bmiHeader.biHeight        = h;
-        s.Info.bmiHeader.biPlanes        = 1;
-        s.Info.bmiHeader.biBitCount      = 32;      // NOTE: Align to WORD
-        s.Info.bmiHeader.biCompression   = BI_RGB;
-        s.Info.bmiHeader.biSizeImage     = 0;
-        s.Info.bmiHeader.biXPelsPerMeter = 0;
-        s.Info.bmiHeader.biYPelsPerMeter = 0;
-        s.Info.bmiHeader.biClrUsed       = 0;
-        s.Info.bmiHeader.biClrImportant  = 0;
+        r->Info.bmiHeader.biSize          = sizeof(r->Info.bmiHeader);
+        r->Info.bmiHeader.biWidth         = w;
+        r->Info.bmiHeader.biHeight        = h;
+        r->Info.bmiHeader.biPlanes        = 1;
+        r->Info.bmiHeader.biBitCount      = 32;      // NOTE: Align to WORD
+        r->Info.bmiHeader.biCompression   = BI_RGB;
+        r->Info.bmiHeader.biSizeImage     = 0;
+        r->Info.bmiHeader.biXPelsPerMeter = 0;
+        r->Info.bmiHeader.biYPelsPerMeter = 0;
+        r->Info.bmiHeader.biClrUsed       = 0;
+        r->Info.bmiHeader.biClrImportant  = 0;
 
-        Size bufferSize = w * h * s.BPP;
-        s.Pixels.Buffer = VirtualAlloc(nullptr, bufferSize, MEM_COMMIT, PAGE_READWRITE);
+        Size bufferSize = w * h * r->BPP;
+        r->Pixels.Buffer = VirtualAlloc(nullptr, bufferSize, MEM_COMMIT, PAGE_READWRITE);
 
-        if (s.Pixels.Buffer == nullptr) {
+        if (r->Pixels.Buffer == nullptr) 
+        {
             // TODO:(ilya.a): Check for errors.
             OutputDebugString("Failed to allocate memory for backbuffer!\n");
         }
     }
 
     // TODO(ilya.a): Find better way to provide payload.
-    template<typename T> InternalFunc void 
-    _PushRenderCommand(State s, RenderCommandType type, const T &payload) noexcept
+    template<typename T> internal void 
+    _PushRenderCommand(Renderer *r, RenderCommandType type, const T &payload) noexcept
     {
-        *(RenderCommand<T> *)s.CommandQueue.End = RenderCommand<T>(type, payload);
-        s.CommandQueue.End += sizeof(RenderCommand<T>);
+        *(RenderCommand<T> *)r->CommandQueue.End = RenderCommand<T>(type, payload);
+        r->CommandQueue.End += sizeof(RenderCommand<T>);
 
-        s.CommandCount++;
-    }
-
-    void 
-    SetClearColor(State s, Color4 c) noexcept 
-    {
-        s.ClearColor = c;    
+        r->CommandCount++;
     }
 
 
     void 
-    Clear(State s) noexcept 
+    Clear(Renderer *r) noexcept 
     {
         _PushRenderCommand(
-            s,
+            r,
             RenderCommandType::CLEAR, 
-            s.ClearColor
+            r->ClearColor
         );
     }
 
@@ -266,10 +263,10 @@ namespace BMR
     };
 
     void 
-    DrawLine(State s, U32 x1, U32 y1, U32 x2, U32 y2) noexcept
+    DrawLine(Renderer *r, U32 x1, U32 y1, U32 x2, U32 y2) noexcept
     {
         _PushRenderCommand(
-            s,
+            r,
             RenderCommandType::LINE, 
             _DrawLine_Payload{V2U(x1, y1), V2U(x2, y2)}
         );
@@ -277,10 +274,10 @@ namespace BMR
 
 
     void
-    DrawLine(State s, V2U p1, V2U p2) noexcept
+    DrawLine(Renderer *r, V2U p1, V2U p2) noexcept
     {
         _PushRenderCommand(
-            s,
+            r,
             RenderCommandType::LINE, 
             _DrawLine_Payload{p1, p2}
         );
@@ -293,44 +290,44 @@ namespace BMR
     };
 
     void 
-    DrawRect(State s, Rect r, Color4 c) noexcept 
+    DrawRect(Renderer *r, Rect r_, Color4 c) noexcept 
     {
         _PushRenderCommand(
-            s,
+            r,
             RenderCommandType::RECT, 
-            _DrawRect_Payload{r, c}
+            _DrawRect_Payload{r_, c}
         );
     }
 
     void 
     DrawRect(
-        State s,
+        Renderer *r,
         U32 x, U32 y, 
         U32 w, U32 h, 
         Color4 c) noexcept 
     {
         _PushRenderCommand(
-            s,
+            r,
             RenderCommandType::RECT, 
             _DrawRect_Payload{Rect(x, y, w, h), c}
         );
     }
 
     void 
-    DrawGrad(State s, U32 xOffset, U32 yOffset) noexcept 
+    DrawGrad(Renderer *r, U32 xOffset, U32 yOffset) noexcept 
     {
         _PushRenderCommand(
-            s, 
+            r, 
             RenderCommandType::GRADIENT, 
             V2U(xOffset, yOffset)
         );
     }
 
     void 
-    DrawGrad(State s, V2U offset) noexcept 
+    DrawGrad(Renderer *r, V2U offset) noexcept 
     {
         _PushRenderCommand(
-            s, 
+            r, 
             RenderCommandType::GRADIENT, 
             offset
         );

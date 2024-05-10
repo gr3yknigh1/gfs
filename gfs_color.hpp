@@ -36,13 +36,13 @@ struct Color4
 
 static_assert(sizeof(Color4) == sizeof(U32));
 
-GlobalVar constexpr Color4 COLOR_WHITE = Color4(MAX_U8, MAX_U8, MAX_U8, MAX_U8);
-GlobalVar constexpr Color4 COLOR_RED   = Color4(MAX_U8, 0, 0, 0);
-GlobalVar constexpr Color4 COLOR_GREEN = Color4(0, MAX_U8, 0, 0);
-GlobalVar constexpr Color4 COLOR_BLUE  = Color4(0, 0, MAX_U8, 0);
-GlobalVar constexpr Color4 COLOR_BLACK = Color4(0, 0, 0, 0);
+global_var constexpr Color4 COLOR_WHITE = Color4(MAX_U8, MAX_U8, MAX_U8, MAX_U8);
+global_var constexpr Color4 COLOR_RED   = Color4(MAX_U8, 0, 0, 0);
+global_var constexpr Color4 COLOR_GREEN = Color4(0, MAX_U8, 0, 0);
+global_var constexpr Color4 COLOR_BLUE  = Color4(0, 0, MAX_U8, 0);
+global_var constexpr Color4 COLOR_BLACK = Color4(0, 0, 0, 0);
 
-GlobalVar constexpr Color4 COLOR_YELLOW = COLOR_GREEN + COLOR_RED;
+global_var constexpr Color4 COLOR_YELLOW = COLOR_GREEN + COLOR_RED;
 
 
 #endif // GFS_COLOR_HPP_INCLUDED

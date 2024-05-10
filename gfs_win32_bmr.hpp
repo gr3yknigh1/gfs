@@ -24,9 +24,9 @@
 namespace BMR 
 {
     /*
-     * Actuall BitMap Renderer State.
+     * Actuall BitMap Renderer Renderer.
      */
-    struct State 
+    struct Renderer 
     {
         Color4 ClearColor;
 
@@ -77,27 +77,25 @@ namespace BMR
 	};
 
 
-	State Init(Color4 clearColor = COLOR_BLACK) noexcept;
-	void DeInit(State s) noexcept;
+	Renderer Init(Color4 clearColor = COLOR_BLACK) noexcept;
+	void DeInit(Renderer *r) noexcept;
 
-	void Update(State s, HWND window) noexcept;
-	void Resize(State s, S32 w, S32 h) noexcept;
+	void Update(Renderer *r, HWND window) noexcept;
+	void Resize(Renderer *r, S32 w, S32 h) noexcept;
 
-    void BeginDrawing(State s, HWND window) noexcept;
-	void EndDrawing(State s) noexcept;
+    void BeginDrawing(Renderer *r, HWND window) noexcept;
+	void EndDrawing(Renderer *r) noexcept;
 
-	void SetClearColor(State s, Color4 c) noexcept;
+    void Clear(Renderer *r) noexcept;
 
-    void Clear(State s) noexcept;
+    void DrawLine(Renderer *r, U32 x1, U32 y1, U32 x2, U32 y2) noexcept;
+    void DrawLine(Renderer *r, V2U p1, V2U p2) noexcept;
 
-    void DrawLine(State s, U32 x1, U32 y1, U32 x2, U32 y2) noexcept;
-    void DrawLine(State s, V2U p1, V2U p2) noexcept;
+	void DrawRect(Renderer *r, Rect r_, Color4 c) noexcept;
+	void DrawRect(Renderer *r, U32 x, U32 y, U32 w, U32 h, Color4 c) noexcept;
 
-	void DrawRect(State s, Rect r, Color4 c) noexcept;
-	void DrawRect(State s, U32 x, U32 y, U32 w, U32 h, Color4 c) noexcept;
-
-	void DrawGrad(State s, U32 xOffset, U32 yOffset) noexcept;
-	void DrawGrad(State s, V2U offset) noexcept;
+	void DrawGrad(Renderer *r, U32 xOffset, U32 yOffset) noexcept;
+	void DrawGrad(Renderer *r, V2U offset) noexcept;
 
 };  // namespace BMR
 
