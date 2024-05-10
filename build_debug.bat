@@ -6,17 +6,19 @@
 
 @echo off
 
-pushd %~dp0
-set project_path=%CD%
-popd
 
-set configuration_path=%project_dir%\Build\Debug
+set project_path=%~dp0
+pushd %project_path%
+
+set configuration_path=%project_path%\Build
 
 if exist %configuration_path%\ (
-  echo "I: Debug configuration already exists!"
+  echo I: Debug configuration already exists!
 ) else (
-  echo "I: Debug configuration not found. Generating new one!"
+  echo I: Debug configuration not found. Generating new one!
   cmake -B %configuration_path% -S %project_path%
 )
 
 cmake --build %configuration_path%
+
+popd

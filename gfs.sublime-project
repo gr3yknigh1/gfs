@@ -10,6 +10,14 @@
         {
             "name": "GFS: Build Debug",
             "shell_cmd": "$project_path\\build_debug.bat"
+        },
+        {
+            "name": "GFS: Run Debug",
+            "shell_cmd": "$project_path\\run_debug.bat"
+        },
+        {
+            "name": "GFS: Clean Build",
+            "shell_cmd": "rmdir /S /Q $project_path\\Build"
         }
     ]
 }
