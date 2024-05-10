@@ -3,7 +3,7 @@
  *
  * FILE    gfs_string.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
- * LICENSE Copyright (c) 2024 Ilya Akkuzin
+ * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * */
 
 #ifndef GFS_STRING_HPP_INCLUDED

@@ -3,7 +3,7 @@
  *
  * FILE    gfs_main.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
- * LICENSE Copyright (c) 2024 Ilya Akkuzin
+ * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * 
  * This is small educational project where I
  * doodling around with Windows API and computer
