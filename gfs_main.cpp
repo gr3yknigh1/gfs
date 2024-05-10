@@ -71,80 +71,102 @@ Win32_MainWindowProc(HWND   window,
     LRESULT result = 0;
 
     switch (message) {
-        case WM_ACTIVATEAPP: {
+        case WM_ACTIVATEAPP: 
+        {
             OutputDebugString("WM_ACTIVATEAPP\n");
         } break;
-        case WM_SIZE: {
+        case WM_SIZE: 
+        {
             OutputDebugString("WM_SIZE\n");
             // S32 width = LOWORD(lParam);
             // S32 height = HIWORD(lParam);
             // BMR::Resize(&renderer, width, height);
         } break;
-        case WM_PAINT: {
+        case WM_PAINT: 
+        {
             OutputDebugString("WM_PAINT\n");
             BMR::Update(&renderer, window);
         } break;
-        case WM_KEYDOWN: {
-            switch (wParam) {
-                case VK_LEFT: {
+        case WM_KEYDOWN: 
+        {
+            switch (wParam) 
+            {
+                case VK_LEFT: 
+                {
                     player.Input.LeftPressed = true;
                 } break;
-                case VK_RIGHT: {
+                case VK_RIGHT: 
+                {
                     player.Input.RightPressed = true;
                 } break;
 #ifdef COLLISSION_TESTING
-                case KEY_A: {
+                case KEY_A: 
+                {
                     box.Input.X = -1;
                 } break;
-                case KEY_D: {
+                case KEY_D: 
+                {
                     box.Input.X = +1;
                 } break;
-                case KEY_S: {
+                case KEY_S: 
+                {
                     box.Input.Y = -1;
                 } break;
-                case KEY_W: {
+                case KEY_W: 
+                {
                     box.Input.Y = +1;
                 } break;
 #endif
-                default: {
+                default: 
+                {
                 } break;
             }
         } break;
-        case WM_KEYUP: {
-            switch (wParam) {
-                case VK_LEFT: {
+        case WM_KEYUP: 
+        {
+            switch (wParam) 
+            {
+                case VK_LEFT: 
+                {
                     player.Input.LeftPressed = false;
                 } break;
-                case VK_RIGHT: {
+                case VK_RIGHT: 
+                {
                     player.Input.RightPressed = false;
                 } break;
 #ifdef COLLISSION_TESTING
                 case KEY_A:
-                case KEY_D: {
+                case KEY_D: 
+                {
                     box.Input.X = 0;
                 } break;
                 case KEY_W:
-                case KEY_S: {
+                case KEY_S: 
+                {
                     box.Input.Y = 0;
                 } break;
 #endif
-                default: {
+                default: 
+                {
                 } break;
             }
         } break;
-        case WM_CLOSE: {
+        case WM_CLOSE: 
+        {
             // TODO(ilya.a): Ask for closing?
             OutputDebugString("WM_CLOSE\n");
             shouldStop = true;
         } break;
-        case WM_DESTROY: {
+        case WM_DESTROY: 
+        {
             // TODO(ilya.a): Casey says that we maybe should recreate
             // window later?
             OutputDebugString("WM_DESTROY\n");
             // PostQuitMessage(0);
         } break;
 
-        default: {
+        default: 
+        {
             // Leave other events to default Window's handler.
             result = DefWindowProc(window, message, wParam, lParam);
         } break;

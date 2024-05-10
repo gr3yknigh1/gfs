@@ -111,12 +111,14 @@ namespace BMR
                     offset += sizeof(RenderCommandType);
 
                     switch (type) {
-                        case (RenderCommandType::CLEAR): {
+                        case (RenderCommandType::CLEAR): 
+                        {
                             Color4 color = *(Color4*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(Color4);
                             *pixel = color;
                         } break;
-                        case (RenderCommandType::LINE): {
+                        case (RenderCommandType::LINE): 
+                        {
                             V2U p1 = *(V2U*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(V2U);
 
@@ -124,7 +126,8 @@ namespace BMR
                             offset += sizeof(V2U);
 
                         } break;
-                        case (RenderCommandType::RECT): {
+                        case (RenderCommandType::RECT): 
+                        {
                             Rect rect = *(Rect*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(rect);
 
@@ -136,14 +139,16 @@ namespace BMR
                                 *pixel = color;
                             }
                         } break;
-                        case (RenderCommandType::GRADIENT): {
+                        case (RenderCommandType::GRADIENT): 
+                        {
                             V2U v = *(V2U*)(r->CommandQueue.Begin + offset);
                             offset += sizeof(V2U);
 
                             *pixel = Color4(x + v.X, y + v.Y, 0);
                         } break;
                         case (RenderCommandType::NOP):
-                        default: {
+                        default: 
+                        {
                             *pixel = r->ClearColor;
                         } break;
                     };
@@ -218,7 +223,7 @@ namespace BMR
 
         r->Info.bmiHeader.biSize          = sizeof(r->Info.bmiHeader);
         r->Info.bmiHeader.biWidth         = w;
-        r->Info.bmiHeader.biHeight        = h;
+        r->Info.bmiHeader.biHeight        = h;  // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
         r->Info.bmiHeader.biPlanes        = 1;
         r->Info.bmiHeader.biBitCount      = 32;      // NOTE: Align to WORD
         r->Info.bmiHeader.biCompression   = BI_RGB;
