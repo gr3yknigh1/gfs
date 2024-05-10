@@ -2,6 +2,8 @@
 *.sublime-*
 *.swp
 
+!gfs.sublime-project
+
 # VS 2022 related things
 .vs/
 

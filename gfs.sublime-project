@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+    "build_systems":
+    [
+        {
+            "name": "GFS: Build Debug",
+            "shell_cmd": "$project_path\\build_debug.bat"
+        }
+    ]
+}
