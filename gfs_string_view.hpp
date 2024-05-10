@@ -45,8 +45,8 @@ public:
         return *this;
     }
 
-    constexpr const void * GetData() ConstMethod noexcept { return m_Data; }
-    constexpr         Size GetSize() ConstMethod noexcept { return m_Size; }
+    constexpr const void * GetData() const_method noexcept { return m_Data; }
+    constexpr         Size GetSize() const_method noexcept { return m_Size; }
 
 private:
     const void * m_Data;

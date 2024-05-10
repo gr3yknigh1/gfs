@@ -26,7 +26,7 @@ struct V2U
 {
     U32 X;
     U32 Y;
-
+    
     constexpr V2U(U32 x = 0, U32 y = 0) noexcept 
         : X(x), Y(y)
     { }

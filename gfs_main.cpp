@@ -76,9 +76,9 @@ Win32_MainWindowProc(HWND   window,
         } break;
         case WM_SIZE: {
             OutputDebugString("WM_SIZE\n");
-            S32 width = LOWORD(lParam);
-            S32 height = HIWORD(lParam);
-            BMR::Resize(&renderer, width, height);
+            // S32 width = LOWORD(lParam);
+            // S32 height = HIWORD(lParam);
+            // BMR::Resize(&renderer, width, height);
         } break;
         case WM_PAINT: {
             OutputDebugString("WM_PAINT\n");
@@ -161,6 +161,7 @@ WinMain(_In_ HINSTANCE instance,
 {
 
     renderer = BMR::Init();
+    BMR::Resize(&renderer, 900, 600);
 
     persist_var LPCSTR CLASS_NAME = "GFS";
     persist_var LPCSTR WINDOW_TITLE = "GFS";
@@ -171,7 +172,8 @@ WinMain(_In_ HINSTANCE instance,
     windowClass.hInstance = instance;
     windowClass.lpszClassName = CLASS_NAME;
 
-    if (RegisterClassA(&windowClass) == 0) {
+    if (RegisterClassA(&windowClass) == 0) 
+    {
         OutputDebugString("Failed to register window class!\n");
         return 0;
     }
@@ -191,7 +193,8 @@ WinMain(_In_ HINSTANCE instance,
         nullptr
     );
 
-    if (window == nullptr) {
+    if (window == nullptr) 
+    {
         OutputDebugString("Failed to initialize window!\n");
         return 0;
     }
@@ -212,11 +215,14 @@ WinMain(_In_ HINSTANCE instance,
 
     renderer.ClearColor = COLOR_WHITE;
 
-    while (!shouldStop) {
+    while (!shouldStop) 
+    {
 
         MSG message = {};
-        while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) {
-            if (message.message == WM_QUIT) {
+        while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) 
+        {
+            if (message.message == WM_QUIT) 
+            {
                 // NOTE(ilya.a): Make sure that we will quit the mainloop.
                 shouldStop = true;
             }
@@ -226,11 +232,13 @@ WinMain(_In_ HINSTANCE instance,
         }
 
 
-        if (player.Input.LeftPressed) {
+        if (player.Input.LeftPressed) 
+        {
             player.Rect.X -= PLAYER_SPEED;
         }
 
-        if (player.Input.RightPressed) {
+        if (player.Input.RightPressed) 
+        {
             player.Rect.X += PLAYER_SPEED;
         }
 
@@ -238,9 +246,12 @@ WinMain(_In_ HINSTANCE instance,
         box.Rect.X += PLAYER_SPEED * box.Input.X;
         box.Rect.Y += PLAYER_SPEED * box.Input.Y;
 
-        if (player.Rect.IsOverlapping(box.Rect)) {
+        if (player.Rect.IsOverlapping(box.Rect)) 
+        {
             player.Color = COLOR_YELLOW;
-        } else {
+        } 
+        else 
+        {
             player.Color = PLAYER_COLOR;
         }
 #endif
@@ -260,8 +271,10 @@ WinMain(_In_ HINSTANCE instance,
 
 #ifdef BLOCKS_RENDERING
         // NOTE(ilya.a): This is really dog-slow :c
-        for (U32 blockYGrid = 0; blockYGrid < BLOCKS_ROWS_COUNT; ++blockYGrid) {
-            for (U32 blockXGrid = 0; blockXGrid < BLOCKS_PER_ROW; ++blockXGrid) {
+        for (U32 blockYGrid = 0; blockYGrid < BLOCKS_ROWS_COUNT; ++blockYGrid) 
+        {
+            for (U32 blockXGrid = 0; blockXGrid < BLOCKS_PER_ROW; ++blockXGrid) 
+            {
                 U32 blockXCoord = blockXGrid * BLOCK_WIDTH + BLOCKS_XOFFSET + BLOCKS_XPADDING * blockXGrid;
                 U32 blockYCoord = blockYGrid * BLOCK_HEIGHT + BLOCKS_YOFFSET + BLOCKS_YPADDING * blockYGrid;
                 BMR::DrawRect(
