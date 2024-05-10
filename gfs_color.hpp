@@ -7,13 +7,14 @@
  * */
 
 
-#ifndef GFS_COLORING_HPP_INCLUDED
-#define GFS_COLORING_HPP_INCLUDED
+#ifndef GFS_COLOR_HPP_INCLUDED
+#define GFS_COLOR_HPP_INCLUDED
 
 #include "gfs_types.hpp"
 #include "gfs_macros.hpp"
 
-struct Color4 {
+struct Color4
+{
     U8 B;
     U8 G;
     U8 R;
@@ -44,5 +45,5 @@ GlobalVar constexpr Color4 COLOR_BLACK = Color4(0, 0, 0, 0);
 GlobalVar constexpr Color4 COLOR_YELLOW = COLOR_GREEN + COLOR_RED;
 
 
-#endif // GFS_COLORING_HPP_INCLUDED
+#endif // GFS_COLOR_HPP_INCLUDED
 

@@ -10,7 +10,8 @@
 #include "gfs_types.hpp"
 #include "gfs_string.hpp"
 
-class StringView {
+class StringView
+{
 public:
     constexpr StringView() noexcept
         : m_Data(nullptr), m_Size(0)

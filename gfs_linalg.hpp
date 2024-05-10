@@ -7,12 +7,13 @@
  * */
 
 
-#ifndef GFS_LIN_HPP_INCLUDED
-#define GFS_LIN_HPP_INCLUDED
+#ifndef GFS_LINALG_HPP_INCLUDED
+#define GFS_LINALG_HPP_INCLUDED
 
 #include "gfs_types.hpp"
 
-struct V2S {
+struct V2S 
+{
     S32 X;
     S32 Y;
 
@@ -21,7 +22,8 @@ struct V2S {
     { }
 };
 
-struct V2U {
+struct V2U 
+{
     U32 X;
     U32 Y;
 
@@ -30,4 +32,4 @@ struct V2U {
     { }
 };
 
-#endif // GFS_LIN_HPP_INCLUDED
+#endif // GFS_LINALG_HPP_INCLUDED
