@@ -39,11 +39,6 @@ global_var struct {
     } Input;
 } player;
 
-global_var struct {
-    Rect Rect;
-    Color4 Color;
-    V2S Input;
-} box;
 
 #define PLAYER_INIT_X 100
 #define PLAYER_INIT_Y 60
@@ -52,15 +47,6 @@ global_var struct {
 #define PLAYER_COLOR (COLOR_RED + COLOR_BLUE)
 #define PLAYER_SPEED 10
 
-#define BLOCKS_XOFFSET 300
-#define BLOCKS_YOFFSET 500
-#define BLOCKS_PER_ROW 4
-#define BLOCKS_ROWS_COUNT 2
-#define BLOCKS_XPADDING 5
-#define BLOCKS_YPADDING 5
-#define BLOCK_WIDTH 100
-#define BLOCK_HEIGHT 80
-#define BLOCK_COLOR COLOR_RED
 
 LRESULT CALLBACK
 Win32_MainWindowProc(HWND   window,
@@ -99,24 +85,6 @@ Win32_MainWindowProc(HWND   window,
                 {
                     player.Input.RightPressed = true;
                 } break;
-#ifdef COLLISSION_TESTING
-                case KEY_A: 
-                {
-                    box.Input.X = -1;
-                } break;
-                case KEY_D: 
-                {
-                    box.Input.X = +1;
-                } break;
-                case KEY_S: 
-                {
-                    box.Input.Y = -1;
-                } break;
-                case KEY_W: 
-                {
-                    box.Input.Y = +1;
-                } break;
-#endif
                 default: 
                 {
                 } break;
@@ -134,18 +102,6 @@ Win32_MainWindowProc(HWND   window,
                 {
                     player.Input.RightPressed = false;
                 } break;
-#ifdef COLLISSION_TESTING
-                case KEY_A:
-                case KEY_D: 
-                {
-                    box.Input.X = 0;
-                } break;
-                case KEY_W:
-                case KEY_S: 
-                {
-                    box.Input.Y = 0;
-                } break;
-#endif
                 default: 
                 {
                 } break;
@@ -164,7 +120,6 @@ Win32_MainWindowProc(HWND   window,
             OutputDebugString("WM_DESTROY\n");
             // PostQuitMessage(0);
         } break;
-
         default: 
         {
             // Leave other events to default Window's handler.
@@ -232,9 +187,6 @@ WinMain(_In_ HINSTANCE instance,
     player.Rect.Height = PLAYER_HEIGHT;
     player.Color = PLAYER_COLOR;
 
-    box.Rect = Rect(0, 0, 100, 100);
-    box.Color = COLOR_RED;
-
     renderer.ClearColor = COLOR_WHITE;
 
     while (!shouldStop) 
@@ -264,25 +216,6 @@ WinMain(_In_ HINSTANCE instance,
             player.Rect.X += PLAYER_SPEED;
         }
 
-#ifdef COLLISSION_TESTING
-        box.Rect.X += PLAYER_SPEED * box.Input.X;
-        box.Rect.Y += PLAYER_SPEED * box.Input.Y;
-
-        if (player.Rect.IsOverlapping(box.Rect)) 
-        {
-            player.Color = COLOR_YELLOW;
-        } 
-        else 
-        {
-            player.Color = PLAYER_COLOR;
-        }
-#endif
-
-#ifdef OFFSET_TESTING
-        renderer->XOffset += PLAYER_SPEED * box.Input.X;
-        renderer->YOffset += PLAYER_SPEED * box.Input.Y;
-#endif
-
         BMR::BeginDrawing(&renderer, window);
 
         BMR::Clear(&renderer);
@@ -290,27 +223,6 @@ WinMain(_In_ HINSTANCE instance,
         BMR::DrawRect(&renderer, player.Rect, player.Color);
 
         BMR::DrawLine(&renderer, 100, 200, 500, 600);
-
-#ifdef BLOCKS_RENDERING
-        // NOTE(ilya.a): This is really dog-slow :c
-        for (U32 blockYGrid = 0; blockYGrid < BLOCKS_ROWS_COUNT; ++blockYGrid) 
-        {
-            for (U32 blockXGrid = 0; blockXGrid < BLOCKS_PER_ROW; ++blockXGrid) 
-            {
-                U32 blockXCoord = blockXGrid * BLOCK_WIDTH + BLOCKS_XOFFSET + BLOCKS_XPADDING * blockXGrid;
-                U32 blockYCoord = blockYGrid * BLOCK_HEIGHT + BLOCKS_YOFFSET + BLOCKS_YPADDING * blockYGrid;
-                BMR::DrawRect(
-                    &renderer,
-                    blockXCoord, blockYCoord, 
-                    BLOCK_WIDTH, BLOCK_HEIGHT, 
-                    BLOCK_COLOR);
-            }
-        }
-#endif
-
-#ifdef COLLISSION_TESTING
-        BMR::DrawRect(&renderer, box.Rect, box.Color);
-#endif
 
         BMR::EndDrawing(&renderer);
 
