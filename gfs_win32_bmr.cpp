@@ -33,8 +33,8 @@ namespace BMR
     {
         StretchDIBits(
             dc,
-            r->XOffset,    r->YOffset,    r->Pixels.Width, r->Pixels.Height,
             windowXOffset, windowYOffset, windowWidth,     windowHeight,
+            r->XOffset,    r->YOffset,    r->Pixels.Width, r->Pixels.Height,
             r->Pixels.Buffer, &r->Info,
             DIB_RGB_COLORS, SRCCOPY
         );
@@ -179,9 +179,12 @@ namespace BMR
         PAINTSTRUCT ps = {0};
         HDC dc = BeginPaint(window, &ps);
 
-        if (dc == nullptr) {
+        if (dc == nullptr) 
+        {
             // TODO(ilya.a): Handle error
-        } else {
+        } 
+        else 
+        {
             S32 x = ps.rcPaint.left;
             S32 y = ps.rcPaint.top;
             S32 width = 0, height = 0;
