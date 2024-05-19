@@ -1,9 +1,9 @@
 /*
  * GFS. Entry point.
  *
- * FILE    gfs_main.hpp
- * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
- * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
+ * FILE      gfs_main.c
+ * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
+ * COPYRIGHT (c) 2024 Ilya Akkuzin
  * 
  * This is small educational project where I
  * doodling around with Windows API and computer
@@ -15,27 +15,27 @@
 
 #include <Windows.h>
 
-#include "gfs_types.hpp"
-#include "gfs_string.hpp"
-#include "gfs_macros.hpp"
-#include "gfs_linalg.hpp"
-#include "gfs_geometry.hpp"
-#include "gfs_color.hpp"
-#include "gfs_win32_bmr.hpp"
-#include "gfs_win32_keys.hpp"
-#include "gfs_win32_misc.hpp"
+#include "gfs_types.h"
+#include "gfs_string.h"
+#include "gfs_macros.h"
+#include "gfs_linalg.h"
+#include "gfs_geometry.h"
+#include "gfs_color.h"
+#include "gfs_win32_bmr.h"
+#include "gfs_win32_keys.h"
+#include "gfs_win32_misc.h"
 
 
-global_var BMR::Renderer renderer;
-global_var bool shouldStop = false;
+global_var BMR_Renderer renderer;
+global_var Bool shouldStop = false;
 
 global_var struct {
     Rect Rect; 
     Color4 Color;
 
     struct {
-        bool LeftPressed;
-        bool RightPressed;
+        Bool LeftPressed;
+        Bool RightPressed;
     } Input;
 } player;
 
@@ -44,7 +44,6 @@ global_var struct {
 #define PLAYER_INIT_Y 60
 #define PLAYER_WIDTH 160
 #define PLAYER_HEIGHT 80
-#define PLAYER_COLOR (COLOR_RED + COLOR_BLUE)
 #define PLAYER_SPEED 10
 
 
@@ -60,18 +59,6 @@ Win32_MainWindowProc(HWND   window,
         case WM_ACTIVATEAPP: 
         {
             OutputDebugString("WM_ACTIVATEAPP\n");
-        } break;
-        case WM_SIZE: 
-        {
-            OutputDebugString("WM_SIZE\n");
-            // S32 width = LOWORD(lParam);
-            // S32 height = HIWORD(lParam);
-            // BMR::Resize(&renderer, width, height);
-        } break;
-        case WM_PAINT: 
-        {
-            OutputDebugString("WM_PAINT\n");
-            BMR::Update(&renderer, window);
         } break;
         case WM_KEYDOWN: 
         {
@@ -130,27 +117,24 @@ Win32_MainWindowProc(HWND   window,
     return result;
 }
 
+
 int WINAPI
 WinMain(_In_ HINSTANCE instance,
         _In_opt_ HINSTANCE prevInstance,
         _In_ LPSTR commandLine,
-        _In_ int showMode)
-{
-
-    renderer = BMR::Init();
-    BMR::Resize(&renderer, 900, 600);
+        _In_ int showMode
+) {
 
     persist_var LPCSTR CLASS_NAME = "GFS";
     persist_var LPCSTR WINDOW_TITLE = "GFS";
 
     WNDCLASS windowClass = {0};
-    windowClass.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
+    windowClass.style = CS_VREDRAW | CS_HREDRAW;
     windowClass.lpfnWndProc = Win32_MainWindowProc;
     windowClass.hInstance = instance;
     windowClass.lpszClassName = CLASS_NAME;
 
-    if (RegisterClassA(&windowClass) == 0) 
-    {
+    if (RegisterClassA(&windowClass) == 0) {
         OutputDebugString("Failed to register window class!\n");
         return 0;
     }
@@ -164,19 +148,21 @@ WinMain(_In_ HINSTANCE instance,
         CW_USEDEFAULT,  // int y
         CW_USEDEFAULT,  // int width
         CW_USEDEFAULT,  // int height
-        nullptr,        // windowParent
-        nullptr,        // menu
+        NULL,           // windowParent
+        NULL,           // menu
         instance,
-        nullptr
+        NULL
     );
 
-    if (window == nullptr) 
-    {
+    if (window == NULL) {
         OutputDebugString("Failed to initialize window!\n");
         return 0;
     }
 
     ShowWindow(window, showMode);
+
+    renderer = BMR_Init(COLOR_WHITE, window);
+    BMR_Resize(&renderer, 900, 600);
 
     U32 xOffset = 0;
     U32 yOffset = 0;
@@ -185,7 +171,7 @@ WinMain(_In_ HINSTANCE instance,
     player.Rect.Y = PLAYER_INIT_Y;
     player.Rect.Width = PLAYER_WIDTH;
     player.Rect.Height = PLAYER_HEIGHT;
-    player.Color = PLAYER_COLOR;
+    player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
 
     renderer.ClearColor = COLOR_WHITE;
 
@@ -193,7 +179,7 @@ WinMain(_In_ HINSTANCE instance,
     {
 
         MSG message = {};
-        while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) 
+        while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) 
         {
             if (message.message == WM_QUIT) 
             {
@@ -216,21 +202,21 @@ WinMain(_In_ HINSTANCE instance,
             player.Rect.X += PLAYER_SPEED;
         }
 
-        BMR::BeginDrawing(&renderer, window);
+        BMR_BeginDrawing(&renderer);
 
-        BMR::Clear(&renderer);
-        BMR::DrawGrad(&renderer, xOffset, yOffset);
-        BMR::DrawRect(&renderer, player.Rect, player.Color);
+        BMR_Clear(&renderer);
+        BMR_DrawGrad(&renderer, xOffset, yOffset);
+        BMR_DrawRectR(&renderer, player.Rect, player.Color);
 
-        BMR::DrawLine(&renderer, 100, 200, 500, 600);
+        BMR_DrawLine(&renderer, 100, 200, 500, 600);
 
-        BMR::EndDrawing(&renderer);
+        BMR_EndDrawing(&renderer);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR::DeInit(&renderer);
+    BMR_DeInit(&renderer);
 
     return 0;
 }

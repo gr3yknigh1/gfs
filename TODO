@@ -1,1 +1,2 @@
-- [ ] You dump-dump: replace `State s` with `State *s` and fix `.` to `->`.
+- [X] You dump-dump: replace `State s` with `State *s` and fix `.` to `->`.
+- [ ] Optimize using DC to CS_OWNDC.

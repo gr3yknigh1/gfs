@@ -1,8 +1,8 @@
 :: GFS. Debug build script
 ::
-:: FILE    build_debug.bat
-:: AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
-:: COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
+:: FILE      build_debug.bat
+:: AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
+:: COPYRIGHT (c) 2024 Ilya Akkuzin
 
 @echo off
 
@@ -16,7 +16,7 @@ if exist %configuration_path%\ (
   echo I: Debug configuration already exists!
 ) else (
   echo I: Debug configuration not found. Generating new one!
-  cmake -B %configuration_path% -S %project_path%
+  cmake -S %project_path% -B %configuration_path% -S %project_path% -D CMAKE_EXPORT_COMPILE_COMMANDS=1
 )
 
 cmake --build %configuration_path%
