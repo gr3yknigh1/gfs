@@ -14,10 +14,11 @@
  * */
 
 #include <Windows.h>
+#include <xinput.h>
 
 #include "gfs_types.h"
-#include "gfs_string.h"
 #include "gfs_macros.h"
+#include "gfs_string.h"
 #include "gfs_linalg.h"
 #include "gfs_geometry.h"
 #include "gfs_color.h"
@@ -26,25 +27,30 @@
 #include "gfs_win32_misc.h"
 
 
+
+// DWORD WINAPI XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState);
+// DWORD WINAPI XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
+
+
 global_var BMR_Renderer renderer;
-global_var Bool shouldStop = false;
+global_var bool shouldStop = false;
 
 global_var struct {
     Rect Rect; 
     Color4 Color;
 
     struct {
-        Bool LeftPressed;
-        Bool RightPressed;
+        bool LeftPressed;
+        bool RightPressed;
     } Input;
 } player;
 
 
 #define PLAYER_INIT_X 100
 #define PLAYER_INIT_Y 60
-#define PLAYER_WIDTH 160
+#define PLAYER_WIDTH  160
 #define PLAYER_HEIGHT 80
-#define PLAYER_SPEED 10
+#define PLAYER_SPEED  10
 
 
 LRESULT CALLBACK
@@ -55,11 +61,13 @@ Win32_MainWindowProc(HWND   window,
 {
     LRESULT result = 0;
 
-    switch (message) {
+    switch (message)
+    {
         case WM_ACTIVATEAPP: 
         {
-            OutputDebugString("WM_ACTIVATEAPP\n");
+            OutputDebugString("T: WM_ACTIVATEAPP\n");
         } break;
+#if 0
         case WM_KEYDOWN: 
         {
             switch (wParam) 
@@ -94,22 +102,22 @@ Win32_MainWindowProc(HWND   window,
                 } break;
             }
         } break;
+#endif  // #if 0
         case WM_CLOSE: 
         {
             // TODO(ilya.a): Ask for closing?
-            OutputDebugString("WM_CLOSE\n");
+            OutputDebugString("T: WM_CLOSE\n");
             shouldStop = true;
         } break;
         case WM_DESTROY: 
         {
-            // TODO(ilya.a): Casey says that we maybe should recreate
-            // window later?
-            OutputDebugString("WM_DESTROY\n");
+            // TODO(ilya.a): Casey says that we maybe should recreate window later?
+            OutputDebugString("T: WM_DESTROY\n");
             // PostQuitMessage(0);
         } break;
         default: 
         {
-            // Leave other events to default Window's handler.
+            // NOTE(ilya): Leave other events to default Window's handler.
             result = DefWindowProc(window, message, wParam, lParam);
         } break;
     }
@@ -122,20 +130,21 @@ int WINAPI
 WinMain(_In_ HINSTANCE instance,
         _In_opt_ HINSTANCE prevInstance,
         _In_ LPSTR commandLine,
-        _In_ int showMode
-) {
+        _In_ int showMode)
+{
 
-    persist_var LPCSTR CLASS_NAME = "GFS";
+    persist_var LPCSTR CLASS_NAME   = "GFS";
     persist_var LPCSTR WINDOW_TITLE = "GFS";
 
-    WNDCLASS windowClass = {0};
-    windowClass.style = CS_VREDRAW | CS_HREDRAW;
-    windowClass.lpfnWndProc = Win32_MainWindowProc;
-    windowClass.hInstance = instance;
+    WNDCLASS windowClass      = {0};
+    windowClass.style         = CS_VREDRAW | CS_HREDRAW;
+    windowClass.lpfnWndProc   = Win32_MainWindowProc;
+    windowClass.hInstance     = instance;
     windowClass.lpszClassName = CLASS_NAME;
 
-    if (RegisterClassA(&windowClass) == 0) {
-        OutputDebugString("Failed to register window class!\n");
+    if (RegisterClassA(&windowClass) == 0)
+    {
+        OutputDebugString("E: Failed to register window class!\n");
         return 0;
     }
 
@@ -154,8 +163,9 @@ WinMain(_In_ HINSTANCE instance,
         NULL
     );
 
-    if (window == NULL) {
-        OutputDebugString("Failed to initialize window!\n");
+    if (window == NULL)
+    {
+        OutputDebugString("E: Failed to initialize window!\n");
         return 0;
     }
 
@@ -167,11 +177,11 @@ WinMain(_In_ HINSTANCE instance,
     U32 xOffset = 0;
     U32 yOffset = 0;
 
-    player.Rect.X = PLAYER_INIT_X;
-    player.Rect.Y = PLAYER_INIT_Y;
-    player.Rect.Width = PLAYER_WIDTH;
+    player.Rect.X      = PLAYER_INIT_X;
+    player.Rect.Y      = PLAYER_INIT_Y;
+    player.Rect.Width  = PLAYER_WIDTH;
     player.Rect.Height = PLAYER_HEIGHT;
-    player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
+    player.Color       = Color4Add(COLOR_RED, COLOR_BLUE);
 
     renderer.ClearColor = COLOR_WHITE;
 
@@ -191,6 +201,35 @@ WinMain(_In_ HINSTANCE instance,
             DispatchMessageA(&message);
         }
 
+
+        // TODO(ilya.a): Should we pool more frequently? [2024/05/19]
+        for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex)
+        {
+            XINPUT_STATE xInputState = {0};
+            DWORD result = XInputGetState(xControllerIndex, &xInputState);
+
+            if(result == ERROR_SUCCESS)
+            {
+                OutputDebugString("T: Found connected device!\n");
+                XINPUT_GAMEPAD *pad = &xInputState.Gamepad;
+
+                bool dPadUp = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+                if (dPadUp)
+                {
+                    OutputDebugString("T: dPadUp!\n");
+                }
+            }
+            else if (result == ERROR_DEVICE_NOT_CONNECTED)
+            {
+                // NOTE(ilya.a): Do nothing. I thought to log that. 
+                // But it will be too frequent log, cause we have no plans on multiple controllers.
+            }
+            else
+            {
+                OutputDebugString("E: Some of xInput's device are not connected!\n");
+                return 0;
+            }
+        }
 
         if (player.Input.LeftPressed) 
         {

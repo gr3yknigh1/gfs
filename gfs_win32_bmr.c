@@ -22,23 +22,24 @@
 
 internal void
 Win32_UpdateWindow(
-    BMR_Renderer *r,
+    BMR_Renderer *renderer,
     S32 windowXOffset,
     S32 windowYOffset,
     S32 windowWidth,
     S32 windowHeight)
 {
     StretchDIBits(
-        r->DC,
-        windowXOffset, windowYOffset, windowWidth,     windowHeight,
-        r->XOffset,    r->YOffset,    r->Pixels.Width, r->Pixels.Height,
-        r->Pixels.Buffer, &r->Info,
+        renderer->DC,
+        windowXOffset,     windowYOffset,     windowWidth,            windowHeight,
+        renderer->XOffset, renderer->YOffset, renderer->Pixels.Width, renderer->Pixels.Height,
+        renderer->Pixels.Buffer, &renderer->Info,
         DIB_RGB_COLORS, SRCCOPY
     );
 }
 
 BMR_Renderer
-BMR_Init(Color4 clearColor, HWND window) {
+BMR_Init(Color4 clearColor, HWND window)
+{
     BMR_Renderer r;
 
     r.ClearColor = clearColor;
@@ -80,13 +81,14 @@ BMR_DeInit(BMR_Renderer *renderer)
     ReleaseDC(renderer->Window, renderer->DC);
 }
 
-void 
-BMR_BeginDrawing(BMR_Renderer *renderer) 
+void
+BMR_BeginDrawing(BMR_Renderer *renderer)
 {
 }
 
-void 
-BMR_EndDrawing(BMR_Renderer *renderer) {
+void
+BMR_EndDrawing(BMR_Renderer *renderer)
+{
     Size pitch = renderer->Pixels.Width * renderer->BPP;
     U8 *row = (U8 *)renderer->Pixels.Buffer;
 
@@ -161,7 +163,7 @@ BMR_EndDrawing(BMR_Renderer *renderer) {
 
 
 void 
-BMR_Update(BMR_Renderer *r, HWND window) 
+BMR_Update(BMR_Renderer *r, HWND window)
 {
     PAINTSTRUCT ps = {0};
     HDC dc = BeginPaint(window, &ps);

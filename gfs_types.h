@@ -28,16 +28,16 @@ typedef U8              Byte;
 typedef S8              Char;
 typedef U64             Size;
 
-#ifndef Bool
-#define Bool _Bool
-#endif // Bool
+#ifndef bool
+#define bool            _Bool
+#endif // bool
 
 #ifndef true
-#define true 1
+#define true            1
 #endif  // true
 
 #ifndef false
-#define false 0
+#define false           0
 #endif  // false
 
 typedef const S8 *      CString8;

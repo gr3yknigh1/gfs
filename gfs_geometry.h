@@ -16,8 +16,8 @@ typedef struct {
     U16 Height;
 } Rect;
 
-Bool RectIsInside(Rect r, U16 x, U16 y);
-Bool RectIsOverlapping(Rect r);
+bool RectIsInside(Rect r, U16 x, U16 y);
+bool RectIsOverlapping(Rect r);
 
 U64 GetOffset(U64 width, U64 y, U64 x);
 

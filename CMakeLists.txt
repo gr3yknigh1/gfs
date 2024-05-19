@@ -35,3 +35,8 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_types.h
     ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
 )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE Xinput.lib
+)

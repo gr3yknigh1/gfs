@@ -40,7 +40,8 @@ typedef struct
     U64 XOffset;
     U64 YOffset;
 
-    struct {
+    struct
+    {
         void *Buffer;
         U64 Width;
         U64 Height;
@@ -52,7 +53,8 @@ typedef struct
 } BMR_Renderer;
 
 
-typedef enum {
+typedef enum
+{
     BMR_RENDER_COMMAND_TYPE_NOP      = 00,
     BMR_RENDER_COMMAND_TYPE_CLEAR    = 01,
     BMR_RENDER_COMMAND_TYPE_LINE     = 10,

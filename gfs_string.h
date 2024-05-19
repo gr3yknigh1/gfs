@@ -9,6 +9,11 @@
 
 #include "gfs_types.h"
 
+typedef struct {
+    Char *Data;
+    Size  Size;
+} String8;
+
 Size CString8GetLength(CString8 s);
 
 #endif  // GFS_STRING_H_INCLUDED
