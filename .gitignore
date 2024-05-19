@@ -4,6 +4,8 @@
 
 !gfs.sublime-project
 
+*.rdbg
+
 # VS 2022 related things
 .vs/
 
