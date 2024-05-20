@@ -27,19 +27,23 @@
 #include "gfs_win32_misc.h"
 
 
+typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE* pState);
+typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
 
-// DWORD WINAPI XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState);
-// DWORD WINAPI XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
+global_var Win32_XInputGetStateType *Win32_XInputGetStatePtr;
+global_var Win32_XInputSetStateType *Win32_XInputSetStatePtr;
 
 
 global_var BMR_Renderer renderer;
 global_var bool shouldStop = false;
 
-global_var struct {
+global_var struct
+{
     Rect Rect; 
     Color4 Color;
 
-    struct {
+    struct
+    {
         bool LeftPressed;
         bool RightPressed;
     } Input;
@@ -51,6 +55,23 @@ global_var struct {
 #define PLAYER_WIDTH  160
 #define PLAYER_HEIGHT 80
 #define PLAYER_SPEED  10
+
+
+internal enum Win32_LoadXInputResult { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR }
+Win32_LoadXInput(void)
+{
+    HMODULE library = LoadLibrary(XINPUT_DLL);
+
+    if (library == NULL)
+    {
+        return WIN32_LOADXINPUT_ERR;
+    }
+
+    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, "XInputGetState");
+    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, "XInputSetState");
+
+    return WIN32_LOADXINPUT_OK;
+}
 
 
 LRESULT CALLBACK
@@ -67,7 +88,7 @@ Win32_MainWindowProc(HWND   window,
         {
             OutputDebugString("T: WM_ACTIVATEAPP\n");
         } break;
-#if 0
+#if 1
         case WM_KEYDOWN: 
         {
             switch (wParam) 
@@ -132,6 +153,21 @@ WinMain(_In_ HINSTANCE instance,
         _In_ LPSTR commandLine,
         _In_ int showMode)
 {
+
+    switch (Win32_LoadXInput()) 
+    {
+        case(WIN32_LOADXINPUT_OK): 
+        {
+        } break;
+        case (WIN32_LOADXINPUT_ERR):
+        {
+            OutputDebugString("E: Failed to load XInput functions!\n");
+            return 0;
+        } break;
+        default:
+        {
+        } break;
+    }
 
     persist_var LPCSTR CLASS_NAME   = "GFS";
     persist_var LPCSTR WINDOW_TITLE = "GFS";
@@ -206,18 +242,19 @@ WinMain(_In_ HINSTANCE instance,
         for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex)
         {
             XINPUT_STATE xInputState = {0};
-            DWORD result = XInputGetState(xControllerIndex, &xInputState);
+            DWORD result = Win32_XInputGetStatePtr(xControllerIndex, &xInputState);
 
             if(result == ERROR_SUCCESS)
             {
-                OutputDebugString("T: Found connected device!\n");
                 XINPUT_GAMEPAD *pad = &xInputState.Gamepad;
 
-                bool dPadUp = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
-                if (dPadUp)
-                {
-                    OutputDebugString("T: dPadUp!\n");
-                }
+                bool dPadUp    = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+                bool dPadDown  = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+                bool dPadLeft  = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+                bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+
+                player.Input.RightPressed = dPadRight;
+                player.Input.LeftPressed = dPadLeft;
             }
             else if (result == ERROR_DEVICE_NOT_CONNECTED)
             {
