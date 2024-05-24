@@ -46,6 +46,8 @@ global_var struct
     {
         bool LeftPressed;
         bool RightPressed;
+        bool UpPressed;
+        bool DownPressed;
     } Input;
 } player;
 
@@ -88,39 +90,31 @@ Win32_MainWindowProc(HWND   window,
         {
             OutputDebugString("T: WM_ACTIVATEAPP\n");
         } break;
-#if 1
+#if 0
+        case WM_KEYUP:
         case WM_KEYDOWN: 
         {
-            switch (wParam) 
+            // NOTE(ilya.a): Messed up input because of gamepad input. It's overrides state changed via keyboard
+            // input [2024/05/24]
+            U32 vkCode = wParam;
+            bool wasDown = (lParam & (1 << 30)) != 0;
+            bool isDown = (lParam & (1 << 31)) == 0;
+
+            if (vkCode == VK_LEFT) 
             {
-                case VK_LEFT: 
-                {
-                    player.Input.LeftPressed = true;
-                } break;
-                case VK_RIGHT: 
-                {
-                    player.Input.RightPressed = true;
-                } break;
-                default: 
-                {
-                } break;
+                player.Input.LeftPressed = isDown;
             }
-        } break;
-        case WM_KEYUP: 
-        {
-            switch (wParam) 
+            else if (vkCode == VK_RIGHT)
             {
-                case VK_LEFT: 
-                {
-                    player.Input.LeftPressed = false;
-                } break;
-                case VK_RIGHT: 
-                {
-                    player.Input.RightPressed = false;
-                } break;
-                default: 
-                {
-                } break;
+                player.Input.RightPressed = isDown;
+            }
+            else if (vkCode == VK_DOWN)
+            {
+                player.Input.DownPressed = isDown;
+            }
+            else if (vkCode == VK_UP)
+            {
+                player.Input.UpPressed = isDown;
             }
         } break;
 #endif  // #if 0
@@ -255,6 +249,27 @@ WinMain(_In_ HINSTANCE instance,
 
                 player.Input.RightPressed = dPadRight;
                 player.Input.LeftPressed = dPadLeft;
+
+                player.Input.UpPressed = dPadUp;
+                player.Input.DownPressed = dPadDown;
+
+                XINPUT_VIBRATION vibrationState = {0};  
+                
+                if (player.Input.RightPressed || player.Input.LeftPressed || 
+                    player.Input.UpPressed    || player.Input.DownPressed) 
+                {
+                    vibrationState.wLeftMotorSpeed = 60000;
+                    vibrationState.wRightMotorSpeed = 60000;
+                } 
+                else
+                {
+                    vibrationState.wLeftMotorSpeed = 0;
+                    vibrationState.wRightMotorSpeed = 0;
+                }
+                Win32_XInputSetStatePtr(
+                  xControllerIndex,
+                  &vibrationState
+                );  
             }
             else if (result == ERROR_DEVICE_NOT_CONNECTED)
             {
@@ -276,6 +291,16 @@ WinMain(_In_ HINSTANCE instance,
         if (player.Input.RightPressed) 
         {
             player.Rect.X += PLAYER_SPEED;
+        }
+
+        if (player.Input.DownPressed) 
+        {
+            player.Rect.Y -= PLAYER_SPEED;
+        }
+
+        if (player.Input.UpPressed) 
+        {
+            player.Rect.Y += PLAYER_SPEED;
         }
 
         BMR_BeginDrawing(&renderer);
