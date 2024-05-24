@@ -1,8 +1,8 @@
 :: GFS. Debug run script
 ::
-:: FILE    run_debug.bat
-:: AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
-:: COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
+:: FILE      run_debug.bat
+:: AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
+:: COPYRIGHT (c) 2024 Ilya Akkuzin
 
 @echo off
 
