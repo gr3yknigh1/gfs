@@ -7,6 +7,22 @@
 @echo off
 
 
+set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+set vc2019_bootstrap="C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat"
+
+if exist %vc2022_bootstrap% (
+  echo I: Found VC 2022 boostrap script!
+		call %vc2022_bootstrap% amd64
+) else (
+
+  if exist %vc2019_bootstrap% (
+    echo I: VC 2022 script not found. Only VC 2019 script was found.
+    call %vc2019_boostrap% amd64
+  ) else (
+    echo W: Failed to find boostrap scripts of 2019 or 2022 VC :c
+  )
+)
+
 set project_path=%~dp0
 pushd %project_path%
 
