@@ -36,6 +36,12 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
 )
 
+# TODO(ilya.a): Add unicode support. [2024/05/24]
+# target_compile_definitions(
+#     ${PROJECT_NAME}
+#     PRIVATE UNICODE
+# )
+
 # NOTE(ilya.a): Maybe replace dynamic loaded functions from <xinput.h>
 # with just static linking? Casey says that dll might be not on the system.
 # I think thats this is right solution, because it's, in my humble opinion

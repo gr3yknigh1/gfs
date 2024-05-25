@@ -14,7 +14,6 @@ if exist %vc2022_bootstrap% (
   echo I: Found VC 2022 boostrap script!
 		call %vc2022_bootstrap% amd64
 ) else (
-
   if exist %vc2019_bootstrap% (
     echo I: VC 2022 script not found. Only VC 2019 script was found.
     call %vc2019_boostrap% amd64

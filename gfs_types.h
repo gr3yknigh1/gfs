@@ -43,6 +43,8 @@ typedef U64             Size;
 
 typedef const S8 *      CString8;
 
+#define BYTE_BITS       8
+
 #define U8_MAX          255
 #define U16_MAX         65535
 #define U32_MAX         4294967295

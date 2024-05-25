@@ -27,5 +27,7 @@ void *ArenaAlloc(Arena *arena, Size size);
 void ArenaFree(Arena *arena);
 
 void MemoryCopy(void *destination, const void *source, Size size);
+void MemorySet(void *data, Byte value, Size size);
+void MemoryZero(void *data, Size size);
 
 #endif  // GFS_MEMORY_H_INCLUDED

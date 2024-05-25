@@ -15,13 +15,15 @@
 
 #include <Windows.h>
 #include <xinput.h>
+#include <dsound.h>
 
 #include "gfs_types.h"
 #include "gfs_macros.h"
 #include "gfs_string.h"
 #include "gfs_linalg.h"
-#include "gfs_geometry.h"
 #include "gfs_color.h"
+#include "gfs_memory.h"
+#include "gfs_geometry.h"
 #include "gfs_win32_bmr.h"
 #include "gfs_win32_keys.h"
 #include "gfs_win32_misc.h"
@@ -30,8 +32,12 @@
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE* pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
 
+typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
+
 global_var Win32_XInputGetStateType *Win32_XInputGetStatePtr;
 global_var Win32_XInputSetStateType *Win32_XInputSetStatePtr;
+
+global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
 
 global_var BMR_Renderer renderer;
@@ -57,22 +63,119 @@ global_var struct
 #define PLAYER_WIDTH  160
 #define PLAYER_HEIGHT 80
 #define PLAYER_SPEED  10
+ 
 
+#define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
+#define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
+
+#define WIN32_XINPUT_DLL XINPUT_DLL
 
 internal enum Win32_LoadXInputResult { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR }
 Win32_LoadXInput(void)
 {
-    HMODULE library = LoadLibrary(XINPUT_DLL);
+    // TODO(ilya.a): Handle different versions of xinput. Check for newer. If fails, use older one. [2024/05/24]
+    HMODULE library = LoadLibrary(WIN32_XINPUT_DLL);
 
     if (library == NULL)
     {
         return WIN32_LOADXINPUT_ERR;
     }
 
-    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, "XInputGetState");
-    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, "XInputSetState");
+    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, WIN32_XINPUTGETSTATE_PROCNAME);
+    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, WIN32_XINPUTSETSTATE_PROCNAME);
+
+    if (Win32_XInputSetStatePtr == NULL || Win32_XInputGetStatePtr == NULL)
+    {
+        return WIN32_LOADXINPUT_ERR;
+    }
 
     return WIN32_LOADXINPUT_OK;
+}
+
+
+#define WIN32_DSOUND_DLL "dsound.dll"
+#define WIN32_DIRECTSOUNDCREATE_PROCNAME "DirectSoundCreate"
+
+/*
+ * Loads DirectrSound library and initializes it.
+ * 
+ * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
+ * TODO(ilya.a): Check this out. [2024/05/25]
+ */
+internal enum Win32_InitDSound { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_LOAD }
+Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
+{
+    HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
+
+    if (library == NULL)
+    {
+        return WIN32_INITDSOUND_DLL_LOAD;
+    }
+
+    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+
+    if (Win32_DirectSoundCreatePtr == NULL)
+    {
+        return WIN32_INITDSOUND_DLL_LOAD;
+    }
+
+    LPDIRECTSOUND directSound;
+    if (!SUCCEEDED(Win32_DirectSoundCreatePtr(0, &directSound, NULL)))
+    {
+        return WIN32_INITDSOUND_ERR;
+    }
+
+    if (!SUCCEEDED(directSound->lpVtbl->SetCooperativeLevel(directSound, window, DSSCL_PRIORITY)))
+    {
+        return WIN32_INITDSOUND_ERR;
+    }
+
+    // NOTE(ilya.a): Primary buffer -- buffer which hold handle to sound card. Windows has wierd API.
+    // [2024/05/25]
+    DSBUFFERDESC primaryBufferDesc;
+    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+                                                                // to zero buffer description. [2024/05/25]
+    primaryBufferDesc.dwSize        = sizeof(primaryBufferDesc);
+    primaryBufferDesc.dwFlags       = DSBCAPS_PRIMARYBUFFER;
+    primaryBufferDesc.dwBufferBytes = 0;     // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
+    primaryBufferDesc.lpwfxFormat   = NULL;  // NOTE(ilya.a): Primary buffer wfx format should be NULL. [2024/05/25]
+
+    LPDIRECTSOUNDBUFFER primaryBuffer;
+    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &primaryBufferDesc, &primaryBuffer, NULL)))
+    {
+        return WIN32_INITDSOUND_ERR;
+    }
+
+    WAVEFORMATEX waveFormat;
+    waveFormat.wFormatTag      = WAVE_FORMAT_PCM;
+    waveFormat.nChannels       = 2;
+    waveFormat.nSamplesPerSec  = samplesPerSecond;
+    waveFormat.wBitsPerSample  = 16;
+    waveFormat.nBlockAlign     = (waveFormat.nChannels * waveFormat.wBitsPerSample) / BYTE_BITS;
+    waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;  // NOTE(ilya.a): Redundant. Lol.
+    waveFormat.cbSize          = 0;
+
+    if (!SUCCEEDED(primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &waveFormat)))
+    {
+        return WIN32_INITDSOUND_ERR;
+    }
+
+    // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
+    DSBUFFERDESC secondaryBufferDesc;
+    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+                                                                    // to zero buffer description. [2024/05/25]
+    secondaryBufferDesc.dwSize        = sizeof(secondaryBufferDesc);
+    secondaryBufferDesc.dwFlags       = 0;
+    secondaryBufferDesc.dwBufferBytes = bufferSize;
+    secondaryBufferDesc.lpwfxFormat   = &waveFormat;
+
+    LPDIRECTSOUNDBUFFER secondaryBuffer;
+    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &secondaryBuffer, NULL)))
+    {
+        return WIN32_INITDSOUND_ERR;
+    }
+
+    return WIN32_INITDSOUND_OK;
 }
 
 
@@ -204,6 +307,13 @@ WinMain(_In_ HINSTANCE instance,
     renderer = BMR_Init(COLOR_WHITE, window);
     BMR_Resize(&renderer, 900, 600);
 
+
+    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, 48000, 48000 * sizeof(S16) * 2);
+    if (initDSoundResult != WIN32_INITDSOUND_OK)
+    {
+        OutputDebugString("W: Failed to init DSound!\n");
+    }
+
     U32 xOffset = 0;
     U32 yOffset = 0;
 
@@ -231,7 +341,6 @@ WinMain(_In_ HINSTANCE instance,
             DispatchMessageA(&message);
         }
 
-
         // TODO(ilya.a): Should we pool more frequently? [2024/05/19]
         for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex)
         {
@@ -258,8 +367,10 @@ WinMain(_In_ HINSTANCE instance,
                 if (player.Input.RightPressed || player.Input.LeftPressed || 
                     player.Input.UpPressed    || player.Input.DownPressed) 
                 {
+#if 0
                     vibrationState.wLeftMotorSpeed = 60000;
                     vibrationState.wRightMotorSpeed = 60000;
+#endif
                 } 
                 else
                 {
