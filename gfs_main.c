@@ -14,6 +14,9 @@
  * */
 
 #include <Windows.h>
+#include <math.h>
+#include <winerror.h>
+#include <winnt.h>
 #include <xinput.h>
 #include <dsound.h>
 
@@ -39,6 +42,7 @@ global_var Win32_XInputSetStateType *Win32_XInputSetStatePtr;
 
 global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
+global_var LPDIRECTSOUNDBUFFER Win32_SecondaryAudioBuffer;
 
 global_var BMR_Renderer renderer;
 global_var bool shouldStop = false;
@@ -130,7 +134,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_ERR;
     }
 
-    // NOTE(ilya.a): Primary buffer -- buffer which hold handle to sound card. Windows has wierd API.
+    // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to sound card. Windows has strange API.
     // [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
     MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
@@ -169,8 +173,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat   = &waveFormat;
 
-    LPDIRECTSOUNDBUFFER secondaryBuffer;
-    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &secondaryBuffer, NULL)))
+    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &Win32_SecondaryAudioBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -308,7 +311,10 @@ WinMain(_In_ HINSTANCE instance,
     BMR_Resize(&renderer, 900, 600);
 
 
-    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, 48000, 48000 * sizeof(S16) * 2);
+    S32 samplesPerSecond = 48000;
+    Size bytesPerSample = sizeof(S16) * 2;
+    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, samplesPerSecond, samplesPerSecond * bytesPerSample);
+    
     if (initDSoundResult != WIN32_INITDSOUND_OK)
     {
         OutputDebugString("W: Failed to init DSound!\n");
@@ -419,8 +425,77 @@ WinMain(_In_ HINSTANCE instance,
         BMR_Clear(&renderer);
         BMR_DrawGrad(&renderer, xOffset, yOffset);
         BMR_DrawRectR(&renderer, player.Rect, player.Color);
-
         BMR_DrawLine(&renderer, 100, 200, 500, 600);
+
+        // NOTE(ilya.a): Testing DirectSound
+#if 1
+        DWORD playCursor;
+        DWORD writeCursor;
+        HRESULT getCursorResult = Win32_SecondaryAudioBuffer->lpVtbl->GetCurrentPosition(
+            Win32_SecondaryAudioBuffer,
+            &playCursor,
+            &writeCursor
+        );
+
+        if (SUCCEEDED(getCursorResult))
+        {
+            DWORD writeCursor = ;
+            DWORD writeBytes  = ;
+
+            VOID * region1;
+            Size   region1Size;
+            VOID * region2;
+            Size   region2Size;
+            
+            // TODO(ilya.a): Check for succeed. [2024/05/25]
+            Win32_SecondaryAudioBuffer->lpVtbl->Lock(
+                Win32_SecondaryAudioBuffer,
+                writeCursor,
+                writeBytes,
+                region1, &region1Size,
+                region2, &region2Size,
+                0
+            );
+
+            S32 squareWaveCounter = 0;
+            S32 squareWaveHZ      = 256;
+            S32 squareWavePeriod  = samplesPerSecond / squareWaveHZ;
+            S16 *sampleOut;
+
+            DWORD region1SampleCount = region1Size / bytesPerSample;
+            DWORD region2SampleCount = region2Size / bytesPerSample;
+
+            sampleOut = (S16 *)region1;
+            for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
+            {
+                if (squareWaveCounter == 0)
+                {
+                    squareWaveCounter = squareWavePeriod;
+                }
+
+                S16 sampleValue = (squareWaveCounter > (squareWavePeriod / 2)) ? 16000 : -16000;
+                *sampleOut++ = sampleValue;
+                *sampleOut++ = sampleValue;
+
+                --squareWaveCounter;
+            }
+
+            sampleOut = (S16 *)region2;
+            for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
+            {
+                if (squareWaveCounter == 0)
+                {
+                    squareWaveCounter = squareWavePeriod;
+                }
+
+                S16 sampleValue = (squareWaveCounter > (squareWavePeriod / 2)) ? 16000 : -16000;
+                *sampleOut++ = sampleValue;
+                *sampleOut++ = sampleValue;
+                --squareWaveCounter;
+            }
+        }
+      
+#endif
 
         BMR_EndDrawing(&renderer);
 

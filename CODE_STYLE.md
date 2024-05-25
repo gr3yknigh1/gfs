@@ -10,14 +10,14 @@
 
 ### Declaration.
 
-```cpp
+```c
 
-i32 Add(i32 a, i32 b);
+S32 Add(S32 a, S32 b);
 
 void V2Add(
-    i32 * outX, i32 * outY,
-    i32 x1,     i32 y1,
-    i32 x2,     i32 y2
+    S32 * outX, S32 * outY,
+    S32 x1,     S32 y1,
+    S32 x2,     S32 y2
 );
 
 ```
@@ -26,8 +26,8 @@ void V2Add(
 
 ```cpp
 
-i32 
-Add(i32 a, i32 b)
+S32 
+Add(S32 a, S32 b)
 {
 
     return a + b;
