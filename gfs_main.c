@@ -14,9 +14,6 @@
  * */
 
 #include <Windows.h>
-#include <math.h>
-#include <winerror.h>
-#include <winnt.h>
 #include <xinput.h>
 #include <dsound.h>
 
@@ -32,6 +29,8 @@
 #include "gfs_win32_misc.h"
 
 
+#define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
+
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE* pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
 
@@ -42,7 +41,7 @@ global_var Win32_XInputSetStateType *Win32_XInputSetStatePtr;
 
 global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
-global_var LPDIRECTSOUNDBUFFER Win32_SecondaryAudioBuffer;
+global_var LPDIRECTSOUNDBUFFER Win32_AudioBuffer;
 
 global_var BMR_Renderer renderer;
 global_var bool shouldStop = false;
@@ -173,7 +172,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat   = &waveFormat;
 
-    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &Win32_SecondaryAudioBuffer, NULL)))
+    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &Win32_AudioBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -310,15 +309,22 @@ WinMain(_In_ HINSTANCE instance,
     renderer = BMR_Init(COLOR_WHITE, window);
     BMR_Resize(&renderer, 900, 600);
 
+    S32 samplesPerSecond     = 48000;
+    U32 runningSampleIndex   = 0;
+    S32 waveToneHZ           = 256;
+    S32 waveToneVolume       = 500;
+    S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
+    S32 squareWaveHalfPeriod = squareWavePeriod / 2;
+    Size bytesPerSample      = sizeof(S16) * 2;
+    Size audioBufferSize     = samplesPerSecond * bytesPerSample;
 
-    S32 samplesPerSecond = 48000;
-    Size bytesPerSample = sizeof(S16) * 2;
-    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, samplesPerSecond, samplesPerSecond * bytesPerSample);
-    
+    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, samplesPerSecond, audioBufferSize);
     if (initDSoundResult != WIN32_INITDSOUND_OK)
     {
         OutputDebugString("W: Failed to init DSound!\n");
     }
+
+    VCALL(Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
     U32 xOffset = 0;
     U32 yOffset = 0;
@@ -431,68 +437,60 @@ WinMain(_In_ HINSTANCE instance,
 #if 1
         DWORD playCursor;
         DWORD writeCursor;
-        HRESULT getCursorResult = Win32_SecondaryAudioBuffer->lpVtbl->GetCurrentPosition(
-            Win32_SecondaryAudioBuffer,
-            &playCursor,
-            &writeCursor
-        );
-
-        if (SUCCEEDED(getCursorResult))
+        if (SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
-            DWORD writeCursor = ;
-            DWORD writeBytes  = ;
+            DWORD byteToLock = runningSampleIndex * bytesPerSample % audioBufferSize;
+            DWORD bytesToWrite;
+            if (byteToLock > playCursor)
+            {
+                bytesToWrite = audioBufferSize - byteToLock;
+                bytesToWrite += playCursor;              
+            }
+            else
+            {
+                bytesToWrite = playCursor - byteToLock;
+            }
 
-            VOID * region1;
-            Size   region1Size;
-            VOID * region2;
-            Size   region2Size;
+            VOID *region1,    *region2;
+            Size  region1Size, region2Size;
             
             // TODO(ilya.a): Check for succeed. [2024/05/25]
-            Win32_SecondaryAudioBuffer->lpVtbl->Lock(
-                Win32_SecondaryAudioBuffer,
-                writeCursor,
-                writeBytes,
-                region1, &region1Size,
-                region2, &region2Size,
+            VCALL(
+                Win32_AudioBuffer, Lock, 
+                byteToLock,
+                bytesToWrite,
+                &region1, &region1Size,
+                &region2, &region2Size,
                 0
             );
 
-            S32 squareWaveCounter = 0;
-            S32 squareWaveHZ      = 256;
-            S32 squareWavePeriod  = samplesPerSecond / squareWaveHZ;
-            S16 *sampleOut;
 
             DWORD region1SampleCount = region1Size / bytesPerSample;
-            DWORD region2SampleCount = region2Size / bytesPerSample;
-
-            sampleOut = (S16 *)region1;
+            S16 *sampleOut = (S16 *)region1;
             for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
             {
-                if (squareWaveCounter == 0)
-                {
-                    squareWaveCounter = squareWavePeriod;
-                }
-
-                S16 sampleValue = (squareWaveCounter > (squareWavePeriod / 2)) ? 16000 : -16000;
+                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
                 *sampleOut++ = sampleValue;
                 *sampleOut++ = sampleValue;
-
-                --squareWaveCounter;
+                ++runningSampleIndex;
             }
 
+            DWORD region2SampleCount = region2Size / bytesPerSample;
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
             {
-                if (squareWaveCounter == 0)
-                {
-                    squareWaveCounter = squareWavePeriod;
-                }
-
-                S16 sampleValue = (squareWaveCounter > (squareWavePeriod / 2)) ? 16000 : -16000;
+                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
                 *sampleOut++ = sampleValue;
                 *sampleOut++ = sampleValue;
-                --squareWaveCounter;
+                ++runningSampleIndex;
             }
+
+            // TODO(ilya.a): Check for succeed. [2024/05/25]
+            VCALL(
+                Win32_AudioBuffer, Unlock,
+                region1, region1Size,
+                region2, region2Size
+            );
         }
       
 #endif
