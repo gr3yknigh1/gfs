@@ -10,6 +10,6 @@
 #include "gfs_types.h"
 #include "gfs_string.h"
 
-Bool IsPathExists(CStr8 path);
+Bool FSIsPathExists(CStr8 path);
 
 #endif // GFS_FS_H_INCLUDED

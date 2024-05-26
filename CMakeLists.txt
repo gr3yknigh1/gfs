@@ -26,6 +26,9 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_fs.h
     ${PROJECT_SOURCE_DIR}/gfs_fs.c
 
+    ${PROJECT_SOURCE_DIR}/gfs_io.h
+    ${PROJECT_SOURCE_DIR}/gfs_io.c
+
     ${PROJECT_SOURCE_DIR}/gfs_wave.h
     ${PROJECT_SOURCE_DIR}/gfs_wave.c
 

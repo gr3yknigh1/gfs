@@ -257,7 +257,7 @@ WinMain(_In_ HINSTANCE instance,
 
     // Wave file format reading testing.
 #if 1
-    Arena assetArena;
+    Arena assetArena = ArenaMake(MEGABYTES(16));
     WaveAsset waveAsset;
     WaveAssetLoadResult waLoadResult = 
         WaveAssetLoadFromFile(&assetArena, "..\\..\\Assets\\test_music_01.wav", &waveAsset);
@@ -271,6 +271,7 @@ WinMain(_In_ HINSTANCE instance,
         /* Do something with asset */
     }
 
+    ArenaFree(&assetArena);
 #endif
 
 
@@ -332,7 +333,7 @@ WinMain(_In_ HINSTANCE instance,
 
     S32 samplesPerSecond     = 48000;
     U32 runningSampleIndex   = 0;
-    S32 waveToneHZ           = 256 * 2;
+    S32 waveToneHZ           = 256 * 0.5;
     S32 waveToneVolume       = 500;
     S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
     S32 squareWaveHalfPeriod = squareWavePeriod / 2;
@@ -455,7 +456,7 @@ WinMain(_In_ HINSTANCE instance,
         BMR_DrawLine(&renderer, 100, 200, 500, 600);
 
         // NOTE(ilya.a): Testing DirectSound
-#if 0
+#if 1
         DWORD playCursor;
         DWORD writeCursor;
         if (SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))

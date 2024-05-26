@@ -9,7 +9,7 @@
 #include <shlwapi.h>
 
 Bool 
-IsPathExists(CStr8 path)
+FSIsPathExists(CStr8 path)
 {
     return PathFileExistsA((LPCSTR)path);
 }

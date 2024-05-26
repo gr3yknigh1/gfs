@@ -9,18 +9,20 @@
 
 #include "gfs_types.h"
 
+#define KILOBYTES(X) (1024 * (X))
+#define MEGABYTES(X) (1024 * 1024 * (X))
+#define GIGABYTES(X) (1024 * 1024 * 1024 * (X))
+
 /*
  * Arena Allocator (aka bump allocator).
  */
 typedef struct {
-    Void *Begin;
-    Void *End;
-    Void *AllocPos;
+    Void *Data;
+    Size Capacity;
+    Size Occupied;
 } Arena;
 
 Arena ArenaMake(Size size);
-Arena ArenaMakeA(Arena *arena, Size size);
-Arena ArenaMakeEx(Void *begin, Size size);
 
 Void *ArenaAlloc(Arena *arena, Size size);
 

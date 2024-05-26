@@ -15,4 +15,7 @@
 #define NULL ((void *)0)
 #endif  // NULL
 
+#define MKFLAG(BITINDEX) (1 << (BITINDEX))
+#define HASANYBIT(MASK, FLAG) ((MASK) | (FLAG))
+
 #endif  // GFS_MACROS_H_INCLUDED
