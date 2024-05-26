@@ -1,5 +1,5 @@
 CompileFlags:                     
-  Add: []                  
-  Compiler: clang             
+  Add: [-std=c99]                  
+  Compiler: clang
 Diagnostics:
   UnusedIncludes: None

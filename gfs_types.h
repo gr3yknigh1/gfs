@@ -8,8 +8,6 @@
 #ifndef GFS_TYPES_H_INCLUDED
 #define GFS_TYPES_H_INCLUDED
 
-/* First layer types. Aka base types. */
-
 typedef signed char     S8;
 typedef signed short    S16;
 typedef signed int      S32;
@@ -23,15 +21,17 @@ typedef unsigned long   U64;
 typedef float           F32;
 typedef double          F64;
 
-/* Second layer types */
-
 typedef U8              Byte;
-typedef S8              Char;
 typedef U64             Size;
+typedef void            Void;
 
-#ifndef bool
-#define bool            _Bool
-#endif // bool
+typedef S8              Char8;
+typedef const S8 *      CStr8;   // NOTE(ilya.a): Explicitly distiguasing C style 
+                                 // string (null terminated).  [2024/05/26]
+
+#ifndef Bool
+#define Bool            _Bool
+#endif // Bool
 
 #ifndef true
 #define true            1
@@ -41,7 +41,6 @@ typedef U64             Size;
 #define false           0
 #endif  // false
 
-typedef const S8 *      CString8;
 
 #define BYTE_BITS       8
 

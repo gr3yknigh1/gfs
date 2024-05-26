@@ -10,10 +10,10 @@
 #include "gfs_types.h"
 
 typedef struct {
-    Char *Data;
-    Size  Size;
-} String8;
+    Char8 *Data;
+    Size   Size;
+} Str8;
 
-Size CString8GetLength(CString8 s);
+Size CStr8_GetLength(CStr8 s);
 
 #endif  // GFS_STRING_H_INCLUDED

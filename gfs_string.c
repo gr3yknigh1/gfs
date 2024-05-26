@@ -8,7 +8,7 @@
 #include "gfs_types.h"
 
 Size 
-CString8GetLength(CString8 s)
+CStr8_GetLength(CStr8 s)
 {
     Size size = 0;
     while (s[size] != '\0')

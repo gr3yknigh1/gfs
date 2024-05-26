@@ -44,7 +44,7 @@ global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 global_var LPDIRECTSOUNDBUFFER Win32_AudioBuffer;
 
 global_var BMR_Renderer renderer;
-global_var bool shouldStop = false;
+global_var Bool shouldStop = false;
 
 global_var struct
 {
@@ -53,10 +53,10 @@ global_var struct
 
     struct
     {
-        bool LeftPressed;
-        bool RightPressed;
-        bool UpPressed;
-        bool DownPressed;
+        Bool LeftPressed;
+        Bool RightPressed;
+        Bool UpPressed;
+        Bool DownPressed;
     } Input;
 } player;
 
@@ -311,7 +311,7 @@ WinMain(_In_ HINSTANCE instance,
 
     S32 samplesPerSecond     = 48000;
     U32 runningSampleIndex   = 0;
-    S32 waveToneHZ           = 256;
+    S32 waveToneHZ           = 256 * 2;
     S32 waveToneVolume       = 500;
     S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
     S32 squareWaveHalfPeriod = squareWavePeriod / 2;
@@ -363,10 +363,10 @@ WinMain(_In_ HINSTANCE instance,
             {
                 XINPUT_GAMEPAD *pad = &xInputState.Gamepad;
 
-                bool dPadUp    = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
-                bool dPadDown  = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-                bool dPadLeft  = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-                bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+                Bool dPadUp    = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+                Bool dPadDown  = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+                Bool dPadLeft  = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+                Bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
 
                 player.Input.RightPressed = dPadRight;
                 player.Input.LeftPressed = dPadLeft;
@@ -434,7 +434,7 @@ WinMain(_In_ HINSTANCE instance,
         BMR_DrawLine(&renderer, 100, 200, 500, 600);
 
         // NOTE(ilya.a): Testing DirectSound
-#if 1
+#if 0
         DWORD playCursor;
         DWORD writeCursor;
         if (SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
