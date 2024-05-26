@@ -21,6 +21,8 @@
 #include "gfs_macros.h"
 #include "gfs_string.h"
 #include "gfs_linalg.h"
+#include "gfs_fs.h"
+#include "gfs_wave.h"
 #include "gfs_color.h"
 #include "gfs_memory.h"
 #include "gfs_geometry.h"
@@ -252,6 +254,25 @@ WinMain(_In_ HINSTANCE instance,
         _In_ LPSTR commandLine,
         _In_ int showMode)
 {
+
+    // Wave file format reading testing.
+#if 1
+    Arena assetArena;
+    WaveAsset waveAsset;
+    WaveAssetLoadResult waLoadResult = 
+        WaveAssetLoadFromFile(&assetArena, "..\\..\\Assets\\test_music_01.wav", &waveAsset);
+
+    if (waLoadResult != WAVEASSET_LOAD_OK)
+    {
+        OutputDebugString("E: Failed to load wave file asset!\n");
+    }
+    else
+    {
+        /* Do something with asset */
+    }
+
+#endif
+
 
     switch (Win32_LoadXInput()) 
     {

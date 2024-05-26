@@ -25,8 +25,8 @@ typedef U8              Byte;
 typedef U64             Size;
 typedef void            Void;
 
-typedef S8              Char8;
-typedef const S8 *      CStr8;   // NOTE(ilya.a): Explicitly distiguasing C style 
+typedef char            Char8;
+typedef const char *    CStr8;   // NOTE(ilya.a): Explicitly distiguasing C style 
                                  // string (null terminated).  [2024/05/26]
 
 #ifndef Bool
@@ -41,6 +41,9 @@ typedef const S8 *      CStr8;   // NOTE(ilya.a): Explicitly distiguasing C styl
 #define false           0
 #endif  // false
 
+#ifndef NULL
+#define NULL ((void *)0)
+#endif  // NULL
 
 #define BYTE_BITS       8
 

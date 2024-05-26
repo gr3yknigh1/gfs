@@ -20,21 +20,33 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_memory.h
     ${PROJECT_SOURCE_DIR}/gfs_memory.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_linalg.h
-    ${PROJECT_SOURCE_DIR}/gfs_macros.h
-
     ${PROJECT_SOURCE_DIR}/gfs_string.h
     ${PROJECT_SOURCE_DIR}/gfs_string.c
-    
+
+    ${PROJECT_SOURCE_DIR}/gfs_fs.h
+    ${PROJECT_SOURCE_DIR}/gfs_fs.c
+
+    ${PROJECT_SOURCE_DIR}/gfs_wave.h
+    ${PROJECT_SOURCE_DIR}/gfs_wave.c
+
     ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.h
     ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
 
     ${PROJECT_SOURCE_DIR}/gfs_win32_misc.h
     ${PROJECT_SOURCE_DIR}/gfs_win32_misc.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_types.h
     ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
+
+    ${PROJECT_SOURCE_DIR}/gfs_types.h
+    ${PROJECT_SOURCE_DIR}/gfs_linalg.h
+    ${PROJECT_SOURCE_DIR}/gfs_macros.h
 )
+
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE shlwapi.lib
+)
+
 
 # TODO(ilya.a): Add unicode support. [2024/05/24]
 # target_compile_definitions(

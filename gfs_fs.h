@@ -7,8 +7,9 @@
 #ifndef GFS_FS_H_INCLUDED
 #define GFS_FS_H_INCLUDED
 
+#include "gfs_types.h"
+#include "gfs_string.h"
 
-
-
+Bool IsPathExists(CStr8 path);
 
 #endif // GFS_FS_H_INCLUDED

@@ -13,21 +13,21 @@
  * Arena Allocator (aka bump allocator).
  */
 typedef struct {
-    void *Begin;
-    void *End;
-    void *AllocPos;
+    Void *Begin;
+    Void *End;
+    Void *AllocPos;
 } Arena;
 
 Arena ArenaMake(Size size);
 Arena ArenaMakeA(Arena *arena, Size size);
-Arena ArenaMakeEx(void *begin, Size size);
+Arena ArenaMakeEx(Void *begin, Size size);
 
-void *ArenaAlloc(Arena *arena, Size size);
+Void *ArenaAlloc(Arena *arena, Size size);
 
 void ArenaFree(Arena *arena);
 
-void MemoryCopy(void *destination, const void *source, Size size);
-void MemorySet(void *data, Byte value, Size size);
-void MemoryZero(void *data, Size size);
+void MemoryCopy(Void *dest, const Void *source, Size size);
+void MemorySet(Void *data, Byte value, Size size);
+void MemoryZero(Void *data, Size size);
 
 #endif  // GFS_MEMORY_H_INCLUDED

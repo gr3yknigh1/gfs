@@ -6,3 +6,10 @@
 
 #include "gfs_fs.h"
 
+#include <shlwapi.h>
+
+Bool 
+IsPathExists(CStr8 path)
+{
+    return PathFileExistsA((LPCSTR)path);
+}
