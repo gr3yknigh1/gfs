@@ -15,7 +15,7 @@
 WaveAssetLoadResult
 WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
 {
-    if (arena == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8_IsEmpty(assetPath))
+    if (arena == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath))
     {
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
@@ -44,11 +44,19 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
+    // if (!CStr8IsEqual(header.FileTypeBlocID, WAVEFILE_FILETYPE) || 
+    //     !CStr8IsEqual(header.FileFormatID,   WAVEFILE_FORMATID) ||
+    //     !CStr8IsEqual(header.FormatBlocID,   WAVEFILE_FORMATBLOCID) ||
+    //     !CStr8IsEqual(header.DataBlocID,     WAVEFILE_DATABLOCID))
+    // {
+    //     return WAVEASSET_LOAD_ERR_INVALID_MAGIC;
+    // }
+
     Void *data = ArenaAlloc(arena, header.DataSize);
 
     if (data == NULL)
     {
-        return WAVEASSET_ERR_LOAD_FAILED_TO_ALLOC;
+        return WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC;
     }
 
     loadFromAssetFile = IOLoadBytesFromFileEx(&assetFileHandle, data, header.DataSize, sizeof(header));
@@ -58,8 +66,8 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
-    waveAssetOut->header = header;
-    waveAssetOut->data = data;
+    waveAssetOut->Header = header;
+    waveAssetOut->Data = data;
 
     return WAVEASSET_LOAD_OK;
 }

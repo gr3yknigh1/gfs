@@ -10,6 +10,12 @@
 #include "gfs_types.h"
 #include "gfs_memory.h"
 
+
+#define WAVEFILE_FILETYPE     "RIFF"
+#define WAVEFILE_FORMATID     "WAVE"
+#define WAVEFILE_FORMATBLOCID "fmt "
+#define WAVEFILE_DATABLOCID   "data"
+
 typedef enum
 {
     WAVEFILE_AUDIOFORMAT_PCM      = 1,
@@ -53,8 +59,8 @@ typedef struct
 
 typedef struct
 {
-    WaveFileHeader header;
-    Void *data;
+    WaveFileHeader Header;
+    Void *Data;
 } WaveAsset;
 
 typedef enum
@@ -65,7 +71,8 @@ typedef enum
     WAVEASSET_LOAD_ERR_FILE_NOT_FOUND,  // Path which you typed is not existing. 
     WAVEASSET_LOAD_ERR_FAILED_TO_OPEN,  // IO error. Failed to open the asset file.
     WAVEASSET_LOAD_ERR_FAILED_TO_READ,  // IO error. Opened the file, but failed to read it.
-    WAVEASSET_ERR_LOAD_FAILED_TO_ALLOC, // Out of memory with Arena.
+    WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC, // Out of memory with Arena.
+    WAVEASSET_LOAD_ERR_INVALID_MAGIC,   // Asset failed signature checks.
 }  WaveAssetLoadResult;
 
 WaveAssetLoadResult WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut);

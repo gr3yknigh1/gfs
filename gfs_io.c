@@ -16,7 +16,7 @@
 IOResult
 IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms)
 {
-    if (filePath == NULL || handleOut == NULL || CStr8_IsEmpty(filePath))
+    if (filePath == NULL || handleOut == NULL || CStr8IsEmpty(filePath))
     {
         return IO_ERR_INVALID_ARGS;
     }

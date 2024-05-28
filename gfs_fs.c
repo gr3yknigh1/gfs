@@ -8,8 +8,10 @@
 
 #include <shlwapi.h>
 
+#include "gfs_types.h"
+
 Bool 
 FSIsPathExists(CStr8 path)
 {
-    return PathFileExistsA((LPCSTR)path);
+    return PathFileExistsA(path);
 }

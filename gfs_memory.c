@@ -14,8 +14,8 @@
 Arena
 ArenaMake(Size size)
 {
-    Void * data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    //                               ^^^^
+    Void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
     // will round up this number to next page. [2024/05/26]
     // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024] 

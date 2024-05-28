@@ -130,7 +130,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_ERR;
     }
 
-    if (!SUCCEEDED(directSound->lpVtbl->SetCooperativeLevel(directSound, window, DSSCL_PRIORITY)))
+    if (!SUCCEEDED(VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -140,13 +140,14 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     DSBUFFERDESC primaryBufferDesc;
     MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                 // to zero buffer description. [2024/05/25]
+    
     primaryBufferDesc.dwSize        = sizeof(primaryBufferDesc);
     primaryBufferDesc.dwFlags       = DSBCAPS_PRIMARYBUFFER;
     primaryBufferDesc.dwBufferBytes = 0;     // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
     primaryBufferDesc.lpwfxFormat   = NULL;  // NOTE(ilya.a): Primary buffer wfx format should be NULL. [2024/05/25]
 
     LPDIRECTSOUNDBUFFER primaryBuffer;
-    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &primaryBufferDesc, &primaryBuffer, NULL)))
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primaryBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -160,7 +161,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;  // NOTE(ilya.a): Redundant. Lol.
     waveFormat.cbSize          = 0;
 
-    if (!SUCCEEDED(primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &waveFormat)))
+    if (!SUCCEEDED(VCALL(primaryBuffer, SetFormat, &waveFormat)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -174,7 +175,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat   = &waveFormat;
 
-    if (!SUCCEEDED(directSound->lpVtbl->CreateSoundBuffer(directSound, &secondaryBufferDesc, &Win32_AudioBuffer, NULL)))
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &Win32_AudioBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -256,7 +257,7 @@ WinMain(_In_ HINSTANCE instance,
 {
 
     // Wave file format reading testing.
-#if 1
+
     Arena assetArena = ArenaMake(MEGABYTES(16));
     WaveAsset waveAsset;
     WaveAssetLoadResult waLoadResult = 
@@ -270,10 +271,6 @@ WinMain(_In_ HINSTANCE instance,
     {
         /* Do something with asset */
     }
-
-    ArenaFree(&assetArena);
-#endif
-
 
     switch (Win32_LoadXInput()) 
     {
@@ -333,8 +330,8 @@ WinMain(_In_ HINSTANCE instance,
 
     S32 samplesPerSecond     = 48000;
     U32 runningSampleIndex   = 0;
-    S32 waveToneHZ           = 256 * 0.5;
-    S32 waveToneVolume       = 500;
+    U32 waveToneHZ           = waveAsset.Header.FreqHZ; // 256 * 2;
+    S32 waveToneVolume       = 1000;
     S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
     S32 squareWaveHalfPeriod = squareWavePeriod / 2;
     Size bytesPerSample      = sizeof(S16) * 2;
@@ -456,6 +453,7 @@ WinMain(_In_ HINSTANCE instance,
         BMR_DrawLine(&renderer, 100, 200, 500, 600);
 
         // NOTE(ilya.a): Testing DirectSound
+        // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
         DWORD playCursor;
         DWORD writeCursor;
@@ -486,28 +484,26 @@ WinMain(_In_ HINSTANCE instance,
                 0
             );
 
-
             DWORD region1SampleCount = region1Size / bytesPerSample;
             S16 *sampleOut = (S16 *)region1;
             for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
             {
-                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
-                *sampleOut++ = sampleValue;
-                *sampleOut++ = sampleValue;
+                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
+                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
                 ++runningSampleIndex;
             }
+
 
             DWORD region2SampleCount = region2Size / bytesPerSample;
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
             {
-                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
-                *sampleOut++ = sampleValue;
-                *sampleOut++ = sampleValue;
+                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
+                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
                 ++runningSampleIndex;
             }
 
-            // TODO(ilya.a): Check for succeed. [2024/05/25]
+            // TODO(ilya.a1): Check for succeed. [2024/05/25]
             VCALL(
                 Win32_AudioBuffer, Unlock,
                 region1, region1Size,
@@ -523,6 +519,7 @@ WinMain(_In_ HINSTANCE instance,
         yOffset++;
     }
 
+    ArenaFree(&assetArena);
     BMR_DeInit(&renderer);
 
     return 0;

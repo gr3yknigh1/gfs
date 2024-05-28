@@ -14,12 +14,8 @@ typedef struct {
     Size   Size;
 } Str8;
 
-Size CStr8_GetLength(CStr8 s);
-
-inline Bool
-CStr8_IsEmpty(CStr8 s)
-{
-    return *s == '\0';
-}
+Size CStr8GetLength(CStr8 s);
+Bool CStr8IsEmpty(CStr8 s);
+Bool CStr8IsEqual(CStr8 s0, CStr8 s1);
 
 #endif  // GFS_STRING_H_INCLUDED
