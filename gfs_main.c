@@ -330,7 +330,7 @@ WinMain(_In_ HINSTANCE instance,
 
     S32 samplesPerSecond     = 48000;
     U32 runningSampleIndex   = 0;
-    U32 waveToneHZ           = waveAsset.Header.FreqHZ; // 256 * 2;
+    U32 waveToneHZ           = 256 * 2;
     S32 waveToneVolume       = 1000;
     S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
     S32 squareWaveHalfPeriod = squareWavePeriod / 2;
@@ -488,8 +488,9 @@ WinMain(_In_ HINSTANCE instance,
             S16 *sampleOut = (S16 *)region1;
             for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
             {
-                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
-                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
+                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
+                *sampleOut++ = sampleValue;
+                *sampleOut++ = sampleValue;
                 ++runningSampleIndex;
             }
 
@@ -498,8 +499,9 @@ WinMain(_In_ HINSTANCE instance,
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
             {
-                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
-                *sampleOut++ = ((S16 *)waveAsset.Data)[runningSampleIndex];
+                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
+                *sampleOut++ = sampleValue;
+                *sampleOut++ = sampleValue;
                 ++runningSampleIndex;
             }
 
