@@ -89,7 +89,7 @@ MemorySet(void *data, Byte value, Size size)
 }
 
 void 
-MemorySetZ(void *data, Size size)
+MemoryZero(void *data, Size size)
 {
     for (Size i = 0; i < size; ++i) 
     {
@@ -176,7 +176,7 @@ Void *
 BlockAllocatorAllocZ(BlockAllocator *allocator, Size size)
 {
     Void *data = BlockAllocatorAlloc(allocator, size);
-    MemorySetZ(data, size);
+    MemoryZero(data, size);
     return data;
 }
 
@@ -198,4 +198,6 @@ BlockAllocatorFree(BlockAllocator *allocator)
 
         VirtualFree(previousBlock, 0, MEM_RELEASE);
     }
+
+    allocator->Head = NULL;
 }

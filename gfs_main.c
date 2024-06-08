@@ -17,6 +17,8 @@
 #include <xinput.h>
 #include <dsound.h>
 
+#include <math.h>  // TODO(ilya.a): Replace with custom code [2024/06/08]
+
 #include "gfs_types.h"
 #include "gfs_macros.h"
 #include "gfs_string.h"
@@ -30,8 +32,8 @@
 #include "gfs_win32_keys.h"
 #include "gfs_win32_misc.h"
 
-
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
+#define PI32 3.1415f
 
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE* pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration);
@@ -140,7 +142,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to sound card. Windows has strange API.
     // [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
-    MemorySetZ(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                 // to zero buffer description. [2024/05/25]
     
     primaryBufferDesc.dwSize        = sizeof(primaryBufferDesc);
@@ -170,7 +172,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
 
     // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
     DSBUFFERDESC secondaryBufferDesc;
-    MemorySetZ(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                     // to zero buffer description. [2024/05/25]
     secondaryBufferDesc.dwSize        = sizeof(secondaryBufferDesc);
     secondaryBufferDesc.dwFlags       = 0;
@@ -313,14 +315,14 @@ WinMain(_In_ HINSTANCE instance,
     renderer = BMR_Init(COLOR_WHITE, window);
     BMR_Resize(&renderer, 900, 600);
 
-    S32 samplesPerSecond     = 48000;
-    U32 runningSampleIndex   = 0;
-    U32 waveToneHZ           = 256 * 2;
-    S32 waveToneVolume       = 1000;
-    S32 squareWavePeriod     = samplesPerSecond / waveToneHZ;
-    S32 squareWaveHalfPeriod = squareWavePeriod / 2;
-    Size bytesPerSample      = sizeof(S16) * 2;
-    Size audioBufferSize     = samplesPerSecond * bytesPerSample;
+    S32 samplesPerSecond   = 48000;
+    U32 runningSampleIndex = 0;
+    U32 waveToneHZ         = 256 * 2;
+    S32 waveToneVolume     = 1000;
+    S32 wavePeriod         = samplesPerSecond / waveToneHZ;
+    S32 waveHalfPeriod     = wavePeriod / 2;
+    Size bytesPerSample    = sizeof(S16) * 2;
+    Size audioBufferSize   = samplesPerSecond * bytesPerSample;
 
     enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, samplesPerSecond, audioBufferSize);
     if (initDSoundResult != WIN32_INITDSOUND_OK)
@@ -438,7 +440,6 @@ WinMain(_In_ HINSTANCE instance,
         // NOTE(ilya.a): Testing DirectSound
         // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
-
         /*
          * NOTE(ilya.a): This is my brief explanation of what I took from Handmade 
          * video about Direct Sound. [2024/05/29]
@@ -530,7 +531,9 @@ WinMain(_In_ HINSTANCE instance,
             S16 *sampleOut = (S16 *)region1;
             for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
             {
-                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
+                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)waveHalfPeriod;
+                F32 sineValue = sinf(sinePosition);
+                S16 sampleValue = (S16)(sineValue * waveToneVolume); // ((runningSampleIndex / waveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
                 *sampleOut++ = sampleValue;
                 *sampleOut++ = sampleValue;
                 ++runningSampleIndex;
@@ -540,13 +543,15 @@ WinMain(_In_ HINSTANCE instance,
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
             {
-                S16 sampleValue = ((runningSampleIndex / squareWaveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
+                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)waveHalfPeriod;
+                F32 sineValue = sinf(sinePosition);
+                S16 sampleValue = (S16)(sineValue * waveToneVolume); // ((runningSampleIndex / waveHalfPeriod) % 2) ? waveToneVolume : -waveToneVolume;
                 *sampleOut++ = sampleValue;
                 *sampleOut++ = sampleValue;
                 ++runningSampleIndex;
             }
 
-            // TODO(ilya.a1): Check for succeed. [2024/05/25]
+            // TODO(ilya.a): Check for succeed. [2024/05/25]
             VCALL(
                 Win32_AudioBuffer, Unlock,
                 region1, region1Size,

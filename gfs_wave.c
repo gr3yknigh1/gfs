@@ -44,6 +44,7 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
+    // TODO(ilya.a): Implement magic check [2024/06/08]
     // if (!CStr8IsEqual(header.FileTypeBlocID, WAVEFILE_FILETYPE) || 
     //     !CStr8IsEqual(header.FileFormatID,   WAVEFILE_FORMATID) ||
     //     !CStr8IsEqual(header.FormatBlocID,   WAVEFILE_FORMATBLOCID) ||

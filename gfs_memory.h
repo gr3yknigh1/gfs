@@ -36,7 +36,7 @@ void ArenaFree(Arena *arena);
 
 void MemoryCopy(Void *dest, const Void *source, Size size);
 void MemorySet(Void *data, Byte value, Size size);
-void MemorySetZ(Void *data, Size size);
+void MemoryZero(Void *data, Size size);
 
 typedef struct Block
 {
