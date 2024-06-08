@@ -47,6 +47,7 @@ global_var LPDIRECTSOUNDBUFFER Win32_AudioBuffer;
 
 global_var BMR_Renderer renderer;
 global_var Bool shouldStop = false;
+global_var Bool isSoundPlaying = false;
 
 global_var struct
 {
@@ -117,7 +118,8 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
-    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    Win32_DirectSoundCreatePtr = 
+        (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
     if (Win32_DirectSoundCreatePtr == NULL)
     {
@@ -138,7 +140,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to sound card. Windows has strange API.
     // [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
-    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemorySetZ(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                 // to zero buffer description. [2024/05/25]
     
     primaryBufferDesc.dwSize        = sizeof(primaryBufferDesc);
@@ -168,7 +170,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
 
     // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
     DSBUFFERDESC secondaryBufferDesc;
-    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemorySetZ(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                     // to zero buffer description. [2024/05/25]
     secondaryBufferDesc.dwSize        = sizeof(secondaryBufferDesc);
     secondaryBufferDesc.dwFlags       = 0;
@@ -255,23 +257,6 @@ WinMain(_In_ HINSTANCE instance,
         _In_ LPSTR commandLine,
         _In_ int showMode)
 {
-
-    // Wave file format reading testing.
-
-    Arena assetArena = ArenaMake(MEGABYTES(16));
-    WaveAsset waveAsset;
-    WaveAssetLoadResult waLoadResult = 
-        WaveAssetLoadFromFile(&assetArena, "..\\..\\Assets\\test_music_01.wav", &waveAsset);
-
-    if (waLoadResult != WAVEASSET_LOAD_OK)
-    {
-        OutputDebugString("E: Failed to load wave file asset!\n");
-    }
-    else
-    {
-        /* Do something with asset */
-    }
-
     switch (Win32_LoadXInput()) 
     {
         case(WIN32_LOADXINPUT_OK): 
@@ -342,8 +327,6 @@ WinMain(_In_ HINSTANCE instance,
     {
         OutputDebugString("W: Failed to init DSound!\n");
     }
-
-    VCALL(Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
     U32 xOffset = 0;
     U32 yOffset = 0;
@@ -455,13 +438,72 @@ WinMain(_In_ HINSTANCE instance,
         // NOTE(ilya.a): Testing DirectSound
         // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
+
+        /*
+         * NOTE(ilya.a): This is my brief explanation of what I took from Handmade 
+         * video about Direct Sound. [2024/05/29]
+         * 
+         * Positive (+)
+         *
+         * |> Period begins (defined in Hz)
+         * |> Sample begins
+         * |
+         * |   |> Sample ends 
+         * |   |     
+         * |   |           |> Period ends
+         * |   |           |
+         * V   V           V       
+         * .___.___.       .___.___.       .___.___.
+         *         |       |       |       |       |
+         *         |       |       |       |       |
+         * ------------------------------------------------>
+         *         |       |       |       |       |
+         *         |___.___|       |___.___|       |___.___
+         *         
+         * Negative (-)
+         *
+         *
+         * Audio ring buffer:
+         *
+         * How we calculate how much bytes we can write to buffer.
+         *
+         *               byte to lock = (running sample index * bytes per sample) % audio buffer size
+         *
+         * (1)
+         *
+         *         Don't touch. It's playing
+         *         VVVVVVVVVVVVVVVV
+         * [+++++++--------++++++++--------]
+         *  ^      ^
+         *  |      |> play cursor
+         *  |> write cursor
+         *
+         *               byte to write = play cursor - byte to lock 
+         *  
+         * (2)
+         *
+         *  Don't touch. It's playing
+         *  VVVVVVVVVVVVVVV  
+         * [+++++++--------++++++++--------]
+         *  ^              ^
+         *  |              |> write cursor
+         *  |> play cursor
+         *
+         *               byte to write = %TODO% 
+         *           
+         */
+
         DWORD playCursor;
         DWORD writeCursor;
         if (SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
             DWORD byteToLock = runningSampleIndex * bytesPerSample % audioBufferSize;
             DWORD bytesToWrite;
-            if (byteToLock > playCursor)
+            if (byteToLock == playCursor)
+            {
+                bytesToWrite = audioBufferSize;
+            }
+            else if (byteToLock > playCursor)
             {
                 bytesToWrite = audioBufferSize - byteToLock;
                 bytesToWrite += playCursor;              
@@ -494,7 +536,6 @@ WinMain(_In_ HINSTANCE instance,
                 ++runningSampleIndex;
             }
 
-
             DWORD region2SampleCount = region2Size / bytesPerSample;
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
@@ -513,6 +554,11 @@ WinMain(_In_ HINSTANCE instance,
             );
         }
       
+        if (!isSoundPlaying)
+        {
+            VCALL(Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+            isSoundPlaying = true;
+        }
 #endif
 
         BMR_EndDrawing(&renderer);
@@ -521,7 +567,6 @@ WinMain(_In_ HINSTANCE instance,
         yOffset++;
     }
 
-    ArenaFree(&assetArena);
     BMR_DeInit(&renderer);
 
     return 0;

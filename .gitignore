@@ -1,17 +1,27 @@
-# Editors
-*.sublime-*
+# Editors & tools
+
+## Vim
 *.swp
+
+## Sublime text
+*.sublime-*
 
 !gfs.sublime-project
 
+## RemedyBG
 *.rdbg
 
-# VS 2022 related things
+## Clangd
+.cache/
+
+## VS 2022 related things
 .vs/
+out/
+
+## VS Code
+.vscode/
 
 # Build artefacts
-out/
 *.obj
 *.exe
-Build/
-build/
+[Bb]uild/

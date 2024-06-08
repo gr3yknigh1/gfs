@@ -7,7 +7,6 @@
 #include "gfs_io.h"
 
 #include <Windows.h>
-#include <winnt.h>
 
 #include "gfs_macros.h"
 #include "gfs_string.h"

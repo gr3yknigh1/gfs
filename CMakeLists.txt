@@ -29,6 +29,9 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_io.h
     ${PROJECT_SOURCE_DIR}/gfs_io.c
 
+    ${PROJECT_SOURCE_DIR}/gfs_sys.h
+    ${PROJECT_SOURCE_DIR}/gfs_sys.c
+
     ${PROJECT_SOURCE_DIR}/gfs_wave.h
     ${PROJECT_SOURCE_DIR}/gfs_wave.c
 
@@ -43,6 +46,11 @@ add_executable(
     ${PROJECT_SOURCE_DIR}/gfs_types.h
     ${PROJECT_SOURCE_DIR}/gfs_linalg.h
     ${PROJECT_SOURCE_DIR}/gfs_macros.h
+)
+
+target_link_options(
+    ${PROJECT_NAME}
+    PUBLIC /DEBUG:FULL
 )
 
 target_link_libraries(
