@@ -440,59 +440,8 @@ WinMain(_In_ HINSTANCE instance,
         // NOTE(ilya.a): Testing DirectSound
         // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
-        /*
-         * NOTE(ilya.a): This is my brief explanation of what I took from Handmade 
-         * video about Direct Sound. [2024/05/29]
-         * 
-         * Positive (+)
-         *
-         * |> Period begins (defined in Hz)
-         * |> Sample begins
-         * |
-         * |   |> Sample ends 
-         * |   |     
-         * |   |           |> Period ends
-         * |   |           |
-         * V   V           V       
-         * .___.___.       .___.___.       .___.___.
-         *         |       |       |       |       |
-         *         |       |       |       |       |
-         * ------------------------------------------------>
-         *         |       |       |       |       |
-         *         |___.___|       |___.___|       |___.___
-         *         
-         * Negative (-)
-         *
-         *
-         * Audio ring buffer:
-         *
-         * How we calculate how much bytes we can write to buffer.
-         *
-         *               byte to lock = (running sample index * bytes per sample) % audio buffer size
-         *
-         * (1)
-         *
-         *         Don't touch. It's playing
-         *         VVVVVVVVVVVVVVVV
-         * [+++++++--------++++++++--------]
-         *  ^      ^
-         *  |      |> play cursor
-         *  |> write cursor
-         *
-         *               byte to write = play cursor - byte to lock 
-         *  
-         * (2)
-         *
-         *  Don't touch. It's playing
-         *  VVVVVVVVVVVVVVV  
-         * [+++++++--------++++++++--------]
-         *  ^              ^
-         *  |              |> write cursor
-         *  |> play cursor
-         *
-         *               byte to write = %TODO% 
-         *           
-         */
+        // NOTE(ilya.a): My brief explanation of what I took from Handmade 
+        // video about Direct Sound inside `Docs/HandmadeHero_Audio.md`. [2024/05/29]
 
         DWORD playCursor;
         DWORD writeCursor;
