@@ -37,3 +37,6 @@ if exist %configuration_path%\ (
 cmake --build %configuration_path%
 
 popd
+
+set /p DUMMY=Hit ENTER to continue...
+
