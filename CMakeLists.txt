@@ -43,6 +43,7 @@ add_executable(
 
     ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
 
+    ${PROJECT_SOURCE_DIR}/gfs_assert.h
     ${PROJECT_SOURCE_DIR}/gfs_types.h
     ${PROJECT_SOURCE_DIR}/gfs_linalg.h
     ${PROJECT_SOURCE_DIR}/gfs_macros.h
