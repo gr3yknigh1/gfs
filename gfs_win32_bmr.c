@@ -62,20 +62,20 @@ BMR_Init(Color4 clearColor, HWND window)
     return r;
 }
 
-void 
+void
 BMR_DeInit(BMR_Renderer *renderer)
-{ 
-    if (renderer->CommandQueue.Begin != NULL && VirtualFree(renderer->CommandQueue.Begin, 0, MEM_RELEASE) == 0) 
+{
+    if (renderer->CommandQueue.Begin != NULL && VirtualFree(renderer->CommandQueue.Begin, 0, MEM_RELEASE) == 0)
     {
         // TODO(ilya.a): Handle memory free error.
-    } 
-    else 
+    }
+    else
     {
         renderer->CommandQueue.Begin = NULL;
         renderer->CommandQueue.End   = NULL;
     }
 
-    if (renderer->Pixels.Buffer != NULL && VirtualFree(renderer->Pixels.Buffer, 0, MEM_RELEASE) == 0) 
+    if (renderer->Pixels.Buffer != NULL && VirtualFree(renderer->Pixels.Buffer, 0, MEM_RELEASE) == 0)
     {
         // TODO(ilya.a): Handle memory free error.
     }
@@ -90,6 +90,7 @@ BMR_DeInit(BMR_Renderer *renderer)
 void
 BMR_BeginDrawing(BMR_Renderer *renderer)
 {
+    UNUSED(renderer);
 }
 
 void
@@ -114,7 +115,7 @@ BMR_EndDrawing(BMR_Renderer *renderer)
 
                 switch (type)
                 {
-                    case (BMR_RENDER_COMMAND_TYPE_CLEAR): 
+                    case (BMR_RENDER_COMMAND_TYPE_CLEAR):
                     {
                         Color4 color = *(Color4*)(renderer->CommandQueue.Begin + offset);
                         offset += sizeof(Color4);
@@ -169,13 +170,13 @@ BMR_EndDrawing(BMR_Renderer *renderer)
     Win32_GetRectSize(&windowRect, &width, &height);
 
     Win32_UpdateWindow(renderer, x, y, width, height);
-    
+
     renderer->CommandQueue.End = renderer->CommandQueue.Begin;
     renderer->CommandCount = 0;
 }
 
 
-void 
+void
 BMR_Update(BMR_Renderer *r, HWND window)
 {
     PAINTSTRUCT ps = {0};
@@ -198,19 +199,19 @@ BMR_Update(BMR_Renderer *r, HWND window)
 }
 
 
-void 
+void
 BMR_Resize(BMR_Renderer *r, S32 w, S32 h)
 {
     if (r->Pixels.Buffer != NULL && VirtualFree(r->Pixels.Buffer, 0, MEM_RELEASE) == 0)
     {
         //                                                           ^^^^^^^^^^^
-        // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead for 
+        // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead for
         // MEM_RELEASE. Because in that case it's will be keep buffer around, until
         // we use it again.
         // P.S. Also will be good to try protect buffer after deallocating or other
         // stuff.
         //
-        // TODO(ilya.a): 
+        // TODO(ilya.a):
         //     - [ ] Checkout how it works.
         //     - [ ] Handle allocation error.
         OutputDebugString("Failed to free backbuffer memory!\n");
@@ -250,11 +251,11 @@ BMR_Resize(BMR_Renderer *r, S32 w, S32 h)
     } while (0)
 
 
-void 
+void
 BMR_Clear(BMR_Renderer *renderer)
 {
-    struct 
-    { 
+    struct
+    {
         BMR_RenderCommandType Type;
         Color4 Color;
     } payload;
@@ -265,7 +266,7 @@ BMR_Clear(BMR_Renderer *renderer)
     PUSH_RENDER_COMMAND(renderer, payload);
 }
 
-void 
+void
 BMR_DrawLine(BMR_Renderer *renderer, U32 x1, U32 y1, U32 x2, U32 y2)
 {
     struct
@@ -303,8 +304,8 @@ BMR_DrawLineV(BMR_Renderer *renderer, Vec2U32 point1, Vec2U32 point2)
     PUSH_RENDER_COMMAND(renderer, payload);
 }
 
-void 
-BMR_DrawRect(BMR_Renderer *renderer, U32 x, U32 y, U32 width, U32 height, Color4 color) 
+void
+BMR_DrawRect(BMR_Renderer *renderer, U32 x, U32 y, U32 width, U32 height, Color4 color)
 {
     struct
     {
@@ -326,8 +327,8 @@ BMR_DrawRect(BMR_Renderer *renderer, U32 x, U32 y, U32 width, U32 height, Color4
     PUSH_RENDER_COMMAND(renderer, payload);
 }
 
-void 
-BMR_DrawRectR(BMR_Renderer *renderer, Rect rect, Color4 color) 
+void
+BMR_DrawRectR(BMR_Renderer *renderer, Rect rect, Color4 color)
 {
     struct
     {
@@ -335,24 +336,24 @@ BMR_DrawRectR(BMR_Renderer *renderer, Rect rect, Color4 color)
         Rect Rect;
         Color4 Color;
     } payload;
-    
+
     payload.Type  = BMR_RENDER_COMMAND_TYPE_RECT;
     payload.Rect  = rect;
     payload.Color = color;
-    
+
     PUSH_RENDER_COMMAND(renderer, payload);
 }
 
-void 
-BMR_DrawGrad(BMR_Renderer *renderer, U32 xOffset, U32 yOffset) 
+void
+BMR_DrawGrad(BMR_Renderer *renderer, U32 xOffset, U32 yOffset)
 {
-    struct 
+    struct
     {
         BMR_RenderCommandType Type;
         U32 XOffset;
         U32 YOffset;
     } payload;
-    
+
     payload.Type    = BMR_RENDER_COMMAND_TYPE_GRADIENT;
     payload.XOffset = xOffset;
     payload.YOffset = yOffset;

@@ -11,6 +11,8 @@
 #define global_var static
 #define persist_var static
 
+#define UNUSED(X) ((void)(X))
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif  // NULL

@@ -1,69 +1,78 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
-project(gfs 
-    VERSION 0.0.1
-    LANGUAGES C
+
+project(gfs
+  VERSION 0.0.1
+  LANGUAGES C
 )
 
-add_executable(
-    ${PROJECT_NAME}
-    WIN32
-    ${PROJECT_SOURCE_DIR}/gfs_main.c
-    ${PROJECT_SOURCE_DIR}/gfs_string.c
-    ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
+add_executable( ${PROJECT_NAME}
+  WIN32
+  ${PROJECT_SOURCE_DIR}/gfs_main.c
+  ${PROJECT_SOURCE_DIR}/gfs_string.c
+  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_color.h
-    ${PROJECT_SOURCE_DIR}/gfs_color.c
+  ${PROJECT_SOURCE_DIR}/gfs_color.h
+  ${PROJECT_SOURCE_DIR}/gfs_color.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_geometry.h
-    ${PROJECT_SOURCE_DIR}/gfs_geometry.c
-    
-    ${PROJECT_SOURCE_DIR}/gfs_memory.h
-    ${PROJECT_SOURCE_DIR}/gfs_memory.c
+  ${PROJECT_SOURCE_DIR}/gfs_geometry.h
+  ${PROJECT_SOURCE_DIR}/gfs_geometry.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_string.h
-    ${PROJECT_SOURCE_DIR}/gfs_string.c
+  ${PROJECT_SOURCE_DIR}/gfs_memory.h
+  ${PROJECT_SOURCE_DIR}/gfs_memory.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_fs.h
-    ${PROJECT_SOURCE_DIR}/gfs_fs.c
+  ${PROJECT_SOURCE_DIR}/gfs_string.h
+  ${PROJECT_SOURCE_DIR}/gfs_string.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_io.h
-    ${PROJECT_SOURCE_DIR}/gfs_io.c
+  ${PROJECT_SOURCE_DIR}/gfs_fs.h
+  ${PROJECT_SOURCE_DIR}/gfs_fs.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_sys.h
-    ${PROJECT_SOURCE_DIR}/gfs_sys.c
+  ${PROJECT_SOURCE_DIR}/gfs_io.h
+  ${PROJECT_SOURCE_DIR}/gfs_io.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_wave.h
-    ${PROJECT_SOURCE_DIR}/gfs_wave.c
+  ${PROJECT_SOURCE_DIR}/gfs_sys.h
+  ${PROJECT_SOURCE_DIR}/gfs_sys.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.h
-    ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
+  ${PROJECT_SOURCE_DIR}/gfs_wave.h
+  ${PROJECT_SOURCE_DIR}/gfs_wave.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_win32_misc.h
-    ${PROJECT_SOURCE_DIR}/gfs_win32_misc.c
+  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.h
+  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
+  ${PROJECT_SOURCE_DIR}/gfs_win32_misc.h
+  ${PROJECT_SOURCE_DIR}/gfs_win32_misc.c
 
-    ${PROJECT_SOURCE_DIR}/gfs_assert.h
-    ${PROJECT_SOURCE_DIR}/gfs_types.h
-    ${PROJECT_SOURCE_DIR}/gfs_linalg.h
-    ${PROJECT_SOURCE_DIR}/gfs_macros.h
+  ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
+
+  ${PROJECT_SOURCE_DIR}/gfs_assert.h
+  ${PROJECT_SOURCE_DIR}/gfs_types.h
+  ${PROJECT_SOURCE_DIR}/gfs_linalg.h
+  ${PROJECT_SOURCE_DIR}/gfs_macros.h
 )
 
 target_link_options(
-    ${PROJECT_NAME}
-    PUBLIC /DEBUG:FULL
+  ${PROJECT_NAME}
+  PUBLIC
+    /DEBUG:FULL
+)
+
+
+target_compile_options(
+  ${PROJECT_NAME}
+  PRIVATE
+    /MP  # Build with multiple processes
+    /W4  # Warning level
 )
 
 target_link_libraries(
-    ${PROJECT_NAME}
-    PRIVATE shlwapi.lib
+  ${PROJECT_NAME}
+  PRIVATE shlwapi.lib
 )
 
 
 # TODO(ilya.a): Add unicode support. [2024/05/24]
 # target_compile_definitions(
-#     ${PROJECT_NAME}
-#     PRIVATE UNICODE
+#   ${PROJECT_NAME}
+#   PRIVATE UNICODE
 # )
 
 # NOTE(ilya.a): Maybe replace dynamic loaded functions from <xinput.h>
@@ -72,6 +81,6 @@ target_link_libraries(
 # more easy approach. [2024/05/19]
 #
 # target_link_libraries(
-#     ${PROJECT_NAME}
-#     PRIVATE Xinput.lib
+#   ${PROJECT_NAME}
+#   PRIVATE Xinput.lib
 # )

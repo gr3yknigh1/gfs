@@ -82,9 +82,22 @@ MemoryCopy(void *destination, const void *source, Size size)
 void 
 MemorySet(void *data, Byte value, Size size)
 {
-    for (Size i = 0; i < size; ++i) 
+    if (size % 4 == 0)
     {
-        ((Byte *)data)[i] = value;
+        for (Size i = 0; i < size / 4; i += 4)
+        {
+            ((Byte *)data)[i] = value;
+            ((Byte *)data)[i + 1] = value;
+            ((Byte *)data)[i + 2] = value;
+            ((Byte *)data)[i + 3] = value;
+        }
+    }
+    else
+    {
+        for (Size i = 0; i < size; ++i) 
+        {
+            ((Byte *)data)[i] = value;
+        }
     }
 }
 

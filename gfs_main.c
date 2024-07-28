@@ -82,10 +82,17 @@ global_var struct
 
 #define WIN32_XINPUT_DLL XINPUT_DLL
 
-internal enum Win32_LoadXInputResult { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR }
+typedef enum
+{
+    WIN32_LOADXINPUT_OK, 
+    WIN32_LOADXINPUT_ERR 
+} Win32_LoadXInputResult;
+
+internal Win32_LoadXInputResult
 Win32_LoadXInput(void)
 {
-    // TODO(ilya.a): Handle different versions of xinput. Check for newer. If fails, use older one. [2024/05/24]
+    // TODO(ilya.a): Handle different versions of xinput. Check for newer. If 
+    // fails, use older one. [2024/05/24]
     HMODULE library = LoadLibrary(WIN32_XINPUT_DLL);
 
     if (library == NULL)
@@ -93,8 +100,13 @@ Win32_LoadXInput(void)
         return WIN32_LOADXINPUT_ERR;
     }
 
-    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, WIN32_XINPUTGETSTATE_PROCNAME);
-    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, WIN32_XINPUTSETSTATE_PROCNAME);
+    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
+        library, WIN32_XINPUTGETSTATE_PROCNAME
+    );
+
+    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
+        library, WIN32_XINPUTSETSTATE_PROCNAME
+    );
 
     if (Win32_XInputSetStatePtr == NULL || Win32_XInputGetStatePtr == NULL)
     {
@@ -108,13 +120,20 @@ Win32_LoadXInput(void)
 #define WIN32_DSOUND_DLL "dsound.dll"
 #define WIN32_DIRECTSOUNDCREATE_PROCNAME "DirectSoundCreate"
 
+typedef enum
+{
+    WIN32_INITDSOUND_OK,
+    WIN32_INITDSOUND_ERR,
+    WIN32_INITDSOUND_DLL_LOAD
+} Win32_InitDSoundResult;
+
 /*
  * Loads DirectrSound library and initializes it.
  * 
  * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
-internal enum Win32_InitDSound { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_LOAD }
+internal Win32_InitDSoundResult
 Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
 {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
@@ -124,8 +143,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
-    Win32_DirectSoundCreatePtr = 
-        (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
     if (Win32_DirectSoundCreatePtr == NULL)
     {
@@ -143,8 +161,8 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_ERR;
     }
 
-    // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to sound card. Windows has strange API.
-    // [2024/05/25]
+    // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to 
+    // sound card. Windows has strange API. [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
     MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
                                                                 // to zero buffer description. [2024/05/25]
@@ -328,7 +346,7 @@ WinMain(_In_ HINSTANCE instance,
     Size bytesPerSample    = sizeof(S16) * 2;
     Size audioBufferSize   = samplesPerSecond * bytesPerSample;
 
-    enum Win32_InitDSound initDSoundResult = Win32_InitDSound(window, samplesPerSecond, audioBufferSize);
+    Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(window, samplesPerSecond, audioBufferSize);
     if (initDSoundResult != WIN32_INITDSOUND_OK)
     {
         OutputDebugString("W: Failed to init DSound!\n");
@@ -383,7 +401,7 @@ WinMain(_In_ HINSTANCE instance,
                 player.Input.DownPressed = dPadDown;
 
                 XINPUT_VIBRATION vibrationState = {0};  
-                
+
                 if (player.Input.RightPressed || player.Input.LeftPressed || 
                     player.Input.UpPressed    || player.Input.DownPressed) 
                 {
@@ -444,18 +462,21 @@ WinMain(_In_ HINSTANCE instance,
         // NOTE(ilya.a): Testing DirectSound
         // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
-        // NOTE(ilya.a): My brief explanation of what I took from Handmade 
-        // video about Direct Sound inside `Docs/HandmadeHero_Audio.md`. [2024/05/29]
-
         DWORD playCursor;
         DWORD writeCursor;
         if (!isSoundPlaying && SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
-            DWORD byteToLock = runningSampleIndex * bytesPerSample % audioBufferSize;
+            DWORD byteToLock = (runningSampleIndex * bytesPerSample) % audioBufferSize;
             DWORD bytesToWrite;
+
+            // NOTE(ilya.a): We need more accurate check than byteToLock == playCursor [2024/07/28]
             if (byteToLock == playCursor)
             {
-                bytesToWrite = audioBufferSize;
+                // NOTE(ilya.a): We need it only once. [2024/06/09]
+                if (!isSoundPlaying)
+                {
+                    bytesToWrite = audioBufferSize;
+                }
             }
             else if (byteToLock > playCursor)
             {
@@ -470,7 +491,7 @@ WinMain(_In_ HINSTANCE instance,
             VOID *region1,    *region2;
             Size  region1Size, region2Size;
             
-            ASSERT_VCALL(
+            VCALL(
                 Win32_AudioBuffer, Lock, 
                 byteToLock,
                 bytesToWrite,
@@ -504,7 +525,7 @@ WinMain(_In_ HINSTANCE instance,
             }
 
             // TODO(ilya.a): Check for succeed. [2024/05/25]
-            VCALL(
+            ASSERT_VCALL(
                 Win32_AudioBuffer, Unlock,
                 region1, region1Size,
                 region2, region2Size

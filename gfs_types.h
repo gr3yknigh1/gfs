@@ -26,7 +26,7 @@ typedef U64             Size;
 typedef void            Void;
 
 typedef char            Char8;
-typedef const char *    CStr8;   // NOTE(ilya.a): Explicitly distiguasing C style 
+typedef const char *    CStr8;   // NOTE(ilya.a): Explicitly distiguasing C style
                                  // string (null terminated).  [2024/05/26]
 
 #ifndef Bool

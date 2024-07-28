@@ -11,16 +11,18 @@ set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC
 set vc2019_bootstrap="C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat"
 
 if exist %vc2022_bootstrap% (
-  echo I: Found VC 2022 boostrap script!
-		call %vc2022_bootstrap% amd64
+  echo I: Found VC 2022 bootstrap script!
+  call %vc2022_bootstrap% amd64
 ) else (
   if exist %vc2019_bootstrap% (
-    echo I: VC 2022 script not found. Only VC 2019 script was found.
-    call %vc2019_boostrap% amd64
+    echo I: No script for VC 2022, but found VC 2019 bootstrap script!
+    call %vc2019_bootstrap% amd64
   ) else (
-    echo W: Failed to find boostrap scripts of 2019 or 2022 VC :c
+    echo W: Failed to find nor VC 2019, nor VC 2022 bootstrap scripts!
   )
 )
+
+set vcpkg_toolchain=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake
 
 set project_path=%~dp0
 pushd %project_path%
@@ -31,7 +33,8 @@ if exist %configuration_path%\ (
   echo I: Debug configuration already exists!
 ) else (
   echo I: Debug configuration not found. Generating new one!
-  cmake -S %project_path% -B %configuration_path% -S %project_path% -D CMAKE_EXPORT_COMPILE_COMMANDS=1 -G "Ninja"
+  mkdir %configuration_path%
+  cmake -G "Ninja Multi-Config" -B %configuration_path% -S %project_path% -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 )
 
 cmake --build %configuration_path%
@@ -39,4 +42,3 @@ cmake --build %configuration_path%
 popd
 
 set /p DUMMY=Hit ENTER to continue...
-
