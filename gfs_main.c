@@ -459,8 +459,6 @@ WinMain(_In_ HINSTANCE instance,
         BMR_DrawRectR(&renderer, player.Rect, player.Color);
         BMR_DrawLine(&renderer, 100, 200, 500, 600);
 
-        // NOTE(ilya.a): Testing DirectSound
-        // NOTE(ilya.a): Help me, I can't understand what I am doing [2024/05/27]
 #if 1
         DWORD playCursor;
         DWORD writeCursor;
