@@ -4,7 +4,7 @@
  * FILE      gfs_assert.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
- * 
+ *
  * */
 
 #if !defined(GFS_ASSERT_H)
@@ -20,6 +20,6 @@
             DebugBreak();                                          \
             ExitProcess(1);                                        \
         }                                                          \
-    } while (0) 
+    } while (0)
 
 #endif  // GFS_ASSERT_H

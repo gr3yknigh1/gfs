@@ -10,7 +10,7 @@
 
 #include "gfs_types.h"
 
-Bool 
+Bool
 FSIsPathExists(CStr8 path)
 {
     return PathFileExistsA(path);

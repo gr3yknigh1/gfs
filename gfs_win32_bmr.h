@@ -1,6 +1,6 @@
 /*
  * GFS. Bitmap renderer.
- * 
+ *
  * Keeps one global backbuffer.
  *
  * FILE      gfs_win32_bmr.h
@@ -23,12 +23,12 @@
 
 /*
  * Actuall BitMap Renderer Renderer.
- */ 
-typedef struct 
+ */
+typedef struct
 {
     Color4 ClearColor;
 
-    struct 
+    struct
     {
         U8 *Begin;
         U8 *End;

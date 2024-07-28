@@ -19,14 +19,14 @@ RectIsInside(Rect r, U16 x, U16 y)
 Bool
 RectIsOverlapping(Rect r)
 {
-    return RectIsInside(r, r.X + 0      , r.Y + 0) 
+    return RectIsInside(r, r.X + 0      , r.Y + 0)
         || RectIsInside(r, r.X + r.Width, r.Y + r.Height)
         || RectIsInside(r, r.X + r.Width, r.Y + 0)
         || RectIsInside(r, r.X + 0      , r.Y + r.Height);
 }
 
-U64 
+U64
 GetOffset(U64 width, U64 y, U64 x)
-{ 
-    return width * y + x; 
+{
+    return width * y + x;
 }

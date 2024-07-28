@@ -38,14 +38,14 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
     IOResult loadFromAssetFile;
 
     loadFromAssetFile = IOLoadBytesFromFile(&assetFileHandle, &header, sizeof(header));
-    
+
     if (loadFromAssetFile != IO_OK)
     {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
     // TODO(ilya.a): Implement magic check [2024/06/08]
-    // if (!CStr8IsEqual(header.FileTypeBlocID, WAVEFILE_FILETYPE) || 
+    // if (!CStr8IsEqual(header.FileTypeBlocID, WAVEFILE_FILETYPE) ||
     //     !CStr8IsEqual(header.FileFormatID,   WAVEFILE_FORMATID) ||
     //     !CStr8IsEqual(header.FormatBlocID,   WAVEFILE_FORMATBLOCID) ||
     //     !CStr8IsEqual(header.DataBlocID,     WAVEFILE_DATABLOCID))
@@ -61,7 +61,7 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
     }
 
     loadFromAssetFile = IOLoadBytesFromFileEx(&assetFileHandle, data, header.DataSize, sizeof(header));
-    
+
     if (loadFromAssetFile != IO_OK)
     {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;

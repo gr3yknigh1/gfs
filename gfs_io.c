@@ -21,7 +21,7 @@ IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms)
     }
 
     DWORD desiredAccess = 0;
-    
+
     if (HASANYBIT(perms, IO_READ))
     {
         desiredAccess |= GENERIC_READ;
@@ -78,7 +78,7 @@ IOLoadBytesFromFileEx(FileHandle *handle, Void *buffer, Size numberOfBytes, Size
     }
 
 #if 0
-    // TODO(ilya.a): Check what was wrong about this piece of code. 
+    // TODO(ilya.a): Check what was wrong about this piece of code.
     // (Unable to offset and read properly). [2024/05/26]
 
     LARGE_INTEGER offsetPair;

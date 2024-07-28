@@ -21,13 +21,3 @@ indent_style = space
 [{CMakeLists.txt,*.cmake}]
 indent_size = 2
 
-[{Makefile,*.mk}]
-indent_style = tab
-end_of_line = lf
-
-[*.sh]
-end_of_line = lf
-
-[{control,conffiles}]
-end_of_line = lf
-insert_final_newline = false

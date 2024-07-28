@@ -7,7 +7,7 @@
 
 #include "gfs_types.h"
 
-Size 
+Size
 CStr8_GetLength(CStr8 s)
 {
     Size size = 0;

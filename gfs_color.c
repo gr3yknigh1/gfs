@@ -5,7 +5,7 @@
  * */
 #include "gfs_color.h"
 
-Color4 
+Color4
 Color4Add(Color4 a, Color4 b)
 {
     return (Color4) {

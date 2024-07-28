@@ -26,12 +26,12 @@ ArenaMake(Size size)
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
     // will round up this number to next page. [2024/05/26]
     // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
-    return (Arena) 
+    return (Arena)
     {
         .Data     = data,
         .Capacity = size,
         .Occupied = 0,
-    }; 
+    };
 }
 
 Void *
@@ -52,7 +52,7 @@ ArenaAlloc(Arena *arena, Size size)
     return data;
 }
 
-void 
+void
 ArenaFree(Arena *arena)
 {
     if (arena == NULL || arena->Data == NULL)
@@ -70,16 +70,16 @@ ArenaFree(Arena *arena)
 
 // TODO(ilya.a): Use SIMD [2024/05/19]
 
-void 
-MemoryCopy(void *destination, const void *source, Size size) 
+void
+MemoryCopy(void *destination, const void *source, Size size)
 {
-    for (Size i = 0; i < size; ++i) 
+    for (Size i = 0; i < size; ++i)
     {
         ((Byte *)destination)[i] = ((Byte *)source)[i];
     }
 }
 
-void 
+void
 MemorySet(void *data, Byte value, Size size)
 {
     if (size % 4 == 0)
@@ -94,17 +94,17 @@ MemorySet(void *data, Byte value, Size size)
     }
     else
     {
-        for (Size i = 0; i < size; ++i) 
+        for (Size i = 0; i < size; ++i)
         {
             ((Byte *)data)[i] = value;
         }
     }
 }
 
-void 
+void
 MemoryZero(void *data, Size size)
 {
-    for (Size i = 0; i < size; ++i) 
+    for (Size i = 0; i < size; ++i)
     {
         ((Byte *)data)[i] = 0;
     }
@@ -141,7 +141,7 @@ BlockAllocatorMake()
     return allocator;
 }
 
-BlockAllocator 
+BlockAllocator
 BlockAllocatorMakeEx(Size size)
 {
     BlockAllocator allocator = {0};
@@ -204,7 +204,7 @@ BlockAllocatorFree(BlockAllocator *allocator)
     Block *previousBlock = NULL;
     Block *currentBlock = allocator->Head;
 
-    while (currentBlock != NULL) 
+    while (currentBlock != NULL)
     {
         previousBlock = currentBlock;
         currentBlock = currentBlock->Next;

@@ -4,7 +4,7 @@
  * FILE      gfs_main.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
- * 
+ *
  * This is small educational project where I
  * doodling around with Windows API and computer
  * graphics.
@@ -57,7 +57,7 @@ global_var Bool isSoundPlaying = false;
 
 global_var struct
 {
-    Rect Rect; 
+    Rect Rect;
     Color4 Color;
 
     struct
@@ -75,7 +75,7 @@ global_var struct
 #define PLAYER_WIDTH  160
 #define PLAYER_HEIGHT 80
 #define PLAYER_SPEED  10
- 
+
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -84,14 +84,14 @@ global_var struct
 
 typedef enum
 {
-    WIN32_LOADXINPUT_OK, 
-    WIN32_LOADXINPUT_ERR 
+    WIN32_LOADXINPUT_OK,
+    WIN32_LOADXINPUT_ERR
 } Win32_LoadXInputResult;
 
 internal Win32_LoadXInputResult
 Win32_LoadXInput(void)
 {
-    // TODO(ilya.a): Handle different versions of xinput. Check for newer. If 
+    // TODO(ilya.a): Handle different versions of xinput. Check for newer. If
     // fails, use older one. [2024/05/24]
     HMODULE library = LoadLibrary(WIN32_XINPUT_DLL);
 
@@ -129,7 +129,7 @@ typedef enum
 
 /*
  * Loads DirectrSound library and initializes it.
- * 
+ *
  * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
@@ -161,12 +161,12 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_ERR;
     }
 
-    // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to 
+    // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to
     // sound card. Windows has strange API. [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
-    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc));  // TODO(ilya.a): Checkout if we really need
                                                                 // to zero buffer description. [2024/05/25]
-    
+
     primaryBufferDesc.dwSize        = sizeof(primaryBufferDesc);
     primaryBufferDesc.dwFlags       = DSBCAPS_PRIMARYBUFFER;
     primaryBufferDesc.dwBufferBytes = 0;     // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
@@ -194,7 +194,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
 
     // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
     DSBUFFERDESC secondaryBufferDesc;
-    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need 
+    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc));  // TODO(ilya.a): Checkout if we really need
                                                                     // to zero buffer description. [2024/05/25]
     secondaryBufferDesc.dwSize        = sizeof(secondaryBufferDesc);
     secondaryBufferDesc.dwFlags       = 0;
@@ -220,13 +220,13 @@ Win32_MainWindowProc(HWND   window,
 
     switch (message)
     {
-        case WM_ACTIVATEAPP: 
+        case WM_ACTIVATEAPP:
         {
             OutputDebugString("T: WM_ACTIVATEAPP\n");
         } break;
 #if 0
         case WM_KEYUP:
-        case WM_KEYDOWN: 
+        case WM_KEYDOWN:
         {
             // NOTE(ilya.a): Messed up input because of gamepad input. It's overrides state changed via keyboard
             // input [2024/05/24]
@@ -234,7 +234,7 @@ Win32_MainWindowProc(HWND   window,
             bool wasDown = (lParam & (1 << 30)) != 0;
             bool isDown = (lParam & (1 << 31)) == 0;
 
-            if (vkCode == VK_LEFT) 
+            if (vkCode == VK_LEFT)
             {
                 player.Input.LeftPressed = isDown;
             }
@@ -252,19 +252,19 @@ Win32_MainWindowProc(HWND   window,
             }
         } break;
 #endif  // #if 0
-        case WM_CLOSE: 
+        case WM_CLOSE:
         {
             // TODO(ilya.a): Ask for closing?
             OutputDebugString("T: WM_CLOSE\n");
             shouldStop = true;
         } break;
-        case WM_DESTROY: 
+        case WM_DESTROY:
         {
             // TODO(ilya.a): Casey says that we maybe should recreate window later?
             OutputDebugString("T: WM_DESTROY\n");
             // PostQuitMessage(0);
         } break;
-        default: 
+        default:
         {
             // NOTE(ilya): Leave other events to default Window's handler.
             result = DefWindowProc(window, message, wParam, lParam);
@@ -281,9 +281,9 @@ WinMain(_In_ HINSTANCE instance,
         _In_ LPSTR commandLine,
         _In_ int showMode)
 {
-    switch (Win32_LoadXInput()) 
+    switch (Win32_LoadXInput())
     {
-        case(WIN32_LOADXINPUT_OK): 
+        case(WIN32_LOADXINPUT_OK):
         {
         } break;
         case (WIN32_LOADXINPUT_ERR):
@@ -363,13 +363,13 @@ WinMain(_In_ HINSTANCE instance,
 
     renderer.ClearColor = COLOR_WHITE;
 
-    while (!shouldStop) 
+    while (!shouldStop)
     {
 
         MSG message = {};
-        while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) 
+        while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
         {
-            if (message.message == WM_QUIT) 
+            if (message.message == WM_QUIT)
             {
                 // NOTE(ilya.a): Make sure that we will quit the mainloop.
                 shouldStop = true;
@@ -400,16 +400,16 @@ WinMain(_In_ HINSTANCE instance,
                 player.Input.UpPressed = dPadUp;
                 player.Input.DownPressed = dPadDown;
 
-                XINPUT_VIBRATION vibrationState = {0};  
+                XINPUT_VIBRATION vibrationState = {0};
 
-                if (player.Input.RightPressed || player.Input.LeftPressed || 
-                    player.Input.UpPressed    || player.Input.DownPressed) 
+                if (player.Input.RightPressed || player.Input.LeftPressed ||
+                    player.Input.UpPressed    || player.Input.DownPressed)
                 {
 #if 0
                     vibrationState.wLeftMotorSpeed = 60000;
                     vibrationState.wRightMotorSpeed = 60000;
 #endif
-                } 
+                }
                 else
                 {
                     vibrationState.wLeftMotorSpeed = 0;
@@ -418,11 +418,11 @@ WinMain(_In_ HINSTANCE instance,
                 Win32_XInputSetStatePtr(
                   xControllerIndex,
                   &vibrationState
-                );  
+                );
             }
             else if (result == ERROR_DEVICE_NOT_CONNECTED)
             {
-                // NOTE(ilya.a): Do nothing. I thought to log that. 
+                // NOTE(ilya.a): Do nothing. I thought to log that.
                 // But it will be too frequent log, cause we have no plans on multiple controllers.
             }
             else
@@ -432,22 +432,22 @@ WinMain(_In_ HINSTANCE instance,
             }
         }
 
-        if (player.Input.LeftPressed) 
+        if (player.Input.LeftPressed)
         {
             player.Rect.X -= PLAYER_SPEED;
         }
 
-        if (player.Input.RightPressed) 
+        if (player.Input.RightPressed)
         {
             player.Rect.X += PLAYER_SPEED;
         }
 
-        if (player.Input.DownPressed) 
+        if (player.Input.DownPressed)
         {
             player.Rect.Y -= PLAYER_SPEED;
         }
 
-        if (player.Input.UpPressed) 
+        if (player.Input.UpPressed)
         {
             player.Rect.Y += PLAYER_SPEED;
         }
@@ -467,7 +467,7 @@ WinMain(_In_ HINSTANCE instance,
         if (!isSoundPlaying && SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
             DWORD byteToLock = (runningSampleIndex * bytesPerSample) % audioBufferSize;
-            DWORD bytesToWrite;
+            DWORD bytesToWrite = 0;
 
             // NOTE(ilya.a): We need more accurate check than byteToLock == playCursor [2024/07/28]
             if (byteToLock == playCursor)
@@ -481,7 +481,7 @@ WinMain(_In_ HINSTANCE instance,
             else if (byteToLock > playCursor)
             {
                 bytesToWrite = audioBufferSize - byteToLock;
-                bytesToWrite += playCursor;              
+                bytesToWrite += playCursor;
             }
             else
             {
@@ -490,9 +490,9 @@ WinMain(_In_ HINSTANCE instance,
 
             VOID *region1,    *region2;
             Size  region1Size, region2Size;
-            
-            VCALL(
-                Win32_AudioBuffer, Lock, 
+
+            ASSERT_VCALL(
+                Win32_AudioBuffer, Lock,
                 byteToLock,
                 bytesToWrite,
                 &region1, &region1Size,
@@ -531,7 +531,7 @@ WinMain(_In_ HINSTANCE instance,
                 region2, region2Size
             );
         }
-      
+
         if (!isSoundPlaying)
         {
             ASSERT_VCALL(Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);

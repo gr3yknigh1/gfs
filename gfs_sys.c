@@ -10,13 +10,13 @@
 
 #include "gfs_types.h"
 
-Size 
+Size
 Sys_GetPageSize()
 {
     Size pageSize;
 
     SYSTEM_INFO systemInfo = {0};
-    GetSystemInfo(&systemInfo); 
+    GetSystemInfo(&systemInfo);
 
     pageSize = systemInfo.dwPageSize;
 

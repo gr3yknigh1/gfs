@@ -26,7 +26,7 @@ void V2Add(
 
 ```cpp
 
-S32 
+S32
 Add(S32 a, S32 b)
 {
 
