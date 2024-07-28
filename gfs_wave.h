@@ -4,6 +4,7 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
+
 #ifndef GFS_WAVE_H_INCLUDED
 #define GFS_WAVE_H_INCLUDED
 

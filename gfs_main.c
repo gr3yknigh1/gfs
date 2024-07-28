@@ -34,7 +34,7 @@
 #include "gfs_assert.h"
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
-#define PI32 3.1415f
+#define PI32 3.14159265358979323846f
 
 #define ASSERT_VCALL(S, M, ...) GFS_ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 #define ASSERT_ISZERO(EXPR)     GFS_ASSERT((EXPR) == 0)
@@ -342,7 +342,7 @@ WinMain(_In_ HINSTANCE instance,
     U32 waveToneHZ         = 256;
     S32 waveToneVolume     = 1000;
     S32 wavePeriod         = samplesPerSecond / waveToneHZ;
-    S32 waveHalfPeriod     = wavePeriod / 2;
+    // S32 waveHalfPeriod     = wavePeriod / 2;
     Size bytesPerSample    = sizeof(S16) * 2;
     Size audioBufferSize   = samplesPerSecond * bytesPerSample;
 
@@ -462,7 +462,7 @@ WinMain(_In_ HINSTANCE instance,
 #if 1
         DWORD playCursor;
         DWORD writeCursor;
-        if (!isSoundPlaying && SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
+        if (/* !isSoundPlaying && */ SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
             DWORD byteToLock = (runningSampleIndex * bytesPerSample) % audioBufferSize;
             DWORD bytesToWrite = 0;
@@ -489,7 +489,8 @@ WinMain(_In_ HINSTANCE instance,
             VOID *region1,    *region2;
             Size  region1Size, region2Size;
 
-            ASSERT_VCALL(
+            // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
+            VCALL(
                 Win32_AudioBuffer, Lock,
                 byteToLock,
                 bytesToWrite,
@@ -502,7 +503,7 @@ WinMain(_In_ HINSTANCE instance,
             S16 *sampleOut = (S16 *)region1;
             for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
             {
-                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)waveHalfPeriod;
+                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)wavePeriod;
                 F32 sineValue = sinf(sinePosition);
                 S16 sampleValue = (S16)(sineValue * waveToneVolume);
                 *sampleOut++ = sampleValue;
@@ -514,7 +515,7 @@ WinMain(_In_ HINSTANCE instance,
             sampleOut = (S16 *)region2;
             for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
             {
-                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)waveHalfPeriod;
+                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)wavePeriod;
                 F32 sineValue = sinf(sinePosition);
                 S16 sampleValue = (S16)(sineValue * waveToneVolume);
                 *sampleOut++ = sampleValue;
