@@ -18,53 +18,49 @@ Align2PageSize(Size size)
     return size + (pageSize - size % pageSize);
 }
 
-Arena
-ArenaMake(Size size)
+ScratchAllocator
+ScratchAllocatorMake(Size size)
 {
     Void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
     // will round up this number to next page. [2024/05/26]
     // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
-    return (Arena)
-    {
-        .Data     = data,
+    return (ScratchAllocator) {
+        .Data = data,
         .Capacity = size,
         .Occupied = 0,
     };
 }
 
 Void *
-ArenaAlloc(Arena *arena, Size size)
+ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size)
 {
-    if (arena == NULL || arena->Data == NULL)
-    {
+    if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
         return NULL;
     }
 
-    if (arena->Occupied + size > arena->Capacity)
-    {
+    if (scratchAllocator->Occupied + size > scratchAllocator->Capacity) {
         return NULL;
     }
 
-    Void *data = ((Byte *)arena->Data) + arena->Occupied;
-    arena->Occupied += size;
+    Void *data = ((Byte *)scratchAllocator->Data) + scratchAllocator->Occupied;
+    scratchAllocator->Occupied += size;
     return data;
 }
 
 void
-ArenaFree(Arena *arena)
+ScratchAllocatorFree(ScratchAllocator *scratchAllocator)
 {
-    if (arena == NULL || arena->Data == NULL)
-    {
+    if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
         return;
     }
 
-    VirtualFree(arena->Data, 0, MEM_RELEASE);
+    VirtualFree(scratchAllocator->Data, 0, MEM_RELEASE);
 
-    arena->Data = NULL;
-    arena->Capacity = 0;
-    arena->Occupied = 0;
+    scratchAllocator->Data = NULL;
+    scratchAllocator->Capacity = 0;
+    scratchAllocator->Occupied = 0;
 }
 
 
@@ -162,13 +158,13 @@ BlockAllocatorAlloc(BlockAllocator *allocator, Size size)
 
     while (currentBlock != NULL)
     {
-        if (!ARENA_HAS_SPACE(&currentBlock->arena, size))
+        if (!SCRATCH_ALLOCATOR_HAS_SPACE(&currentBlock->arena, size))
         {
             previousBlock = currentBlock;
             currentBlock = currentBlock->Next;
             continue;
         }
-        return ArenaAlloc(&currentBlock->arena, size);
+        return ScratchAllocatorAlloc(&currentBlock->arena, size);
     }
 
     Block *newBlock = BlockMake(size);
@@ -182,7 +178,7 @@ BlockAllocatorAlloc(BlockAllocator *allocator, Size size)
         previousBlock->Next = newBlock;
     }
 
-    return ArenaAlloc(&newBlock->arena, size);
+    return ScratchAllocatorAlloc(&newBlock->arena, size);
 }
 
 Void *

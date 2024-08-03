@@ -44,16 +44,16 @@ typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVib
 
 typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
-global_var Win32_XInputGetStateType *G_Win32_XInputGetStatePtr;
-global_var Win32_XInputSetStateType *G_Win32_XInputSetStatePtr;
+global_var Win32_XInputGetStateType *Win32_xInputGetStatePtr;
+global_var Win32_XInputSetStateType *Win32_xInputSetStatePtr;
 
-global_var Win32_DirectSoundCreateType *G_Win32_DirectSoundCreatePtr;
+global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
-global_var LPDIRECTSOUNDBUFFER G_Win32_AudioBuffer;
+global_var LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
 
-global_var BMR_Renderer G_Renderer;
-global_var Bool G_ShouldStop = false;
-global_var Bool G_IsSoundPlaying = false;
+global_var BMR_Renderer g_renderer;
+global_var Bool g_shouldStop = false;
+global_var Bool g_isSoundPlaying = false;
 
 global_var struct
 {
@@ -67,7 +67,7 @@ global_var struct
         Bool UpPressed;
         Bool DownPressed;
     } Input;
-} G_Player;
+} g_player;
 
 
 #define PLAYER_INIT_X 100
@@ -100,15 +100,15 @@ Win32_LoadXInput(void)
         return WIN32_LOADXINPUT_ERR;
     }
 
-    G_Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
+    Win32_xInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
         library, WIN32_XINPUTGETSTATE_PROCNAME
     );
 
-    G_Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
+    Win32_xInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
         library, WIN32_XINPUTSETSTATE_PROCNAME
     );
 
-    if (G_Win32_XInputSetStatePtr == NULL || G_Win32_XInputGetStatePtr == NULL)
+    if (Win32_xInputSetStatePtr == NULL || Win32_xInputGetStatePtr == NULL)
     {
         return WIN32_LOADXINPUT_ERR;
     }
@@ -143,15 +143,15 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
-    G_Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
-    if (G_Win32_DirectSoundCreatePtr == NULL)
+    if (Win32_DirectSoundCreatePtr == NULL)
     {
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
     LPDIRECTSOUND directSound;
-    if (!SUCCEEDED(G_Win32_DirectSoundCreatePtr(0, &directSound, NULL)))
+    if (!SUCCEEDED(Win32_DirectSoundCreatePtr(0, &directSound, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -201,7 +201,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat   = &waveFormat;
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &G_Win32_AudioBuffer, NULL)))
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &g_Win32_AudioBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -241,7 +241,7 @@ Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, DWORD byteToLock, DWORD by
 
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
     VCALL(
-        G_Win32_AudioBuffer, Lock,
+        g_Win32_AudioBuffer, Lock,
         byteToLock,
         bytesToWrite,
         &region1, &region1Size,
@@ -275,7 +275,7 @@ Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, DWORD byteToLock, DWORD by
 
     // TODO(ilya.a): Check for succeed. [2024/05/25]
     ASSERT_VCALL(
-        G_Win32_AudioBuffer, Unlock,
+        g_Win32_AudioBuffer, Unlock,
         region1, region1Size,
         region2, region2Size
     );
@@ -327,7 +327,7 @@ Win32_MainWindowProc(HWND   window,
         {
             // TODO(ilya.a): Ask for closing?
             OutputDebugString("T: WM_CLOSE\n");
-            G_ShouldStop = true;
+            g_shouldStop = true;
         } break;
         case WM_DESTROY:
         {
@@ -409,8 +409,8 @@ WinMain(_In_ HINSTANCE instance,
 
     ShowWindow(window, showMode);
 
-    G_Renderer = BMR_Init(COLOR_WHITE, window);
-    BMR_Resize(&G_Renderer, 900, 600);
+    g_renderer = BMR_Init(COLOR_WHITE, window);
+    BMR_Resize(&g_renderer, 900, 600);
 
     Win32_SoundOutput soundOutput = Win32_SoundOutputMake();
     Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
@@ -420,20 +420,20 @@ WinMain(_In_ HINSTANCE instance,
     }
 
     Win32_FillSoundBuffer(&soundOutput, 0, soundOutput.audioBufferSize);
-    VCALL(G_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+    VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
     U32 xOffset = 0;
     U32 yOffset = 0;
 
-    G_Player.Rect.X = PLAYER_INIT_X;
-    G_Player.Rect.Y = PLAYER_INIT_Y;
-    G_Player.Rect.Width = PLAYER_WIDTH;
-    G_Player.Rect.Height = PLAYER_HEIGHT;
-    G_Player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
+    g_player.Rect.X = PLAYER_INIT_X;
+    g_player.Rect.Y = PLAYER_INIT_Y;
+    g_player.Rect.Width = PLAYER_WIDTH;
+    g_player.Rect.Height = PLAYER_HEIGHT;
+    g_player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
 
-    G_Renderer.ClearColor = COLOR_WHITE;
+    g_renderer.ClearColor = COLOR_WHITE;
 
-    while (!G_ShouldStop)
+    while (!g_shouldStop)
     {
 
         MSG message = {};
@@ -442,7 +442,7 @@ WinMain(_In_ HINSTANCE instance,
             if (message.message == WM_QUIT)
             {
                 // NOTE(ilya.a): Make sure that we will quit the mainloop.
-                G_ShouldStop = true;
+                g_shouldStop = true;
             }
 
             TranslateMessage(&message);
@@ -453,7 +453,7 @@ WinMain(_In_ HINSTANCE instance,
         for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex)
         {
             XINPUT_STATE xInputState = {0};
-            DWORD result = G_Win32_XInputGetStatePtr(xControllerIndex, &xInputState);
+            DWORD result = Win32_xInputGetStatePtr(xControllerIndex, &xInputState);
 
             if(result == ERROR_SUCCESS)
             {
@@ -464,16 +464,16 @@ WinMain(_In_ HINSTANCE instance,
                 Bool dPadLeft  = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
                 Bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
 
-                G_Player.Input.RightPressed = dPadRight;
-                G_Player.Input.LeftPressed = dPadLeft;
+                g_player.Input.RightPressed = dPadRight;
+                g_player.Input.LeftPressed = dPadLeft;
 
-                G_Player.Input.UpPressed = dPadUp;
-                G_Player.Input.DownPressed = dPadDown;
+                g_player.Input.UpPressed = dPadUp;
+                g_player.Input.DownPressed = dPadDown;
 
                 XINPUT_VIBRATION vibrationState = {0};
 
-                if (G_Player.Input.RightPressed || G_Player.Input.LeftPressed ||
-                    G_Player.Input.UpPressed    || G_Player.Input.DownPressed)
+                if (g_player.Input.RightPressed || g_player.Input.LeftPressed ||
+                    g_player.Input.UpPressed    || g_player.Input.DownPressed)
                 {
 #if 0
                     vibrationState.wLeftMotorSpeed = 60000;
@@ -485,7 +485,7 @@ WinMain(_In_ HINSTANCE instance,
                     vibrationState.wLeftMotorSpeed = 0;
                     vibrationState.wRightMotorSpeed = 0;
                 }
-                G_Win32_XInputSetStatePtr(
+                Win32_xInputSetStatePtr(
                   xControllerIndex,
                   &vibrationState
                 );
@@ -502,37 +502,37 @@ WinMain(_In_ HINSTANCE instance,
             }
         }
 
-        if (G_Player.Input.LeftPressed)
+        if (g_player.Input.LeftPressed)
         {
-            G_Player.Rect.X -= PLAYER_SPEED;
+            g_player.Rect.X -= PLAYER_SPEED;
         }
 
-        if (G_Player.Input.RightPressed)
+        if (g_player.Input.RightPressed)
         {
-            G_Player.Rect.X += PLAYER_SPEED;
+            g_player.Rect.X += PLAYER_SPEED;
         }
 
-        if (G_Player.Input.DownPressed)
+        if (g_player.Input.DownPressed)
         {
-            G_Player.Rect.Y -= PLAYER_SPEED;
+            g_player.Rect.Y -= PLAYER_SPEED;
         }
 
-        if (G_Player.Input.UpPressed)
+        if (g_player.Input.UpPressed)
         {
-            G_Player.Rect.Y += PLAYER_SPEED;
+            g_player.Rect.Y += PLAYER_SPEED;
         }
 
-        BMR_BeginDrawing(&G_Renderer);
+        BMR_BeginDrawing(&g_renderer);
 
-        BMR_Clear(&G_Renderer);
-        BMR_DrawGrad(&G_Renderer, xOffset, yOffset);
-        BMR_DrawRectR(&G_Renderer, G_Player.Rect, G_Player.Color);
-        BMR_DrawLine(&G_Renderer, 100, 200, 500, 600);
+        BMR_Clear(&g_renderer);
+        BMR_DrawGrad(&g_renderer, xOffset, yOffset);
+        BMR_DrawRectR(&g_renderer, g_player.Rect, g_player.Color);
+        BMR_DrawLine(&g_renderer, 100, 200, 500, 600);
 
         DWORD playCursor;
         DWORD writeCursor;
 
-        if (SUCCEEDED(VCALL(G_Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
+        if (SUCCEEDED(VCALL(g_Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
             DWORD byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
             DWORD bytesToWrite = 0;
@@ -550,20 +550,20 @@ WinMain(_In_ HINSTANCE instance,
             Win32_FillSoundBuffer(&soundOutput, byteToLock, bytesToWrite);
 
 
-            if (!G_IsSoundPlaying)
+            if (!g_isSoundPlaying)
             {
-                ASSERT_VCALL(G_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
-                G_IsSoundPlaying = true;
+                ASSERT_VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+                g_isSoundPlaying = true;
             }
         }
 
-        BMR_EndDrawing(&G_Renderer);
+        BMR_EndDrawing(&g_renderer);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR_DeInit(&G_Renderer);
+    BMR_DeInit(&g_renderer);
 
     return 0;
 }

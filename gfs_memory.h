@@ -17,22 +17,21 @@
 Size Align2PageSize(Size size);
 
 /*
- * Arena Allocator (aka bump allocator).
+ * Scratch Allocator.
  */
 typedef struct
 {
     Void *Data;
     Size Capacity;
     Size Occupied;
-} Arena;
+} ScratchAllocator;
 
-#define ARENA_HAS_SPACE(ARENAPTR, SIZE) ((ARENAPTR)->Occupied + (SIZE) <= (ARENAPTR)->Capacity)
+#define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE) ((ALLOCATORPTR)->Occupied + (SIZE) <= (ALLOCATORPTR)->Capacity)
 
-Arena ArenaMake(Size size);
+ScratchAllocator ScratchAllocatorMake(Size size);
 
-Void *ArenaAlloc(Arena *arena, Size size);
-
-void ArenaFree(Arena *arena);
+Void *ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size);
+void ScratchAllocatorFree(ScratchAllocator *scratchAllocator);
 
 void MemoryCopy(Void *dest, const Void *source, Size size);
 void MemorySet(Void *data, Byte value, Size size);
@@ -40,7 +39,7 @@ void MemoryZero(Void *data, Size size);
 
 typedef struct Block
 {
-    Arena arena;
+    ScratchAllocator arena;
     struct Block *Next;
 } Block;
 

@@ -13,9 +13,9 @@
 
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
+WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveAsset *waveAssetOut)
 {
-    if (arena == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath))
+    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath))
     {
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
@@ -53,7 +53,7 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
     //     return WAVEASSET_LOAD_ERR_INVALID_MAGIC;
     // }
 
-    Void *data = ArenaAlloc(arena, header.DataSize);
+    Void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
 
     if (data == NULL)
     {
@@ -73,6 +73,6 @@ WaveAssetLoadFromFile(Arena *arena, CStr8 assetPath, WaveAsset *waveAssetOut)
     return WAVEASSET_LOAD_OK;
 }
 
-WaveAssetLoadResult WaveAssetLoadFromMemory(Arena *arena, const Void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const Void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);
