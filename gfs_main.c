@@ -537,20 +537,7 @@ WinMain(_In_ HINSTANCE instance,
             DWORD byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
             DWORD bytesToWrite = 0;
 
-            // NOTE(ilya.a): We need more accurate check than byteToLock == playCursor [2024/07/28]
-            if (byteToLock == playCursor)
-            {
-                // NOTE(ilya.a): We need it only once. [2024/06/09]
-                if (G_IsSoundPlaying)
-                {
-                    byteToLock = 0;
-                }
-                else
-                {
-                    bytesToWrite = soundOutput.audioBufferSize;
-                }
-            }
-            else if (byteToLock > playCursor)
+            if (byteToLock > playCursor)
             {
                 bytesToWrite = soundOutput.audioBufferSize - byteToLock;
                 bytesToWrite += playCursor;
