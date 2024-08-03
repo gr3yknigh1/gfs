@@ -65,7 +65,8 @@ target_compile_options(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  PRIVATE shlwapi.lib
+  PRIVATE
+    shlwapi.lib
 )
 
 

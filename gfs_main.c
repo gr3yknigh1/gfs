@@ -354,6 +354,7 @@ WinMain(_In_ HINSTANCE instance,
 {
     UNUSED(commandLine);
     UNUSED(showMode);
+    UNUSED(prevInstance);
 
     switch (Win32_LoadXInput())
     {
@@ -418,14 +419,17 @@ WinMain(_In_ HINSTANCE instance,
         OutputDebugString("W: Failed to init DSound!\n");
     }
 
+    Win32_FillSoundBuffer(&soundOutput, 0, soundOutput.audioBufferSize);
+    VCALL(G_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+
     U32 xOffset = 0;
     U32 yOffset = 0;
 
-    G_Player.Rect.X      = PLAYER_INIT_X;
-    G_Player.Rect.Y      = PLAYER_INIT_Y;
-    G_Player.Rect.Width  = PLAYER_WIDTH;
+    G_Player.Rect.X = PLAYER_INIT_X;
+    G_Player.Rect.Y = PLAYER_INIT_Y;
+    G_Player.Rect.Width = PLAYER_WIDTH;
     G_Player.Rect.Height = PLAYER_HEIGHT;
-    G_Player.Color       = Color4Add(COLOR_RED, COLOR_BLUE);
+    G_Player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
 
     G_Renderer.ClearColor = COLOR_WHITE;
 
@@ -525,7 +529,6 @@ WinMain(_In_ HINSTANCE instance,
         BMR_DrawRectR(&G_Renderer, G_Player.Rect, G_Player.Color);
         BMR_DrawLine(&G_Renderer, 100, 200, 500, 600);
 
-
         DWORD playCursor;
         DWORD writeCursor;
 
@@ -538,7 +541,11 @@ WinMain(_In_ HINSTANCE instance,
             if (byteToLock == playCursor)
             {
                 // NOTE(ilya.a): We need it only once. [2024/06/09]
-                if (!G_IsSoundPlaying)
+                if (G_IsSoundPlaying)
+                {
+                    byteToLock = 0;
+                }
+                else
                 {
                     bytesToWrite = soundOutput.audioBufferSize;
                 }
