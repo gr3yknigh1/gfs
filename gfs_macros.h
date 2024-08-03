@@ -10,6 +10,7 @@
 #define internal static
 #define global_var static
 #define persist_var static
+#define procedure void
 
 #define UNUSED(X) ((void)(X))
 

@@ -44,16 +44,16 @@ typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION* pVib
 
 typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
-global_var Win32_XInputGetStateType *Win32_XInputGetStatePtr;
-global_var Win32_XInputSetStateType *Win32_XInputSetStatePtr;
+global_var Win32_XInputGetStateType *G_Win32_XInputGetStatePtr;
+global_var Win32_XInputSetStateType *G_Win32_XInputSetStatePtr;
 
-global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
+global_var Win32_DirectSoundCreateType *G_Win32_DirectSoundCreatePtr;
 
-global_var LPDIRECTSOUNDBUFFER Win32_AudioBuffer;
+global_var LPDIRECTSOUNDBUFFER G_Win32_AudioBuffer;
 
-global_var BMR_Renderer renderer;
-global_var Bool shouldStop = false;
-global_var Bool isSoundPlaying = false;
+global_var BMR_Renderer G_Renderer;
+global_var Bool G_ShouldStop = false;
+global_var Bool G_IsSoundPlaying = false;
 
 global_var struct
 {
@@ -67,7 +67,7 @@ global_var struct
         Bool UpPressed;
         Bool DownPressed;
     } Input;
-} player;
+} G_Player;
 
 
 #define PLAYER_INIT_X 100
@@ -100,15 +100,15 @@ Win32_LoadXInput(void)
         return WIN32_LOADXINPUT_ERR;
     }
 
-    Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
+    G_Win32_XInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
         library, WIN32_XINPUTGETSTATE_PROCNAME
     );
 
-    Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
+    G_Win32_XInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
         library, WIN32_XINPUTSETSTATE_PROCNAME
     );
 
-    if (Win32_XInputSetStatePtr == NULL || Win32_XInputGetStatePtr == NULL)
+    if (G_Win32_XInputSetStatePtr == NULL || G_Win32_XInputGetStatePtr == NULL)
     {
         return WIN32_LOADXINPUT_ERR;
     }
@@ -143,15 +143,15 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
-    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    G_Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
-    if (Win32_DirectSoundCreatePtr == NULL)
+    if (G_Win32_DirectSoundCreatePtr == NULL)
     {
         return WIN32_INITDSOUND_DLL_LOAD;
     }
 
     LPDIRECTSOUND directSound;
-    if (!SUCCEEDED(Win32_DirectSoundCreatePtr(0, &directSound, NULL)))
+    if (!SUCCEEDED(G_Win32_DirectSoundCreatePtr(0, &directSound, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -201,7 +201,7 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat   = &waveFormat;
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &Win32_AudioBuffer, NULL)))
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &G_Win32_AudioBuffer, NULL)))
     {
         return WIN32_INITDSOUND_ERR;
     }
@@ -209,6 +209,77 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize)
     return WIN32_INITDSOUND_OK;
 }
 
+typedef struct
+{
+    U32 runningSampleIndex;
+    U32 toneHZ;
+    S32 samplesPerSecond;
+    S32 toneVolume;
+    S32 wavePeriod;
+    Size bytesPerSample;
+    Size audioBufferSize;
+} Win32_SoundOutput;
+
+internal Win32_SoundOutput
+Win32_SoundOutputMake(void) {
+    Win32_SoundOutput ret = {0};
+    ret.samplesPerSecond = 48000;
+    ret.runningSampleIndex = 0;
+    ret.toneHZ = 256;
+    ret.toneVolume = 1000;
+
+    ret.wavePeriod = ret.samplesPerSecond / ret.toneHZ;
+    ret.bytesPerSample = sizeof(S16) * 2;
+    ret.audioBufferSize = ret.samplesPerSecond * ret.bytesPerSample;
+    return ret;
+}
+
+internal procedure
+Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, DWORD byteToLock, DWORD bytesToWrite) {
+    VOID *region1, *region2;
+    Size region1Size, region2Size;
+
+    // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
+    VCALL(
+        G_Win32_AudioBuffer, Lock,
+        byteToLock,
+        bytesToWrite,
+        &region1, &region1Size,
+        &region2, &region2Size,
+        0
+    );
+
+    DWORD region1SampleCount = region1Size / soundOutput->bytesPerSample;
+    S16 *sampleOut = (S16 *)region1;
+    for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
+    {
+        F32 sinePosition = 2.0f * PI32 * (F32)soundOutput->runningSampleIndex / (F32)soundOutput->wavePeriod;
+        F32 sineValue = sinf(sinePosition);
+        S16 sampleValue = (S16)(sineValue * soundOutput->toneVolume);
+        *sampleOut++ = sampleValue;
+        *sampleOut++ = sampleValue;
+        ++soundOutput->runningSampleIndex;
+    }
+
+    DWORD region2SampleCount = region2Size / soundOutput->bytesPerSample;
+    sampleOut = (S16 *)region2;
+    for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
+    {
+        F32 sinePosition = 2.0f * PI32 * (F32)soundOutput->runningSampleIndex / (F32)soundOutput->wavePeriod;
+        F32 sineValue = sinf(sinePosition);
+        S16 sampleValue = (S16)(sineValue * soundOutput->toneVolume);
+        *sampleOut++ = sampleValue;
+        *sampleOut++ = sampleValue;
+        ++soundOutput->runningSampleIndex;
+    }
+
+    // TODO(ilya.a): Check for succeed. [2024/05/25]
+    ASSERT_VCALL(
+        G_Win32_AudioBuffer, Unlock,
+        region1, region1Size,
+        region2, region2Size
+    );
+}
 
 LRESULT CALLBACK
 Win32_MainWindowProc(HWND   window,
@@ -256,7 +327,7 @@ Win32_MainWindowProc(HWND   window,
         {
             // TODO(ilya.a): Ask for closing?
             OutputDebugString("T: WM_CLOSE\n");
-            shouldStop = true;
+            G_ShouldStop = true;
         } break;
         case WM_DESTROY:
         {
@@ -281,6 +352,9 @@ WinMain(_In_ HINSTANCE instance,
         _In_ LPSTR commandLine,
         _In_ int showMode)
 {
+    UNUSED(commandLine);
+    UNUSED(showMode);
+
     switch (Win32_LoadXInput())
     {
         case(WIN32_LOADXINPUT_OK):
@@ -334,19 +408,11 @@ WinMain(_In_ HINSTANCE instance,
 
     ShowWindow(window, showMode);
 
-    renderer = BMR_Init(COLOR_WHITE, window);
-    BMR_Resize(&renderer, 900, 600);
+    G_Renderer = BMR_Init(COLOR_WHITE, window);
+    BMR_Resize(&G_Renderer, 900, 600);
 
-    S32 samplesPerSecond   = 48000;
-    U32 runningSampleIndex = 0;
-    U32 waveToneHZ         = 256;
-    S32 waveToneVolume     = 1000;
-    S32 wavePeriod         = samplesPerSecond / waveToneHZ;
-    // S32 waveHalfPeriod     = wavePeriod / 2;
-    Size bytesPerSample    = sizeof(S16) * 2;
-    Size audioBufferSize   = samplesPerSecond * bytesPerSample;
-
-    Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(window, samplesPerSecond, audioBufferSize);
+    Win32_SoundOutput soundOutput = Win32_SoundOutputMake();
+    Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
     if (initDSoundResult != WIN32_INITDSOUND_OK)
     {
         OutputDebugString("W: Failed to init DSound!\n");
@@ -355,15 +421,15 @@ WinMain(_In_ HINSTANCE instance,
     U32 xOffset = 0;
     U32 yOffset = 0;
 
-    player.Rect.X      = PLAYER_INIT_X;
-    player.Rect.Y      = PLAYER_INIT_Y;
-    player.Rect.Width  = PLAYER_WIDTH;
-    player.Rect.Height = PLAYER_HEIGHT;
-    player.Color       = Color4Add(COLOR_RED, COLOR_BLUE);
+    G_Player.Rect.X      = PLAYER_INIT_X;
+    G_Player.Rect.Y      = PLAYER_INIT_Y;
+    G_Player.Rect.Width  = PLAYER_WIDTH;
+    G_Player.Rect.Height = PLAYER_HEIGHT;
+    G_Player.Color       = Color4Add(COLOR_RED, COLOR_BLUE);
 
-    renderer.ClearColor = COLOR_WHITE;
+    G_Renderer.ClearColor = COLOR_WHITE;
 
-    while (!shouldStop)
+    while (!G_ShouldStop)
     {
 
         MSG message = {};
@@ -372,7 +438,7 @@ WinMain(_In_ HINSTANCE instance,
             if (message.message == WM_QUIT)
             {
                 // NOTE(ilya.a): Make sure that we will quit the mainloop.
-                shouldStop = true;
+                G_ShouldStop = true;
             }
 
             TranslateMessage(&message);
@@ -383,7 +449,7 @@ WinMain(_In_ HINSTANCE instance,
         for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex)
         {
             XINPUT_STATE xInputState = {0};
-            DWORD result = Win32_XInputGetStatePtr(xControllerIndex, &xInputState);
+            DWORD result = G_Win32_XInputGetStatePtr(xControllerIndex, &xInputState);
 
             if(result == ERROR_SUCCESS)
             {
@@ -394,16 +460,16 @@ WinMain(_In_ HINSTANCE instance,
                 Bool dPadLeft  = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
                 Bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
 
-                player.Input.RightPressed = dPadRight;
-                player.Input.LeftPressed = dPadLeft;
+                G_Player.Input.RightPressed = dPadRight;
+                G_Player.Input.LeftPressed = dPadLeft;
 
-                player.Input.UpPressed = dPadUp;
-                player.Input.DownPressed = dPadDown;
+                G_Player.Input.UpPressed = dPadUp;
+                G_Player.Input.DownPressed = dPadDown;
 
                 XINPUT_VIBRATION vibrationState = {0};
 
-                if (player.Input.RightPressed || player.Input.LeftPressed ||
-                    player.Input.UpPressed    || player.Input.DownPressed)
+                if (G_Player.Input.RightPressed || G_Player.Input.LeftPressed ||
+                    G_Player.Input.UpPressed    || G_Player.Input.DownPressed)
                 {
 #if 0
                     vibrationState.wLeftMotorSpeed = 60000;
@@ -415,7 +481,7 @@ WinMain(_In_ HINSTANCE instance,
                     vibrationState.wLeftMotorSpeed = 0;
                     vibrationState.wRightMotorSpeed = 0;
                 }
-                Win32_XInputSetStatePtr(
+                G_Win32_XInputSetStatePtr(
                   xControllerIndex,
                   &vibrationState
                 );
@@ -432,53 +498,54 @@ WinMain(_In_ HINSTANCE instance,
             }
         }
 
-        if (player.Input.LeftPressed)
+        if (G_Player.Input.LeftPressed)
         {
-            player.Rect.X -= PLAYER_SPEED;
+            G_Player.Rect.X -= PLAYER_SPEED;
         }
 
-        if (player.Input.RightPressed)
+        if (G_Player.Input.RightPressed)
         {
-            player.Rect.X += PLAYER_SPEED;
+            G_Player.Rect.X += PLAYER_SPEED;
         }
 
-        if (player.Input.DownPressed)
+        if (G_Player.Input.DownPressed)
         {
-            player.Rect.Y -= PLAYER_SPEED;
+            G_Player.Rect.Y -= PLAYER_SPEED;
         }
 
-        if (player.Input.UpPressed)
+        if (G_Player.Input.UpPressed)
         {
-            player.Rect.Y += PLAYER_SPEED;
+            G_Player.Rect.Y += PLAYER_SPEED;
         }
 
-        BMR_BeginDrawing(&renderer);
+        BMR_BeginDrawing(&G_Renderer);
 
-        BMR_Clear(&renderer);
-        BMR_DrawGrad(&renderer, xOffset, yOffset);
-        BMR_DrawRectR(&renderer, player.Rect, player.Color);
-        BMR_DrawLine(&renderer, 100, 200, 500, 600);
+        BMR_Clear(&G_Renderer);
+        BMR_DrawGrad(&G_Renderer, xOffset, yOffset);
+        BMR_DrawRectR(&G_Renderer, G_Player.Rect, G_Player.Color);
+        BMR_DrawLine(&G_Renderer, 100, 200, 500, 600);
 
-#if 1
+
         DWORD playCursor;
         DWORD writeCursor;
-        if (/* !isSoundPlaying && */ SUCCEEDED(VCALL(Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
+
+        if (SUCCEEDED(VCALL(G_Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor)))
         {
-            DWORD byteToLock = (runningSampleIndex * bytesPerSample) % audioBufferSize;
+            DWORD byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
             DWORD bytesToWrite = 0;
 
             // NOTE(ilya.a): We need more accurate check than byteToLock == playCursor [2024/07/28]
             if (byteToLock == playCursor)
             {
                 // NOTE(ilya.a): We need it only once. [2024/06/09]
-                if (!isSoundPlaying)
+                if (!G_IsSoundPlaying)
                 {
-                    bytesToWrite = audioBufferSize;
+                    bytesToWrite = soundOutput.audioBufferSize;
                 }
             }
             else if (byteToLock > playCursor)
             {
-                bytesToWrite = audioBufferSize - byteToLock;
+                bytesToWrite = soundOutput.audioBufferSize - byteToLock;
                 bytesToWrite += playCursor;
             }
             else
@@ -486,65 +553,23 @@ WinMain(_In_ HINSTANCE instance,
                 bytesToWrite = playCursor - byteToLock;
             }
 
-            VOID *region1,    *region2;
-            Size  region1Size, region2Size;
+            Win32_FillSoundBuffer(&soundOutput, byteToLock, bytesToWrite);
 
-            // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
-            VCALL(
-                Win32_AudioBuffer, Lock,
-                byteToLock,
-                bytesToWrite,
-                &region1, &region1Size,
-                &region2, &region2Size,
-                0
-            );
 
-            DWORD region1SampleCount = region1Size / bytesPerSample;
-            S16 *sampleOut = (S16 *)region1;
-            for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex)
+            if (!G_IsSoundPlaying)
             {
-                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)wavePeriod;
-                F32 sineValue = sinf(sinePosition);
-                S16 sampleValue = (S16)(sineValue * waveToneVolume);
-                *sampleOut++ = sampleValue;
-                *sampleOut++ = sampleValue;
-                ++runningSampleIndex;
+                ASSERT_VCALL(G_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+                G_IsSoundPlaying = true;
             }
-
-            DWORD region2SampleCount = region2Size / bytesPerSample;
-            sampleOut = (S16 *)region2;
-            for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex)
-            {
-                F32 sinePosition = 2.0f * PI32 * (F32)runningSampleIndex / (F32)wavePeriod;
-                F32 sineValue = sinf(sinePosition);
-                S16 sampleValue = (S16)(sineValue * waveToneVolume);
-                *sampleOut++ = sampleValue;
-                *sampleOut++ = sampleValue;
-                ++runningSampleIndex;
-            }
-
-            // TODO(ilya.a): Check for succeed. [2024/05/25]
-            ASSERT_VCALL(
-                Win32_AudioBuffer, Unlock,
-                region1, region1Size,
-                region2, region2Size
-            );
         }
 
-        if (!isSoundPlaying)
-        {
-            ASSERT_VCALL(Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
-            isSoundPlaying = true;
-        }
-#endif
-
-        BMR_EndDrawing(&renderer);
+        BMR_EndDrawing(&G_Renderer);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR_DeInit(&renderer);
+    BMR_DeInit(&G_Renderer);
 
     return 0;
 }

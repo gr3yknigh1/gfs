@@ -22,6 +22,9 @@ out/
 ## VS Code
 .vscode/
 
+## Emacs
+\#*#
+
 # Build artefacts
 *.obj
 *.exe
