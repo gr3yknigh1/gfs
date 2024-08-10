@@ -12,21 +12,19 @@
 #include "gfs_sys.h"
 
 Size
-Align2PageSize(Size size)
-{
+Align2PageSize(Size size) {
     Size pageSize = Sys_GetPageSize();
     return size + (pageSize - size % pageSize);
 }
 
 ScratchAllocator
-ScratchAllocatorMake(Size size)
-{
+ScratchAllocatorMake(Size size) {
     Void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
     // will round up this number to next page. [2024/05/26]
     // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
-    return (ScratchAllocator) {
+    return (ScratchAllocator){
         .Data = data,
         .Capacity = size,
         .Occupied = 0,
@@ -34,8 +32,7 @@ ScratchAllocatorMake(Size size)
 }
 
 Void *
-ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size)
-{
+ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size) {
     if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
         return NULL;
     }
@@ -50,8 +47,7 @@ ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size)
 }
 
 void
-ScratchAllocatorFree(ScratchAllocator *scratchAllocator)
-{
+ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
     if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
         return;
     }
@@ -63,57 +59,44 @@ ScratchAllocatorFree(ScratchAllocator *scratchAllocator)
     scratchAllocator->Occupied = 0;
 }
 
-
 // TODO(ilya.a): Use SIMD [2024/05/19]
 
 void
-MemoryCopy(void *destination, const void *source, Size size)
-{
-    for (Size i = 0; i < size; ++i)
-    {
+MemoryCopy(void *destination, const void *source, Size size) {
+    for (Size i = 0; i < size; ++i) {
         ((Byte *)destination)[i] = ((Byte *)source)[i];
     }
 }
 
 void
-MemorySet(void *data, Byte value, Size size)
-{
-    if (size % 4 == 0)
-    {
-        for (Size i = 0; i < size / 4; i += 4)
-        {
+MemorySet(void *data, Byte value, Size size) {
+    if (size % 4 == 0) {
+        for (Size i = 0; i < size / 4; i += 4) {
             ((Byte *)data)[i] = value;
             ((Byte *)data)[i + 1] = value;
             ((Byte *)data)[i + 2] = value;
             ((Byte *)data)[i + 3] = value;
         }
-    }
-    else
-    {
-        for (Size i = 0; i < size; ++i)
-        {
+    } else {
+        for (Size i = 0; i < size; ++i) {
             ((Byte *)data)[i] = value;
         }
     }
 }
 
 void
-MemoryZero(void *data, Size size)
-{
-    for (Size i = 0; i < size; ++i)
-    {
+MemoryZero(void *data, Size size) {
+    for (Size i = 0; i < size; ++i) {
         ((Byte *)data)[i] = 0;
     }
 }
 
 Block *
-BlockMake(Size size)
-{
+BlockMake(Size size) {
     Size bytesAllocated = Align2PageSize(size + sizeof(Block));
     Void *allocatedData = VirtualAlloc(NULL, bytesAllocated, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-    if (allocatedData == NULL)
-    {
+    if (allocatedData == NULL) {
         return NULL;
     }
 
@@ -130,36 +113,30 @@ BlockMake(Size size)
 }
 
 BlockAllocator
-BlockAllocatorMake()
-{
+BlockAllocatorMake() {
     BlockAllocator allocator;
     allocator.Head = NULL;
     return allocator;
 }
 
 BlockAllocator
-BlockAllocatorMakeEx(Size size)
-{
+BlockAllocatorMakeEx(Size size) {
     BlockAllocator allocator = {0};
     allocator.Head = BlockMake(size);
     return allocator;
 }
 
 Void *
-BlockAllocatorAlloc(BlockAllocator *allocator, Size size)
-{
-    if (allocator == NULL)
-    {
+BlockAllocatorAlloc(BlockAllocator *allocator, Size size) {
+    if (allocator == NULL) {
         return NULL;
     }
 
     Block *previousBlock = NULL;
     Block *currentBlock = allocator->Head;
 
-    while (currentBlock != NULL)
-    {
-        if (!SCRATCH_ALLOCATOR_HAS_SPACE(&currentBlock->arena, size))
-        {
+    while (currentBlock != NULL) {
+        if (!SCRATCH_ALLOCATOR_HAS_SPACE(&currentBlock->arena, size)) {
             previousBlock = currentBlock;
             currentBlock = currentBlock->Next;
             continue;
@@ -169,12 +146,9 @@ BlockAllocatorAlloc(BlockAllocator *allocator, Size size)
 
     Block *newBlock = BlockMake(size);
 
-    if (allocator->Head == NULL)
-    {
+    if (allocator->Head == NULL) {
         allocator->Head = newBlock;
-    }
-    else
-    {
+    } else {
         previousBlock->Next = newBlock;
     }
 
@@ -182,26 +156,22 @@ BlockAllocatorAlloc(BlockAllocator *allocator, Size size)
 }
 
 Void *
-BlockAllocatorAllocZ(BlockAllocator *allocator, Size size)
-{
+BlockAllocatorAllocZ(BlockAllocator *allocator, Size size) {
     Void *data = BlockAllocatorAlloc(allocator, size);
     MemoryZero(data, size);
     return data;
 }
 
 void
-BlockAllocatorFree(BlockAllocator *allocator)
-{
-    if (allocator == NULL || allocator->Head == NULL)
-    {
+BlockAllocatorFree(BlockAllocator *allocator) {
+    if (allocator == NULL || allocator->Head == NULL) {
         return;
     }
 
     Block *previousBlock = NULL;
     Block *currentBlock = allocator->Head;
 
-    while (currentBlock != NULL)
-    {
+    while (currentBlock != NULL) {
         previousBlock = currentBlock;
         currentBlock = currentBlock->Next;
 

@@ -21,4 +21,4 @@ Bool RectIsOverlapping(Rect r);
 
 U64 GetOffset(U64 width, U64 y, U64 x);
 
-#endif  // GFS_GEOMETRY_H_INCLUDED
+#endif // GFS_GEOMETRY_H_INCLUDED

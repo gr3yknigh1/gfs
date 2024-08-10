@@ -11,25 +11,20 @@
 #include "gfs_fs.h"
 #include "gfs_io.h"
 
-
 WaveAssetLoadResult
-WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveAsset *waveAssetOut)
-{
-    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath))
-    {
+WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveAsset *waveAssetOut) {
+    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath)) {
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
 
-    if (!FSIsPathExists(assetPath))
-    {
+    if (!FSIsPathExists(assetPath)) {
         return WAVEASSET_LOAD_ERR_FILE_NOT_FOUND;
     }
 
     FileHandle assetFileHandle;
     IOResult openAssetFileResult = IOOpenFile(assetPath, &assetFileHandle, IO_READ);
 
-    if (openAssetFileResult != IO_OK)
-    {
+    if (openAssetFileResult != IO_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_OPEN;
     }
 
@@ -39,8 +34,7 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveA
 
     loadFromAssetFile = IOLoadBytesFromFile(&assetFileHandle, &header, sizeof(header));
 
-    if (loadFromAssetFile != IO_OK)
-    {
+    if (loadFromAssetFile != IO_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
@@ -55,15 +49,13 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveA
 
     Void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
 
-    if (data == NULL)
-    {
+    if (data == NULL) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC;
     }
 
     loadFromAssetFile = IOLoadBytesFromFileEx(&assetFileHandle, data, header.DataSize, sizeof(header));
 
-    if (loadFromAssetFile != IO_OK)
-    {
+    if (loadFromAssetFile != IO_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 

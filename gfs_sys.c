@@ -11,8 +11,7 @@
 #include "gfs_types.h"
 
 Size
-Sys_GetPageSize()
-{
+Sys_GetPageSize() {
     Size pageSize;
 
     SYSTEM_INFO systemInfo = {0};

@@ -11,7 +11,6 @@
 #include "gfs_string.h"
 #include "gfs_macros.h"
 
-
 #include <Windows.h>
 
 // TODO(ilya.a): If at some day I will port it to another platform, do work around with
@@ -20,8 +19,7 @@ typedef HANDLE FileHandle;
 
 #define IO_HANDLE_IS_VALID(FILEHANDLE) (FILEHANDLE == INVALID_HANDLE_VALUE)
 
-typedef enum
-{
+typedef enum {
     IO_OK,
     IO_ERR_INVALID_ARGS,
     IO_ERR_FAILED_TO_OPEN,
@@ -32,8 +30,8 @@ typedef enum
 
 typedef U8 IOPermissions;
 
-#define IO_READ       MKFLAG(1)
-#define IO_WRITE      MKFLAG(2)
+#define IO_READ MKFLAG(1)
+#define IO_WRITE MKFLAG(2)
 #define IO_READ_WRITE IO_READ | IO_WRITE
 
 IOResult IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms);

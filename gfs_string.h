@@ -11,11 +11,11 @@
 
 typedef struct {
     Char8 *Data;
-    Size   Size;
+    Size Size;
 } Str8;
 
 Size CStr8GetLength(CStr8 s);
 Bool CStr8IsEmpty(CStr8 s);
 Bool CStr8IsEqual(CStr8 s0, CStr8 s1);
 
-#endif  // GFS_STRING_H_INCLUDED
+#endif // GFS_STRING_H_INCLUDED

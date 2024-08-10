@@ -24,12 +24,10 @@
 /*
  * Actuall BitMap Renderer Renderer.
  */
-typedef struct
-{
+typedef struct {
     Color4 ClearColor;
 
-    struct
-    {
+    struct {
         U8 *Begin;
         U8 *End;
     } CommandQueue;
@@ -40,8 +38,7 @@ typedef struct
     U64 XOffset;
     U64 YOffset;
 
-    struct
-    {
+    struct {
         void *Buffer;
         U64 Width;
         U64 Height;
@@ -52,16 +49,13 @@ typedef struct
     HDC DC;
 } BMR_Renderer;
 
-
-typedef enum
-{
-    BMR_RENDER_COMMAND_TYPE_NOP      = 00,
-    BMR_RENDER_COMMAND_TYPE_CLEAR    = 01,
-    BMR_RENDER_COMMAND_TYPE_LINE     = 10,
-    BMR_RENDER_COMMAND_TYPE_RECT     = 11,
+typedef enum {
+    BMR_RENDER_COMMAND_TYPE_NOP = 00,
+    BMR_RENDER_COMMAND_TYPE_CLEAR = 01,
+    BMR_RENDER_COMMAND_TYPE_LINE = 10,
+    BMR_RENDER_COMMAND_TYPE_RECT = 11,
     BMR_RENDER_COMMAND_TYPE_GRADIENT = 20,
 } BMR_RenderCommandType;
-
 
 BMR_Renderer BMR_Init(Color4 clearColor, HWND window);
 void BMR_DeInit(BMR_Renderer *renderer);
@@ -83,5 +77,4 @@ void BMR_DrawRectR(BMR_Renderer *renderer, Rect r, Color4 c);
 void BMR_DrawGrad(BMR_Renderer *renderer, U32 xOffset, U32 yOffset);
 void BMR_DrawGradV(BMR_Renderer *renderer, Vec2U32 offset);
 
-#endif  // GFS_BMR_H_INCLUDED
-
+#endif // GFS_BMR_H_INCLUDED

@@ -20,4 +20,4 @@ void Win32_GetRectSize(const RECT *r, S32 *w, S32 *h);
 
 #define Win32_TextOutA_CString8(HDC, X, Y, MSG) TextOutA((HDC), (X), (Y), (MSG), CStr_GetLength((MSG)))
 
-#endif  // GFS_WIN32_MISC_HPP_INCLUDED
+#endif // GFS_WIN32_MISC_HPP_INCLUDED

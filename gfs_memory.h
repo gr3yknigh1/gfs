@@ -19,8 +19,7 @@ Size Align2PageSize(Size size);
 /*
  * Scratch Allocator.
  */
-typedef struct
-{
+typedef struct {
     Void *Data;
     Size Capacity;
     Size Occupied;
@@ -37,8 +36,7 @@ void MemoryCopy(Void *dest, const Void *source, Size size);
 void MemorySet(Void *data, Byte value, Size size);
 void MemoryZero(Void *data, Size size);
 
-typedef struct Block
-{
+typedef struct Block {
     ScratchAllocator arena;
     struct Block *Next;
 } Block;
@@ -48,8 +46,7 @@ Block *BlockMake(Size size);
 /*
  * Block Allocator
  */
-typedef struct
-{
+typedef struct {
     Block *Head;
 } BlockAllocator;
 
@@ -61,4 +58,4 @@ Void *BlockAllocatorAllocZ(BlockAllocator *allocator, Size size);
 
 void BlockAllocatorFree(BlockAllocator *allocator);
 
-#endif  // GFS_MEMORY_H_INCLUDED
+#endif // GFS_MEMORY_H_INCLUDED

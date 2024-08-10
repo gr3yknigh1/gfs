@@ -10,4 +10,4 @@
 
 Size Sys_GetPageSize();
 
-#endif  // if !defined(GFS_SYS_H_INCLUDED)
+#endif // if !defined(GFS_SYS_H_INCLUDED)

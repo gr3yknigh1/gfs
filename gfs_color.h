@@ -20,11 +20,15 @@ typedef struct {
 
 Color4 Color4Add(Color4 a, Color4 b);
 
-#define COLOR_WHITE (Color4){U8_MAX, U8_MAX, U8_MAX, U8_MAX}
-#define COLOR_RED   (Color4){U8_MAX, 0, 0, 0}
-#define COLOR_GREEN (Color4){0, U8_MAX, 0, 0}
-#define COLOR_BLUE  (Color4){0, 0, U8_MAX, 0}
-#define COLOR_BLACK (Color4){0, 0, 0, 0}
+#define COLOR_WHITE                                                                                                    \
+    (Color4) { U8_MAX, U8_MAX, U8_MAX, U8_MAX }
+#define COLOR_RED                                                                                                      \
+    (Color4) { U8_MAX, 0, 0, 0 }
+#define COLOR_GREEN                                                                                                    \
+    (Color4) { 0, U8_MAX, 0, 0 }
+#define COLOR_BLUE                                                                                                     \
+    (Color4) { 0, 0, U8_MAX, 0 }
+#define COLOR_BLACK                                                                                                    \
+    (Color4) { 0, 0, 0, 0 }
 
 #endif // GFS_COLOR_H_INCLUDED
-

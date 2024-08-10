@@ -14,4 +14,4 @@
 #define KEY_S 0x53
 #define KEY_W 0x57
 
-#endif  // GFS_WIN32_KEYS_INCLUDED
+#endif // GFS_WIN32_KEYS_INCLUDED
