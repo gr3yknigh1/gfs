@@ -52,18 +52,18 @@ global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 global_var LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
 
 global_var BMR_Renderer g_renderer;
-global_var Bool g_shouldStop = false;
-global_var Bool g_isSoundPlaying = false;
+global_var bool g_shouldStop = false;
+global_var bool g_isSoundPlaying = false;
 
 global_var struct {
     Rect Rect;
     Color4 Color;
 
     struct {
-        Bool LeftPressed;
-        Bool RightPressed;
-        Bool UpPressed;
-        Bool DownPressed;
+        bool LeftPressed;
+        bool RightPressed;
+        bool UpPressed;
+        bool DownPressed;
     } Input;
 } g_player;
 
@@ -113,7 +113,7 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 internal Win32_InitDSoundResult
-Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize) {
+Win32_InitDSound(HWND window, i32 samplesPerSecond, usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
 
     if (library == NULL) {
@@ -182,13 +182,13 @@ Win32_InitDSound(HWND window, S32 samplesPerSecond, Size bufferSize) {
 }
 
 typedef struct {
-    U32 runningSampleIndex;
-    U32 toneHZ;
-    S32 samplesPerSecond;
-    S32 toneVolume;
-    S32 wavePeriod;
-    Size bytesPerSample;
-    Size audioBufferSize;
+    u32 runningSampleIndex;
+    u32 toneHZ;
+    i32 samplesPerSecond;
+    i32 toneVolume;
+    i32 wavePeriod;
+    usize bytesPerSample;
+    usize audioBufferSize;
 } Win32_SoundOutput;
 
 internal Win32_SoundOutput
@@ -200,7 +200,7 @@ Win32_SoundOutputMake(void) {
     ret.toneVolume = 1000;
 
     ret.wavePeriod = ret.samplesPerSecond / ret.toneHZ;
-    ret.bytesPerSample = sizeof(S16) * 2;
+    ret.bytesPerSample = sizeof(i16) * 2;
     ret.audioBufferSize = ret.samplesPerSecond * ret.bytesPerSample;
     return ret;
 }
@@ -208,28 +208,28 @@ Win32_SoundOutputMake(void) {
 internal procedure
 Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, DWORD byteToLock, DWORD bytesToWrite) {
     VOID *region1, *region2;
-    Size region1Size, region2Size;
+    usize region1Size, region2Size;
 
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
     VCALL(g_Win32_AudioBuffer, Lock, byteToLock, bytesToWrite, &region1, &region1Size, &region2, &region2Size, 0);
 
     DWORD region1SampleCount = region1Size / soundOutput->bytesPerSample;
-    S16 *sampleOut = (S16 *)region1;
-    for (U32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
-        F32 sinePosition = 2.0f * PI32 * (F32)soundOutput->runningSampleIndex / (F32)soundOutput->wavePeriod;
-        F32 sineValue = sinf(sinePosition);
-        S16 sampleValue = (S16)(sineValue * soundOutput->toneVolume);
+    i16 *sampleOut = (i16 *)region1;
+    for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
+        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sineValue = sinf(sinePosition);
+        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;
         ++soundOutput->runningSampleIndex;
     }
 
     DWORD region2SampleCount = region2Size / soundOutput->bytesPerSample;
-    sampleOut = (S16 *)region2;
-    for (U32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        F32 sinePosition = 2.0f * PI32 * (F32)soundOutput->runningSampleIndex / (F32)soundOutput->wavePeriod;
-        F32 sineValue = sinf(sinePosition);
-        S16 sampleValue = (S16)(sineValue * soundOutput->toneVolume);
+    sampleOut = (i16 *)region2;
+    for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
+        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sineValue = sinf(sinePosition);
+        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;
         ++soundOutput->runningSampleIndex;
@@ -355,8 +355,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     Win32_FillSoundBuffer(&soundOutput, 0, soundOutput.audioBufferSize);
     VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
-    U32 xOffset = 0;
-    U32 yOffset = 0;
+    u32 xOffset = 0;
+    u32 yOffset = 0;
 
     g_player.Rect.X = PLAYER_INIT_X;
     g_player.Rect.Y = PLAYER_INIT_Y;
@@ -387,10 +387,10 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
             if (result == ERROR_SUCCESS) {
                 XINPUT_GAMEPAD *pad = &xInputState.Gamepad;
 
-                Bool dPadUp = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
-                Bool dPadDown = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-                Bool dPadLeft = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-                Bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+                bool dPadUp = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
+                bool dPadDown = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
+                bool dPadLeft = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
+                bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
 
                 g_player.Input.RightPressed = dPadRight;
                 g_player.Input.LeftPressed = dPadLeft;

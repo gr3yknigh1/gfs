@@ -10,15 +10,15 @@
 #include "gfs_types.h"
 
 typedef struct {
-    U16 X;
-    U16 Y;
-    U16 Width;
-    U16 Height;
+    u16 X;
+    u16 Y;
+    u16 Width;
+    u16 Height;
 } Rect;
 
-Bool RectIsInside(Rect r, U16 x, U16 y);
-Bool RectIsOverlapping(Rect r);
+bool RectIsInside(Rect r, u16 x, u16 y);
+bool RectIsOverlapping(Rect r);
 
-U64 GetOffset(U64 width, U64 y, U64 x);
+u64 GetOffset(u64 width, u64 y, u64 x);
 
 #endif // GFS_GEOMETRY_H_INCLUDED

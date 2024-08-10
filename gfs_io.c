@@ -12,7 +12,7 @@
 #include "gfs_string.h"
 
 IOResult
-IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms) {
+IOOpenFile(cstr8 filePath, FileHandle *handleOut, IOPermissions perms) {
     if (filePath == NULL || handleOut == NULL || CStr8IsEmpty(filePath)) {
         return IO_ERR_INVALID_ARGS;
     }
@@ -44,12 +44,12 @@ IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms) {
 
 // TODO(ilya.a): Should I inline this? [2024/05/26]
 IOResult
-IOLoadBytesFromFile(FileHandle *handle, Void *buffer, Size numberOfBytes) {
+IOLoadBytesFromFile(FileHandle *handle, void *buffer, usize numberOfBytes) {
     return IOLoadBytesFromFileEx(handle, buffer, numberOfBytes, 0);
 }
 
 IOResult
-IOLoadBytesFromFileEx(FileHandle *handle, Void *buffer, Size numberOfBytes, Size offset) {
+IOLoadBytesFromFileEx(FileHandle *handle, void *buffer, usize numberOfBytes, usize offset) {
     if (handle == NULL || buffer == NULL || IO_HANDLE_IS_VALID(*handle)) {
         return IO_ERR_INVALID_ARGS;
     }
@@ -69,7 +69,7 @@ IOLoadBytesFromFileEx(FileHandle *handle, Void *buffer, Size numberOfBytes, Size
 
     DWORD setFilePointerResult = SetFilePointer(
         *handle,
-        (U32)offset, // XXX(ilya.a): Hack [2024/05/26]
+        (u32)offset, // XXX(ilya.a): Hack [2024/05/26]
         NULL, FILE_BEGIN);
 
     if (setFilePointerResult == INVALID_SET_FILE_POINTER) {

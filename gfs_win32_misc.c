@@ -7,7 +7,7 @@
 #include "gfs_win32_misc.h"
 
 void
-Win32_GetRectSize(const RECT *r, S32 *w, S32 *h) {
+Win32_GetRectSize(const RECT *r, i32 *w, i32 *h) {
     *w = r->right - r->left;
     *h = r->bottom - r->top;
 }

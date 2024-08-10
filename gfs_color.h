@@ -12,10 +12,10 @@
 
 // NOTE(ilya.a): Ordered according to GDI requirements.
 typedef struct {
-    U8 B;
-    U8 G;
-    U8 R;
-    U8 A;
+    u8 b;
+    u8 g;
+    u8 r;
+    u8 a;
 } Color4;
 
 Color4 Color4Add(Color4 a, Color4 b);

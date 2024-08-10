@@ -12,7 +12,7 @@
 #include "gfs_io.h"
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveAsset *waveAssetOut) {
+WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstr8 assetPath, WaveAsset *waveAssetOut) {
     if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath)) {
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
@@ -47,7 +47,7 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveA
     //     return WAVEASSET_LOAD_ERR_INVALID_MAGIC;
     // }
 
-    Void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
+    void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
 
     if (data == NULL) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC;
@@ -65,6 +65,6 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, CStr8 assetPath, WaveA
     return WAVEASSET_LOAD_OK;
 }
 
-WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const Void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);

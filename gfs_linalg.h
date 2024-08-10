@@ -4,19 +4,19 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#ifndef GFS_LINALG_H_INCLUDED
+#if !defined(GFS_LINALG_H_INCLUDED)
 #define GFS_LINALG_H_INCLUDED
 
 #include "gfs_types.h"
 
 typedef struct {
-    S32 X;
-    S32 Y;
-} Vec2S32;
+    i32 X;
+    i32 Y;
+} v2i32;
 
 typedef struct {
-    U32 X;
-    U32 Y;
-} Vec2U32;
+    u32 X;
+    u32 Y;
+} v2u32;
 
 #endif // GFS_LINALG_H_INCLUDED

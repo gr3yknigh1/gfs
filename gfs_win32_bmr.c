@@ -19,7 +19,7 @@
 #define BMR_RENDER_COMMAND_CAPACITY 1024
 
 internal void
-Win32_UpdateWindow(BMR_Renderer *renderer, S32 windowXOffset, S32 windowYOffset, S32 windowWidth, S32 windowHeight) {
+Win32_UpdateWindow(BMR_Renderer *renderer, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
     StretchDIBits(
         renderer->DC, windowXOffset, windowYOffset, windowWidth, windowHeight, renderer->XOffset, renderer->YOffset,
         renderer->Pixels.Width, renderer->Pixels.Height, renderer->Pixels.Buffer, &renderer->Info, DIB_RGB_COLORS,
@@ -32,7 +32,7 @@ BMR_Init(Color4 clearColor, HWND window) {
 
     r.ClearColor = clearColor;
     r.CommandQueue.Begin =
-        (Byte *)VirtualAlloc(NULL, BMR_RENDER_COMMAND_CAPACITY, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        (byte *)VirtualAlloc(NULL, BMR_RENDER_COMMAND_CAPACITY, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     r.CommandQueue.End = r.CommandQueue.Begin;
     r.CommandCount = 0;
 
@@ -75,16 +75,16 @@ BMR_BeginDrawing(BMR_Renderer *renderer) {
 
 void
 BMR_EndDrawing(BMR_Renderer *renderer) {
-    Size pitch = renderer->Pixels.Width * renderer->BPP;
-    U8 *row = (U8 *)renderer->Pixels.Buffer;
+    usize pitch = renderer->Pixels.Width * renderer->BPP;
+    u8 *row = (u8 *)renderer->Pixels.Buffer;
 
-    for (U64 y = 0; y < renderer->Pixels.Height; ++y) {
+    for (u64 y = 0; y < renderer->Pixels.Height; ++y) {
         Color4 *pixel = (Color4 *)row;
 
-        for (U64 x = 0; x < renderer->Pixels.Width; ++x) {
-            Size offset = 0;
+        for (u64 x = 0; x < renderer->Pixels.Width; ++x) {
+            usize offset = 0;
 
-            for (U64 commandIdx = 0; commandIdx < renderer->CommandCount; ++commandIdx) {
+            for (u64 commandIdx = 0; commandIdx < renderer->CommandCount; ++commandIdx) {
                 BMR_RenderCommandType type = *((BMR_RenderCommandType *)(renderer->CommandQueue.Begin + offset));
 
                 offset += sizeof(BMR_RenderCommandType);
@@ -96,11 +96,11 @@ BMR_EndDrawing(BMR_Renderer *renderer) {
                     *pixel = color;
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_LINE): {
-                    Vec2U32 p1 = *(Vec2U32 *)(renderer->CommandQueue.Begin + offset);
-                    offset += sizeof(Vec2U32);
+                    v2u32 p1 = *(v2u32 *)(renderer->CommandQueue.Begin + offset);
+                    offset += sizeof(v2u32);
 
-                    Vec2U32 p2 = *(Vec2U32 *)(renderer->CommandQueue.Begin + offset);
-                    offset += sizeof(Vec2U32);
+                    v2u32 p2 = *(v2u32 *)(renderer->CommandQueue.Begin + offset);
+                    offset += sizeof(v2u32);
 
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_RECT): {
@@ -115,8 +115,8 @@ BMR_EndDrawing(BMR_Renderer *renderer) {
                     }
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_GRADIENT): {
-                    Vec2U32 v = *(Vec2U32 *)(renderer->CommandQueue.Begin + offset);
-                    offset += sizeof(Vec2U32);
+                    v2u32 v = *(v2u32 *)(renderer->CommandQueue.Begin + offset);
+                    offset += sizeof(v2u32);
 
                     *pixel = (Color4){x + v.X, y + v.Y, 0};
                 } break;
@@ -134,9 +134,9 @@ BMR_EndDrawing(BMR_Renderer *renderer) {
 
     RECT windowRect;
     GetClientRect(renderer->Window, &windowRect);
-    S32 x = windowRect.left;
-    S32 y = windowRect.top;
-    S32 width = 0, height = 0;
+    i32 x = windowRect.left;
+    i32 y = windowRect.top;
+    i32 width = 0, height = 0;
     Win32_GetRectSize(&windowRect, &width, &height);
 
     Win32_UpdateWindow(renderer, x, y, width, height);
@@ -153,9 +153,9 @@ BMR_Update(BMR_Renderer *r, HWND window) {
     if (dc == NULL) {
         // TODO(ilya.a): Handle error
     } else {
-        S32 x = ps.rcPaint.left;
-        S32 y = ps.rcPaint.top;
-        S32 width = 0, height = 0;
+        i32 x = ps.rcPaint.left;
+        i32 y = ps.rcPaint.top;
+        i32 width = 0, height = 0;
         Win32_GetRectSize(&(ps.rcPaint), &width, &height);
         Win32_UpdateWindow(r, x, y, width, height);
     }
@@ -164,7 +164,7 @@ BMR_Update(BMR_Renderer *r, HWND window) {
 }
 
 void
-BMR_Resize(BMR_Renderer *r, S32 w, S32 h) {
+BMR_Resize(BMR_Renderer *r, i32 w, i32 h) {
     if (r->Pixels.Buffer != NULL && VirtualFree(r->Pixels.Buffer, 0, MEM_RELEASE) == 0) {
         //                                                           ^^^^^^^^^^^
         // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead for
@@ -193,7 +193,7 @@ BMR_Resize(BMR_Renderer *r, S32 w, S32 h) {
     r->Info.bmiHeader.biClrUsed = 0;
     r->Info.bmiHeader.biClrImportant = 0;
 
-    Size bufferSize = w * h * r->BPP;
+    usize bufferSize = w * h * r->BPP;
     r->Pixels.Buffer = VirtualAlloc(NULL, bufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                                                ^^^^^^^^^^^
     // TODO(ilya.a): Checkout reason why we should pass MEM_RELEASE flag. [2024/05/25]
@@ -225,13 +225,13 @@ BMR_Clear(BMR_Renderer *renderer) {
 }
 
 void
-BMR_DrawLine(BMR_Renderer *renderer, U32 x1, U32 y1, U32 x2, U32 y2) {
+BMR_DrawLine(BMR_Renderer *renderer, u32 x1, u32 y1, u32 x2, u32 y2) {
     struct {
         BMR_RenderCommandType Type;
-        U32 X1;
-        U32 Y1;
-        U32 X2;
-        U32 Y2;
+        u32 X1;
+        u32 Y1;
+        u32 X2;
+        u32 Y2;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_LINE;
@@ -244,11 +244,11 @@ BMR_DrawLine(BMR_Renderer *renderer, U32 x1, U32 y1, U32 x2, U32 y2) {
 }
 
 void
-BMR_DrawLineV(BMR_Renderer *renderer, Vec2U32 point1, Vec2U32 point2) {
+BMR_DrawLineV(BMR_Renderer *renderer, v2u32 point1, v2u32 point2) {
     struct {
         BMR_RenderCommandType Type;
-        Vec2U32 Point1;
-        Vec2U32 Point2;
+        v2u32 Point1;
+        v2u32 Point2;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_LINE;
@@ -259,13 +259,13 @@ BMR_DrawLineV(BMR_Renderer *renderer, Vec2U32 point1, Vec2U32 point2) {
 }
 
 void
-BMR_DrawRect(BMR_Renderer *renderer, U32 x, U32 y, U32 width, U32 height, Color4 color) {
+BMR_DrawRect(BMR_Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4 color) {
     struct {
         BMR_RenderCommandType Type;
-        U32 X;
-        U32 Y;
-        U32 Width;
-        U32 Height;
+        u32 X;
+        u32 Y;
+        u32 Width;
+        u32 Height;
         Color4 Color;
     } payload;
 
@@ -295,11 +295,11 @@ BMR_DrawRectR(BMR_Renderer *renderer, Rect rect, Color4 color) {
 }
 
 void
-BMR_DrawGrad(BMR_Renderer *renderer, U32 xOffset, U32 yOffset) {
+BMR_DrawGrad(BMR_Renderer *renderer, u32 xOffset, u32 yOffset) {
     struct {
         BMR_RenderCommandType Type;
-        U32 XOffset;
-        U32 YOffset;
+        u32 XOffset;
+        u32 YOffset;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_GRADIENT;

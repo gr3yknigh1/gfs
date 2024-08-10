@@ -1,37 +1,33 @@
-
 /*
  * FILE      gfs_types.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#ifndef GFS_TYPES_H_INCLUDED
+#if !defined(GFS_TYPES_H_INCLUDED)
 #define GFS_TYPES_H_INCLUDED
 
-typedef signed char S8;
-typedef signed short S16;
-typedef signed int S32;
-typedef signed long S64;
+typedef signed char i8;
+typedef signed short i16;
+typedef signed int i32;
+typedef signed long i64;
 
-typedef unsigned char U8;
-typedef unsigned short U16;
-typedef unsigned int U32;
-typedef unsigned long U64;
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long u64;
 
-typedef float F32;
-typedef double F64;
+typedef float f32;
+typedef double f64;
 
-typedef U8 Byte;
-typedef U64 Size;
-typedef void Void;
+typedef u8 byte;
+typedef u64 usize;
 
-typedef char Char8;
-typedef const char *CStr8; // NOTE(ilya.a): Explicitly distiguasing C style
+typedef char char8;
+typedef const char *cstr8; // NOTE(ilya.a): Explicitly distiguasing C style
                            // string (null terminated).  [2024/05/26]
 
-#ifndef Bool
-#define Bool _Bool
-#endif // Bool
+typedef _Bool bool;
 
 #ifndef true
 #define true 1

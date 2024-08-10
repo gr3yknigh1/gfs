@@ -8,9 +8,9 @@
 Color4
 Color4Add(Color4 a, Color4 b) {
     return (Color4){
-        .B = a.B + b.B,
-        .G = a.G + b.G,
-        .R = a.R + b.R,
-        .A = a.A + b.A,
+        .b = a.b + b.b,
+        .g = a.g + b.g,
+        .r = a.r + b.r,
+        .a = a.a + b.a,
     };
 }

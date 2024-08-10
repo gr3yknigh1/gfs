@@ -28,14 +28,14 @@ typedef enum {
     IO_ERR_READED_LESS_THAN_REQUIRED,
 } IOResult;
 
-typedef U8 IOPermissions;
+typedef u8 IOPermissions;
 
 #define IO_READ MKFLAG(1)
 #define IO_WRITE MKFLAG(2)
 #define IO_READ_WRITE IO_READ | IO_WRITE
 
-IOResult IOOpenFile(CStr8 filePath, FileHandle *handleOut, IOPermissions perms);
-IOResult IOLoadBytesFromFile(FileHandle *handle, Void *buffer, Size numberOfBytes);
-IOResult IOLoadBytesFromFileEx(FileHandle *handle, Void *buffer, Size numberOfBytes, Size offset);
+IOResult IOOpenFile(cstr8 filePath, FileHandle *handleOut, IOPermissions perms);
+IOResult IOLoadBytesFromFile(FileHandle *handle, void *buffer, usize numberOfBytes);
+IOResult IOLoadBytesFromFileEx(FileHandle *handle, void *buffer, usize numberOfBytes, usize offset);
 
 #endif // GFS_IO_H_INCLUDED

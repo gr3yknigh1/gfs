@@ -8,6 +8,6 @@
 
 #include "gfs_types.h"
 
-Size Sys_GetPageSize();
+usize Sys_GetPageSize();
 
 #endif // if !defined(GFS_SYS_H_INCLUDED)

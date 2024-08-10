@@ -11,15 +11,15 @@
 #include "gfs_types.h"
 #include "gfs_sys.h"
 
-Size
-Align2PageSize(Size size) {
-    Size pageSize = Sys_GetPageSize();
+usize
+Align2PageSize(usize size) {
+    usize pageSize = Sys_GetPageSize();
     return size + (pageSize - size % pageSize);
 }
 
 ScratchAllocator
-ScratchAllocatorMake(Size size) {
-    Void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+ScratchAllocatorMake(usize size) {
+    void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
     // will round up this number to next page. [2024/05/26]
@@ -31,8 +31,8 @@ ScratchAllocatorMake(Size size) {
     };
 }
 
-Void *
-ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size) {
+void *
+ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
     if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
         return NULL;
     }
@@ -41,7 +41,7 @@ ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size) {
         return NULL;
     }
 
-    Void *data = ((Byte *)scratchAllocator->Data) + scratchAllocator->Occupied;
+    void *data = ((byte *)scratchAllocator->Data) + scratchAllocator->Occupied;
     scratchAllocator->Occupied += size;
     return data;
 }
@@ -62,46 +62,46 @@ ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
 // TODO(ilya.a): Use SIMD [2024/05/19]
 
 void
-MemoryCopy(void *destination, const void *source, Size size) {
-    for (Size i = 0; i < size; ++i) {
-        ((Byte *)destination)[i] = ((Byte *)source)[i];
+MemoryCopy(void *destination, const void *source, usize size) {
+    for (usize i = 0; i < size; ++i) {
+        ((byte *)destination)[i] = ((byte *)source)[i];
     }
 }
 
 void
-MemorySet(void *data, Byte value, Size size) {
+MemorySet(void *data, byte value, usize size) {
     if (size % 4 == 0) {
-        for (Size i = 0; i < size / 4; i += 4) {
-            ((Byte *)data)[i] = value;
-            ((Byte *)data)[i + 1] = value;
-            ((Byte *)data)[i + 2] = value;
-            ((Byte *)data)[i + 3] = value;
+        for (usize i = 0; i < size / 4; i += 4) {
+            ((byte *)data)[i] = value;
+            ((byte *)data)[i + 1] = value;
+            ((byte *)data)[i + 2] = value;
+            ((byte *)data)[i + 3] = value;
         }
     } else {
-        for (Size i = 0; i < size; ++i) {
-            ((Byte *)data)[i] = value;
+        for (usize i = 0; i < size; ++i) {
+            ((byte *)data)[i] = value;
         }
     }
 }
 
 void
-MemoryZero(void *data, Size size) {
-    for (Size i = 0; i < size; ++i) {
-        ((Byte *)data)[i] = 0;
+MemoryZero(void *data, usize size) {
+    for (usize i = 0; i < size; ++i) {
+        ((byte *)data)[i] = 0;
     }
 }
 
 Block *
-BlockMake(Size size) {
-    Size bytesAllocated = Align2PageSize(size + sizeof(Block));
-    Void *allocatedData = VirtualAlloc(NULL, bytesAllocated, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+BlockMake(usize size) {
+    usize bytesAllocated = Align2PageSize(size + sizeof(Block));
+    void *allocatedData = VirtualAlloc(NULL, bytesAllocated, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
     if (allocatedData == NULL) {
         return NULL;
     }
 
     Block *segment = (Block *)allocatedData;
-    Void *data = (Byte *)(allocatedData) + sizeof(Block);
+    void *data = (byte *)(allocatedData) + sizeof(Block);
 
     segment = allocatedData;
     segment->arena.Data = data;
@@ -120,14 +120,14 @@ BlockAllocatorMake() {
 }
 
 BlockAllocator
-BlockAllocatorMakeEx(Size size) {
+BlockAllocatorMakeEx(usize size) {
     BlockAllocator allocator = {0};
     allocator.Head = BlockMake(size);
     return allocator;
 }
 
-Void *
-BlockAllocatorAlloc(BlockAllocator *allocator, Size size) {
+void *
+BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
     if (allocator == NULL) {
         return NULL;
     }
@@ -155,9 +155,9 @@ BlockAllocatorAlloc(BlockAllocator *allocator, Size size) {
     return ScratchAllocatorAlloc(&newBlock->arena, size);
 }
 
-Void *
-BlockAllocatorAllocZ(BlockAllocator *allocator, Size size) {
-    Void *data = BlockAllocatorAlloc(allocator, size);
+void *
+BlockAllocatorAllocZ(BlockAllocator *allocator, usize size) {
+    void *data = BlockAllocatorAlloc(allocator, size);
     MemoryZero(data, size);
     return data;
 }

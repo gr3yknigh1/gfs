@@ -23,7 +23,7 @@ typedef enum {
 /* NOTE(ilya.a): This piece of code just for the sake of the shame
  * I have with MSVC and C language. Which doesn't support fixed-size enums. [2024/05/26]
  */
-typedef U16 WaveFileAudioFormatTag;
+typedef u16 WaveFileAudioFormatTag;
 
 #pragma pack(push, 1)
 /*
@@ -34,29 +34,29 @@ typedef U16 WaveFileAudioFormatTag;
  */
 typedef struct {
     /* Master RIFF chunk */
-    Char8 FileTypeBlocID[4]; // Identifier [RIFF]  (0x52, 0x49, 0x46, 0x46)
-    U32 FileSize;            // Overall file size minus 8 bytes
-    Char8 FileFormatID[4];   // Format = [WAVE]  (0x57, 0x41, 0x56, 0x45)
+    char8 FileTypeBlocID[4]; // Identifier [RIFF]  (0x52, 0x49, 0x46, 0x46)
+    u32 FileSize;            // Overall file size minus 8 bytes
+    char8 FileFormatID[4];   // Format = [WAVE]  (0x57, 0x41, 0x56, 0x45)
 
     /* Chunk describing the data format */
-    Char8 FormatBlocID[4];              // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
-    U32 BlockSize;                      // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
+    char8 FormatBlocID[4];              // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
+    u32 BlockSize;                      // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
     WaveFileAudioFormatTag AudioFormat; // Audio format (1: PCM integer, 3: IIEE float)
-    U16 NumberOfChannels;               // Number of channels
-    U32 FreqHZ;                         // Sample rate (in hertz)
-    U32 BytePerSec;                     // Number of bytes to read per second (Frequence * BytePerBloc)
-    U16 BytePerBloc;                    // Number of bytes per block (NbrChannels * BitsPerSample / 8)
-    U16 BitsPerSample;                  // Number of bits per sample
+    u16 NumberOfChannels;               // Number of channels
+    u32 FreqHZ;                         // Sample rate (in hertz)
+    u32 BytePerSec;                     // Number of bytes to read per second (Frequence * BytePerBloc)
+    u16 BytePerBloc;                    // Number of bytes per block (NbrChannels * BitsPerSample / 8)
+    u16 BitsPerSample;                  // Number of bits per sample
 
     /* Chunk containing the sampled data */
-    Char8 DataBlocID[4]; // Identifier "data"  (0x64, 0x61, 0x74, 0x61)
-    U32 DataSize;        // SampledData size
+    char8 DataBlocID[4]; // Identifier "data"  (0x64, 0x61, 0x74, 0x61)
+    u32 DataSize;        // SampledData size
 } WaveFileHeader;
 #pragma pack(pop)
 
 typedef struct {
     WaveFileHeader Header;
-    Void *Data;
+    void *Data;
 } WaveAsset;
 
 typedef enum {
@@ -70,8 +70,8 @@ typedef enum {
     WAVEASSET_LOAD_ERR_INVALID_MAGIC,   // Asset failed signature checks.
 } WaveAssetLoadResult;
 
-WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, CStr8 assetPath, WaveAsset *waveAssetOut);
-WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const Void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, cstr8 assetPath, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);
 

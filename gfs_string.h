@@ -10,12 +10,12 @@
 #include "gfs_types.h"
 
 typedef struct {
-    Char8 *Data;
-    Size Size;
+    char8 *Data;
+    usize Size;
 } Str8;
 
-Size CStr8GetLength(CStr8 s);
-Bool CStr8IsEmpty(CStr8 s);
-Bool CStr8IsEqual(CStr8 s0, CStr8 s1);
+usize CStr8GetLength(cstr8 s);
+bool CStr8IsEmpty(cstr8 s);
+bool CStr8IsEqual(cstr8 s0, cstr8 s1);
 
 #endif // GFS_STRING_H_INCLUDED

@@ -14,34 +14,34 @@
 #define MEGABYTES(X) (1024 * 1024 * (X))
 #define GIGABYTES(X) (1024 * 1024 * 1024 * (X))
 
-Size Align2PageSize(Size size);
+usize Align2PageSize(usize size);
 
 /*
  * Scratch Allocator.
  */
 typedef struct {
-    Void *Data;
-    Size Capacity;
-    Size Occupied;
+    void *Data;
+    usize Capacity;
+    usize Occupied;
 } ScratchAllocator;
 
 #define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE) ((ALLOCATORPTR)->Occupied + (SIZE) <= (ALLOCATORPTR)->Capacity)
 
-ScratchAllocator ScratchAllocatorMake(Size size);
+ScratchAllocator ScratchAllocatorMake(usize size);
 
-Void *ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, Size size);
+void *ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size);
 void ScratchAllocatorFree(ScratchAllocator *scratchAllocator);
 
-void MemoryCopy(Void *dest, const Void *source, Size size);
-void MemorySet(Void *data, Byte value, Size size);
-void MemoryZero(Void *data, Size size);
+void MemoryCopy(void *dest, const void *source, usize size);
+void MemorySet(void *data, byte value, usize size);
+void MemoryZero(void *data, usize size);
 
 typedef struct Block {
     ScratchAllocator arena;
     struct Block *Next;
 } Block;
 
-Block *BlockMake(Size size);
+Block *BlockMake(usize size);
 
 /*
  * Block Allocator
@@ -51,10 +51,10 @@ typedef struct {
 } BlockAllocator;
 
 BlockAllocator BlockAllocatorMake();
-BlockAllocator BlockAllocatorMakeEx(Size size);
+BlockAllocator BlockAllocatorMakeEx(usize size);
 
-Void *BlockAllocatorAlloc(BlockAllocator *allocator, Size size);
-Void *BlockAllocatorAllocZ(BlockAllocator *allocator, Size size);
+void *BlockAllocatorAlloc(BlockAllocator *allocator, usize size);
+void *BlockAllocatorAllocZ(BlockAllocator *allocator, usize size);
 
 void BlockAllocatorFree(BlockAllocator *allocator);
 

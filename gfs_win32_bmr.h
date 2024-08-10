@@ -28,20 +28,20 @@ typedef struct {
     Color4 ClearColor;
 
     struct {
-        U8 *Begin;
-        U8 *End;
+        u8 *Begin;
+        u8 *End;
     } CommandQueue;
 
-    U64 CommandCount;
+    u64 CommandCount;
 
-    U8 BPP;
-    U64 XOffset;
-    U64 YOffset;
+    u8 BPP;
+    u64 XOffset;
+    u64 YOffset;
 
     struct {
         void *Buffer;
-        U64 Width;
-        U64 Height;
+        u64 Width;
+        u64 Height;
     } Pixels;
 
     BITMAPINFO Info;
@@ -61,20 +61,20 @@ BMR_Renderer BMR_Init(Color4 clearColor, HWND window);
 void BMR_DeInit(BMR_Renderer *renderer);
 
 void BMR_Update(BMR_Renderer *renderer, HWND window);
-void BMR_Resize(BMR_Renderer *renderer, S32 w, S32 h);
+void BMR_Resize(BMR_Renderer *renderer, i32 w, i32 h);
 
 void BMR_BeginDrawing(BMR_Renderer *renderer);
 void BMR_EndDrawing(BMR_Renderer *renderer);
 
 void BMR_Clear(BMR_Renderer *renderer);
 
-void BMR_DrawLine(BMR_Renderer *renderer, U32 x1, U32 y1, U32 x2, U32 y2);
-void BMR_DrawLineV(BMR_Renderer *renderer, Vec2U32 p1, Vec2U32 p2);
+void BMR_DrawLine(BMR_Renderer *renderer, u32 x1, u32 y1, u32 x2, u32 y2);
+void BMR_DrawLineV(BMR_Renderer *renderer, v2u32 p1, v2u32 p2);
 
-void BMR_DrawRect(BMR_Renderer *renderer, U32 x, U32 y, U32 w, U32 h, Color4 c);
+void BMR_DrawRect(BMR_Renderer *renderer, u32 x, u32 y, u32 w, u32 h, Color4 c);
 void BMR_DrawRectR(BMR_Renderer *renderer, Rect r, Color4 c);
 
-void BMR_DrawGrad(BMR_Renderer *renderer, U32 xOffset, U32 yOffset);
-void BMR_DrawGradV(BMR_Renderer *renderer, Vec2U32 offset);
+void BMR_DrawGrad(BMR_Renderer *renderer, u32 xOffset, u32 yOffset);
+void BMR_DrawGradV(BMR_Renderer *renderer, v2u32 offset);
 
 #endif // GFS_BMR_H_INCLUDED
