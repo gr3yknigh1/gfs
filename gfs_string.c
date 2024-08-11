@@ -8,7 +8,7 @@
 #include "gfs_types.h"
 
 usize
-CStr8_GetLength(cstr8 s) {
+CStr8GetLength(cstr8 s) {
     usize size = 0;
     while (s[size] != '\0') {
         size++;
