@@ -9,11 +9,6 @@
 
 #include "gfs_types.h"
 
-typedef struct {
-    char8 *Data;
-    usize Size;
-} Str8;
-
 usize CStr8GetLength(cstr8 s);
 bool CStr8IsEmpty(cstr8 s);
 bool CStr8IsEqual(cstr8 s0, cstr8 s1);
