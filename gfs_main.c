@@ -51,9 +51,9 @@ global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
 global_var LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
 
-global_var BMR_Renderer g_renderer;
-global_var bool g_shouldStop = false;
-global_var bool g_isSoundPlaying = false;
+global_var BMR_Renderer gRenderer;
+global_var bool gShouldStop = false;
+global_var bool gIsSoundPlaying = false;
 
 global_var struct {
     Rect Rect;
@@ -65,7 +65,7 @@ global_var struct {
         bool UpPressed;
         bool DownPressed;
     } Input;
-} g_player;
+} gPlayer;
 
 #define PLAYER_INIT_X 100
 #define PLAYER_INIT_Y 60
@@ -288,7 +288,7 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_CLOSE: {
         // TODO(ilya.a): Ask for closing?
         OutputDebugString("T: WM_CLOSE\n");
-        g_shouldStop = true;
+        gShouldStop = true;
     } break;
     case WM_DESTROY: {
         // TODO(ilya.a): Casey says that we maybe should recreate window later?
@@ -352,8 +352,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     ShowWindow(window, showMode);
 
-    g_renderer = BMR_Init(COLOR_WHITE, window);
-    BMR_Resize(&g_renderer, 900, 600);
+    gRenderer = BMR_Init(COLOR_WHITE, window);
+    BMR_Resize(&gRenderer, 900, 600);
 
     Win32_SoundOutput soundOutput = Win32_SoundOutputMake();
     Win32_InitDSoundResult initDSoundResult =
@@ -369,21 +369,21 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     u32 xOffset = 0;
     u32 yOffset = 0;
 
-    g_player.Rect.X = PLAYER_INIT_X;
-    g_player.Rect.Y = PLAYER_INIT_Y;
-    g_player.Rect.Width = PLAYER_WIDTH;
-    g_player.Rect.Height = PLAYER_HEIGHT;
-    g_player.Color = Color4Add(COLOR_RED, COLOR_BLUE);
+    gPlayer.Rect.X = PLAYER_INIT_X;
+    gPlayer.Rect.Y = PLAYER_INIT_Y;
+    gPlayer.Rect.Width = PLAYER_WIDTH;
+    gPlayer.Rect.Height = PLAYER_HEIGHT;
+    gPlayer.Color = Color4Add(COLOR_RED, COLOR_BLUE);
 
-    g_renderer.ClearColor = COLOR_WHITE;
+    gRenderer.ClearColor = COLOR_WHITE;
 
-    while (!g_shouldStop) {
+    while (!gShouldStop) {
 
         MSG message = {};
         while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
             if (message.message == WM_QUIT) {
                 // NOTE(ilya.a): Make sure that we will quit the mainloop.
-                g_shouldStop = true;
+                gShouldStop = true;
             }
 
             TranslateMessage(&message);
@@ -418,18 +418,18 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
                 xOffset += leftStickX / 4096;
                 yOffset += leftStickY / 4096;
 
-                g_player.Input.RightPressed = dPadRight;
-                g_player.Input.LeftPressed = dPadLeft;
+                gPlayer.Input.RightPressed = dPadRight;
+                gPlayer.Input.LeftPressed = dPadLeft;
 
-                g_player.Input.UpPressed = dPadUp;
-                g_player.Input.DownPressed = dPadDown;
+                gPlayer.Input.UpPressed = dPadUp;
+                gPlayer.Input.DownPressed = dPadDown;
 
                 Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f * ((f32)leftStickY / 30000.0f)) + 512);
 
                 XINPUT_VIBRATION vibrationState = {0};
 
-                if (g_player.Input.RightPressed || g_player.Input.LeftPressed || g_player.Input.UpPressed ||
-                    g_player.Input.DownPressed) {
+                if (gPlayer.Input.RightPressed || gPlayer.Input.LeftPressed || gPlayer.Input.UpPressed ||
+                    gPlayer.Input.DownPressed) {
 #if 0
                     vibrationState.wLeftMotorSpeed = 60000;
                     vibrationState.wRightMotorSpeed = 60000;
@@ -449,28 +449,28 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
             }
         }
 
-        if (g_player.Input.LeftPressed) {
-            g_player.Rect.X -= PLAYER_SPEED;
+        if (gPlayer.Input.LeftPressed) {
+            gPlayer.Rect.X -= PLAYER_SPEED;
         }
 
-        if (g_player.Input.RightPressed) {
-            g_player.Rect.X += PLAYER_SPEED;
+        if (gPlayer.Input.RightPressed) {
+            gPlayer.Rect.X += PLAYER_SPEED;
         }
 
-        if (g_player.Input.DownPressed) {
-            g_player.Rect.Y -= PLAYER_SPEED;
+        if (gPlayer.Input.DownPressed) {
+            gPlayer.Rect.Y -= PLAYER_SPEED;
         }
 
-        if (g_player.Input.UpPressed) {
-            g_player.Rect.Y += PLAYER_SPEED;
+        if (gPlayer.Input.UpPressed) {
+            gPlayer.Rect.Y += PLAYER_SPEED;
         }
 
-        BMR_BeginDrawing(&g_renderer);
+        BMR_BeginDrawing(&gRenderer);
 
-        BMR_Clear(&g_renderer);
-        BMR_DrawGrad(&g_renderer, xOffset, yOffset);
-        BMR_DrawRectR(&g_renderer, g_player.Rect, g_player.Color);
-        BMR_DrawLine(&g_renderer, 100, 200, 500, 600);
+        BMR_Clear(&gRenderer);
+        BMR_DrawGrad(&gRenderer, xOffset, yOffset);
+        BMR_DrawRectR(&gRenderer, gPlayer.Rect, gPlayer.Color);
+        BMR_DrawLine(&gRenderer, 100, 200, 500, 600);
 
         DWORD playCursor;
         DWORD writeCursor;
@@ -492,13 +492,13 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
             Win32_FillSoundBuffer(&soundOutput, byteToLock, bytesToWrite);
         }
 
-        BMR_EndDrawing(&g_renderer);
+        BMR_EndDrawing(&gRenderer);
 
         xOffset++;
         yOffset++;
     }
 
-    BMR_DeInit(&g_renderer);
+    BMR_DeInit(&gRenderer);
 
     return 0;
 }
