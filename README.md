@@ -14,7 +14,7 @@ Tools:
 * CMake: version 3.20
 * MSVC: version i am lazy to check which minimal version of the compiler you need.
 
-DLLs:
+DLLs (the should be on every windows machine these days):
 
 * `Xinput.dll`
 * `DirectSound.dll`
