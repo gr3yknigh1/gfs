@@ -37,7 +37,7 @@ if exist %configuration_path%\ (
   cmake -G "Ninja Multi-Config" -B %configuration_path% -S %project_path% -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 )
 
-cmake --build %configuration_path%
+cmake --build %configuration_path% --config Debug
 
 popd
 
