@@ -413,8 +413,10 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
                 i16 rightStickX = pad->sThumbRX;
                 i16 rightStickY = pad->sThumbRY;
 
-                xOffset += leftStickX >> 12;
-                yOffset += leftStickY >> 12;
+                // TODO(ilya.a): Handle deadzone propery, using XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE and
+                // XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE [2024/08/11]
+                xOffset += leftStickX / 4096;
+                yOffset += leftStickY / 4096;
 
                 g_player.Input.RightPressed = dPadRight;
                 g_player.Input.LeftPressed = dPadLeft;
@@ -422,11 +424,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
                 g_player.Input.UpPressed = dPadUp;
                 g_player.Input.DownPressed = dPadDown;
 
-                // if (aButton) {
                 Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f * ((f32)leftStickY / 30000.0f)) + 512);
-                // } else {
-                //     Win32_SoundOutputSetTone(&soundOutput, 256);
-                // }
 
                 XINPUT_VIBRATION vibrationState = {0};
 
