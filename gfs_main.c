@@ -376,6 +376,9 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     LARGE_INTEGER lastCounter = {0};
     ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
 
+    u64 lastCycleCount = __rdtsc();
+
+    /// BEGIN(MAINLOOP)
     while (!gShouldStop) {
         MSG message = {};
         while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
@@ -495,23 +498,29 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
         xOffset++;
         yOffset++;
 
-        LARGE_INTEGER endCounter;
-        ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
-
-        // TODO(ilya.a): Display counter [2024/11/08]
-
-        LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
-        u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-        u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
-
         {
-            char8 printBuffer[KILOBYTES(1)];
-            wsprintf(printBuffer, "Frame took %ums | %uFPS\n", msPerFrame, framesPerSeconds);
-            OutputDebugString(printBuffer);
-        }
+            u64 endCycleCount = __rdtsc();
 
-        lastCounter = endCounter;
+            LARGE_INTEGER endCounter;
+            ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
+
+            // TODO(ilya.a): Display counter [2024/11/08]
+
+            u64 cyclesElapsed = endCycleCount - lastCycleCount;
+            LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
+            u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
+            u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
+
+            char8 printBuffer[KILOBYTES(1)];
+            wsprintf(printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame, framesPerSeconds, megaCyclesPerFrame);
+            OutputDebugString(printBuffer);
+            lastCounter = endCounter;
+            lastCycleCount = endCycleCount;
+        }
     }
+
+    /// END(MAINLOOP)
 
     BMR_DeInit(&gRenderer);
 
