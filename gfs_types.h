@@ -48,4 +48,6 @@ typedef _Bool bool;
 #define U32_MAX 4294967295
 #define U64_MAX 18446744073709551615
 
+
+
 #endif // GFS_TYPES_H_INCLUDED

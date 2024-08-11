@@ -189,6 +189,8 @@ typedef struct {
     i32 wavePeriod;
     usize bytesPerSample;
     usize audioBufferSize;
+
+    i32 latencySampleCount;
 } Win32_SoundOutput;
 
 internal Win32_SoundOutput
@@ -202,7 +204,15 @@ Win32_SoundOutputMake(void) {
     ret.wavePeriod = ret.samplesPerSecond / ret.toneHZ;
     ret.bytesPerSample = sizeof(i16) * 2;
     ret.audioBufferSize = ret.samplesPerSecond * ret.bytesPerSample;
+
+    ret.latencySampleCount = ret.samplesPerSecond / 15;
     return ret;
+}
+
+internal procedure
+Win32_SoundOutputSetTone(Win32_SoundOutput *soundOutput, i32 toneHZ) {
+    soundOutput->toneHZ = toneHZ;
+    soundOutput->wavePeriod = soundOutput->samplesPerSecond / soundOutput->toneHZ;
 }
 
 internal procedure
@@ -352,7 +362,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
         OutputDebugString("W: Failed to init DSound!\n");
     }
 
-    Win32_FillSoundBuffer(&soundOutput, 0, soundOutput.audioBufferSize);
+    Win32_FillSoundBuffer(
+        &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
     VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
     u32 xOffset = 0;
@@ -387,16 +398,35 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
             if (result == ERROR_SUCCESS) {
                 XINPUT_GAMEPAD *pad = &xInputState.Gamepad;
 
+                bool aButton = pad->wButtons & XINPUT_GAMEPAD_A;
+                bool bButton = pad->wButtons & XINPUT_GAMEPAD_B;
+                bool xButton = pad->wButtons & XINPUT_GAMEPAD_X;
+                bool yButton = pad->wButtons & XINPUT_GAMEPAD_Y;
+
                 bool dPadUp = pad->wButtons & XINPUT_GAMEPAD_DPAD_UP;
                 bool dPadDown = pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
                 bool dPadLeft = pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
                 bool dPadRight = pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
+
+                i16 leftStickX = pad->sThumbLX;
+                i16 leftStickY = pad->sThumbLY;
+                i16 rightStickX = pad->sThumbRX;
+                i16 rightStickY = pad->sThumbRY;
+
+                xOffset += leftStickX >> 12;
+                yOffset += leftStickY >> 12;
 
                 g_player.Input.RightPressed = dPadRight;
                 g_player.Input.LeftPressed = dPadLeft;
 
                 g_player.Input.UpPressed = dPadUp;
                 g_player.Input.DownPressed = dPadDown;
+
+                // if (aButton) {
+                Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f * ((f32)leftStickY / 30000.0f)) + 512);
+                // } else {
+                //     Win32_SoundOutputSetTone(&soundOutput, 256);
+                // }
 
                 XINPUT_VIBRATION vibrationState = {0};
 
@@ -410,6 +440,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
                     vibrationState.wLeftMotorSpeed = 0;
                     vibrationState.wRightMotorSpeed = 0;
                 }
+
                 Win32_xInputSetStatePtr(xControllerIndex, &vibrationState);
             } else if (result == ERROR_DEVICE_NOT_CONNECTED) {
                 // NOTE(ilya.a): Do nothing. I thought to log that.
@@ -449,21 +480,18 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
         if (SUCCEEDED(VCALL(g_Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor))) {
             DWORD byteToLock =
                 (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
+            DWORD targetCursor = (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) %
+                                 soundOutput.audioBufferSize;
             DWORD bytesToWrite = 0;
 
-            if (byteToLock > playCursor) {
+            if (byteToLock > targetCursor) {
                 bytesToWrite = soundOutput.audioBufferSize - byteToLock;
-                bytesToWrite += playCursor;
+                bytesToWrite += targetCursor;
             } else {
-                bytesToWrite = playCursor - byteToLock;
+                bytesToWrite = targetCursor - byteToLock;
             }
 
             Win32_FillSoundBuffer(&soundOutput, byteToLock, bytesToWrite);
-
-            if (!g_isSoundPlaying) {
-                ASSERT_VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
-                g_isSoundPlaying = true;
-            }
         }
 
         BMR_EndDrawing(&g_renderer);
