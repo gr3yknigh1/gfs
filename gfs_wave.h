@@ -7,6 +7,7 @@
 #ifndef GFS_WAVE_H_INCLUDED
 #define GFS_WAVE_H_INCLUDED
 
+#include "gfs_assert.h"
 #include "gfs_types.h"
 #include "gfs_memory.h"
 
@@ -24,6 +25,8 @@ typedef enum {
  * I have with MSVC and C language. Which doesn't support fixed-size enums. [2024/05/26]
  */
 typedef u16 WaveFileAudioFormatTag;
+
+#define WAVEFILE_HEADER_SIZE 44
 
 #pragma pack(push, 1)
 /*
@@ -53,6 +56,8 @@ typedef struct {
     u32 DataSize;        // SampledData size
 } WaveFileHeader;
 #pragma pack(pop)
+
+GFS_EXPECT_TYPE_SIZE(WaveFileHeader, WAVEFILE_HEADER_SIZE);
 
 typedef struct {
     WaveFileHeader Header;

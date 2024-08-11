@@ -38,6 +38,9 @@
 
 #define ASSERT_VCALL(S, M, ...) GFS_ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 #define ASSERT_ISZERO(EXPR) GFS_ASSERT((EXPR) == 0)
+#define ASSERT_NONZERO(EXPR) GFS_ASSERT((EXPR) != 0)
+#define ASSERT_EQ(EXPR, VAL) GFS_ASSERT((EXPR) == (VAL))
+#define ASSERT_NONNULL(EXPR) GFS_ASSERT((EXPR) != NULL)
 
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE *pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
@@ -329,11 +332,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     windowClass.lpfnWndProc = Win32_MainWindowProc;
     windowClass.hInstance = instance;
     windowClass.lpszClassName = CLASS_NAME;
-
-    if (RegisterClassA(&windowClass) == 0) {
-        OutputDebugString("E: Failed to register window class!\n");
-        return 0;
-    }
+    ASSERT_NONZERO(RegisterClass(&windowClass));
 
     HWND window = CreateWindowExA(
         0, windowClass.lpszClassName, WINDOW_TITLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -344,11 +343,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
         NULL,          // windowParent
         NULL,          // menu
         instance, NULL);
-
-    if (window == NULL) {
-        OutputDebugString("E: Failed to initialize window!\n");
-        return 0;
-    }
+    ASSERT_NONNULL(window);
 
     ShowWindow(window, showMode);
 
@@ -358,13 +353,11 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     Win32_SoundOutput soundOutput = Win32_SoundOutputMake();
     Win32_InitDSoundResult initDSoundResult =
         Win32_InitDSound(window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
-    if (initDSoundResult != WIN32_INITDSOUND_OK) {
-        OutputDebugString("W: Failed to init DSound!\n");
-    }
+    ASSERT_EQ(initDSoundResult, WIN32_INITDSOUND_OK);
 
     Win32_FillSoundBuffer(
         &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
-    VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+    ASSERT_VCALL(g_Win32_AudioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 
     u32 xOffset = 0;
     u32 yOffset = 0;
@@ -377,8 +370,13 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     gRenderer.ClearColor = COLOR_WHITE;
 
-    while (!gShouldStop) {
+    LARGE_INTEGER performanceCounterFrequency = {0};
+    ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
 
+    LARGE_INTEGER lastCounter = {0};
+    ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
+
+    while (!gShouldStop) {
         MSG message = {};
         while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
             if (message.message == WM_QUIT) {
@@ -496,6 +494,23 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
         xOffset++;
         yOffset++;
+
+        LARGE_INTEGER endCounter;
+        ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
+
+        // TODO(ilya.a): Display counter [2024/11/08]
+
+        LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
+        u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+        u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
+
+        {
+            char8 printBuffer[KILOBYTES(1)];
+            wsprintf(printBuffer, "Frame took %ums | %uFPS\n", msPerFrame, framesPerSeconds);
+            OutputDebugString(printBuffer);
+        }
+
+        lastCounter = endCounter;
     }
 
     BMR_DeInit(&gRenderer);

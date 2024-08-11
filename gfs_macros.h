@@ -3,8 +3,7 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-
-#ifndef GFS_MACROS_H_INCLUDED
+#if !defined(GFS_MACROS_H_INCLUDED)
 #define GFS_MACROS_H_INCLUDED
 
 #define internal static

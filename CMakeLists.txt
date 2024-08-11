@@ -5,7 +5,8 @@ project(gfs
   LANGUAGES C
 )
 
-add_executable( ${PROJECT_NAME}
+add_executable(
+  gfs
   WIN32
   ${PROJECT_SOURCE_DIR}/gfs_main.c
   ${PROJECT_SOURCE_DIR}/gfs_string.c
@@ -49,22 +50,28 @@ add_executable( ${PROJECT_NAME}
   ${PROJECT_SOURCE_DIR}/gfs_macros.h
 )
 
+target_compile_features(
+  gfs
+  PRIVATE
+    c_std_17
+)
+
 target_link_options(
-  ${PROJECT_NAME}
+  gfs
   PUBLIC
     /DEBUG:FULL
 )
 
 
 target_compile_options(
-  ${PROJECT_NAME}
+  gfs
   PRIVATE
     /MP  # Build with multiple processes
     /W4  # Warning level
 )
 
 target_link_libraries(
-  ${PROJECT_NAME}
+  gfs
   PRIVATE
     shlwapi.lib
 )

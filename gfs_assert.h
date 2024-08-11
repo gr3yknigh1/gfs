@@ -17,4 +17,7 @@
         }                                                                                                              \
     } while (0)
 
+#define GFS_STATIC_ASSERT(COND) _Static_assert((COND), "")
+#define GFS_EXPECT_TYPE_SIZE(TYPE, SIZE) GFS_STATIC_ASSERT(sizeof(TYPE) == (SIZE))
+
 #endif // GFS_ASSERT_H
