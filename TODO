@@ -1,4 +1,0 @@
-- [X] You dump-dump: replace `State s` with `State *s` and fix `.` to `->`.
-- [ ] Optimize using DC to CS_OWNDC.
-- [ ] Bitmap images. Import `monet` library.
-- [ ] Refactor sound player in order to play .wave files.
