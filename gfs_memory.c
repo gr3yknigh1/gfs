@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 
+#include "gfs_platform.h"
 #include "gfs_types.h"
 #include "gfs_sys.h"
 
@@ -19,11 +20,7 @@ Align2PageSize(usize size) {
 
 ScratchAllocator
 ScratchAllocatorMake(usize size) {
-    void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    //                              ^^^^
-    // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
-    // will round up this number to next page. [2024/05/26]
-    // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
+    void *data = PlatformMemoryAllocate(size);
     return (ScratchAllocator){
         .Data = data,
         .Capacity = size,
@@ -52,7 +49,7 @@ ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
         return;
     }
 
-    VirtualFree(scratchAllocator->Data, 0, MEM_RELEASE);
+    PlatformMemoryFree(scratchAllocator->Data);
 
     scratchAllocator->Data = NULL;
     scratchAllocator->Capacity = 0;
@@ -94,7 +91,7 @@ MemoryZero(void *data, usize size) {
 Block *
 BlockMake(usize size) {
     usize bytesAllocated = Align2PageSize(size + sizeof(Block));
-    void *allocatedData = VirtualAlloc(NULL, bytesAllocated, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void *allocatedData = PlatformMemoryAllocate(bytesAllocated);
 
     if (allocatedData == NULL) {
         return NULL;
@@ -175,7 +172,7 @@ BlockAllocatorFree(BlockAllocator *allocator) {
         previousBlock = currentBlock;
         currentBlock = currentBlock->Next;
 
-        VirtualFree(previousBlock, 0, MEM_RELEASE);
+        PlatformMemoryFree(previousBlock);
     }
 
     allocator->Head = NULL;

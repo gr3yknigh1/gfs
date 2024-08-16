@@ -141,6 +141,21 @@ PlatformWindowClose(PlatformWindow *window) {
     CloseWindow(window->windowHandle);
 }
 
+void *
+PlatformMemoryAllocate(usize size) {
+    void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    //                              ^^^^
+    // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
+    // will round up this number to next page. [2024/05/26]
+    // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
+    return data;
+}
+
+void
+PlatformMemoryFree(void *data) {
+    VirtualFree(data, 0, MEM_RELEASE);
+}
+
 int WINAPI
 WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
     UNUSED(instance);
