@@ -8,7 +8,7 @@
 
 #include "gfs_types.h"
 
-bool State_ShouldStop(void);
-void State_Stop(void);
+bool StateShouldStop(void);
+void StateStop(void);
 
 #endif // GFS_STATE_H_INCLUDED

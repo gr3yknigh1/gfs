@@ -62,7 +62,7 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_CLOSE: {
         // TODO(ilya.a): Ask for closing?
         OutputDebugString("T: WM_CLOSE\n");
-        State_Stop();
+        StateStop();
     } break;
     case WM_DESTROY: {
         // TODO(ilya.a): Casey says that we maybe should recreate window later?
@@ -127,7 +127,7 @@ PlatformPoolEvents(PlatformWindow *window) {
     while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
         if (message.message == WM_QUIT) {
             // NOTE(ilya.a): Make sure that we will quit the mainloop.
-            State_Stop();
+            StateStop();
         }
 
         TranslateMessage(&message);
@@ -163,6 +163,6 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     UNUSED(showMode);
     UNUSED(prevInstance);
 
-    Game_Mainloop();
+    GameMainloop();
 }
 

@@ -9,12 +9,12 @@
 #include "gfs_memory.h"
 
 void
-Game_Mainloop(void) {
+GameMainloop(void) {
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
 
     PlatformWindow *window = PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
 
-    while (!State_ShouldStop()) {
+    while (!StateShouldStop()) {
         PlatformPoolEvents(window);
     }
 

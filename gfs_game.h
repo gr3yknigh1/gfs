@@ -6,6 +6,6 @@
  * */
 #define GFS_WAVE_H_INCLUDED
 
-void Game_Mainloop(void);
+void GameMainloop(void);
 
 #endif // GFS_WAVE_H_INCLUDED

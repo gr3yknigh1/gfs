@@ -9,11 +9,11 @@
 global_var no_optimize bool gGameShouldStop = false;
 
 bool
-State_ShouldStop(void) {
+StateShouldStop(void) {
     return gGameShouldStop == true;
 }
 
 void
-State_Stop(void) {
+StateStop(void) {
     gGameShouldStop = true;
 }
