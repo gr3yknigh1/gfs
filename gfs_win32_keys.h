@@ -1,6 +1,4 @@
 /*
- * GFS
- *
  * FILE    gfs_win32_keys.hpp
  * AUTHOR  Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin

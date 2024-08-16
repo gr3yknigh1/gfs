@@ -1,10 +1,9 @@
+#if !defined(GFS_WAVE_H_INCLUDED)
 /*
  * FILE      gfs_wave.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-
-#ifndef GFS_WAVE_H_INCLUDED
 #define GFS_WAVE_H_INCLUDED
 
 #include "gfs_assert.h"

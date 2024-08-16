@@ -33,14 +33,12 @@
 #include "gfs_win32_misc.h"
 #include "gfs_assert.h"
 
+#if 0
+
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define PI32 3.14159265358979323846f
 
 #define ASSERT_VCALL(S, M, ...) GFS_ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
-#define ASSERT_ISZERO(EXPR) GFS_ASSERT((EXPR) == 0)
-#define ASSERT_NONZERO(EXPR) GFS_ASSERT((EXPR) != 0)
-#define ASSERT_EQ(EXPR, VAL) GFS_ASSERT((EXPR) == (VAL))
-#define ASSERT_NONNULL(EXPR) GFS_ASSERT((EXPR) != NULL)
 
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE *pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
@@ -526,3 +524,4 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     return 0;
 }
+#endif

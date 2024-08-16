@@ -44,6 +44,7 @@ typedef u8 byte;
 typedef u64 usize;
 
 GFS_EXPECT_TYPE_SIZE(byte, 1);
+GFS_EXPECT_TYPE_SIZE(usize, POINTER_SIZE);
 
 typedef char char8;
 typedef const char *cstr8; // NOTE(ilya.a): Explicitly distiguasing C style

@@ -48,6 +48,14 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_types.h
   ${PROJECT_SOURCE_DIR}/gfs_linalg.h
   ${PROJECT_SOURCE_DIR}/gfs_macros.h
+  ${PROJECT_SOURCE_DIR}/gfs_platform.h
+  ${PROJECT_SOURCE_DIR}/gfs_win32.c
+
+  ${PROJECT_SOURCE_DIR}/gfs_game.c
+  ${PROJECT_SOURCE_DIR}/gfs_game.h
+
+  ${PROJECT_SOURCE_DIR}/gfs_state.c
+  ${PROJECT_SOURCE_DIR}/gfs_state.h
 )
 
 target_compile_features(
