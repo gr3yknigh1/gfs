@@ -38,6 +38,8 @@
 
 #define ASSERT_VCALL(S, M, ...) GFS_ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
+#if 0
+
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE *pState);
 typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
 
@@ -473,3 +475,4 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     return 0;
 }
+#endif

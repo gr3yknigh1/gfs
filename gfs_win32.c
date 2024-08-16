@@ -16,14 +16,9 @@
 
 #include <Windows.h>
 
-typedef struct PlatformWindow {
-    HWND windowHandle;
-    WNDCLASS windowClass;
-} PlatformWindow;
-
 static BMR_Renderer gRenderer;
 
-LRESULT CALLBACK
+static LRESULT CALLBACK
 Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result = 0;
 
@@ -31,34 +26,6 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_ACTIVATEAPP: {
         OutputDebugString("T: WM_ACTIVATEAPP\n");
     } break;
-#if 0
-        case WM_KEYUP:
-        case WM_KEYDOWN:
-        {
-            // NOTE(ilya.a): Messed up input because of gamepad input. It's overrides state changed via keyboard
-            // input [2024/05/24]
-            U32 vkCode = wParam;
-            bool wasDown = (lParam & (1 << 30)) != 0;
-            bool isDown = (lParam & (1 << 31)) == 0;
-
-            if (vkCode == VK_LEFT)
-            {
-                player.Input.LeftPressed = isDown;
-            }
-            else if (vkCode == VK_RIGHT)
-            {
-                player.Input.RightPressed = isDown;
-            }
-            else if (vkCode == VK_DOWN)
-            {
-                player.Input.DownPressed = isDown;
-            }
-            else if (vkCode == VK_UP)
-            {
-                player.Input.UpPressed = isDown;
-            }
-        } break;
-#endif // #if 0
     case WM_CLOSE: {
         // TODO(ilya.a): Ask for closing?
         OutputDebugString("T: WM_CLOSE\n");
@@ -77,6 +44,21 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
 
     return result;
 }
+
+int WINAPI
+WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
+    UNUSED(instance);
+    UNUSED(commandLine);
+    UNUSED(showMode);
+    UNUSED(prevInstance);
+
+    GameMainloop();
+}
+
+typedef struct PlatformWindow {
+    HWND windowHandle;
+    WNDCLASS windowClass;
+} PlatformWindow;
 
 PlatformWindow *
 PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
@@ -141,6 +123,18 @@ PlatformWindowClose(PlatformWindow *window) {
     CloseWindow(window->windowHandle);
 }
 
+usize
+PlatformGetPageSize(void) {
+    usize pageSize;
+
+    SYSTEM_INFO systemInfo = {0};
+    GetSystemInfo(&systemInfo);
+
+    pageSize = systemInfo.dwPageSize;
+
+    return pageSize;
+}
+
 void *
 PlatformMemoryAllocate(usize size) {
     void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -154,14 +148,4 @@ PlatformMemoryAllocate(usize size) {
 void
 PlatformMemoryFree(void *data) {
     VirtualFree(data, 0, MEM_RELEASE);
-}
-
-int WINAPI
-WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
-    UNUSED(instance);
-    UNUSED(commandLine);
-    UNUSED(showMode);
-    UNUSED(prevInstance);
-
-    GameMainloop();
 }

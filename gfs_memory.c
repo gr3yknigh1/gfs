@@ -10,11 +10,10 @@
 
 #include "gfs_platform.h"
 #include "gfs_types.h"
-#include "gfs_sys.h"
 
 usize
 Align2PageSize(usize size) {
-    usize pageSize = Sys_GetPageSize();
+    usize pageSize = PlatformGetPageSize();
     return size + (pageSize - size % pageSize);
 }
 
