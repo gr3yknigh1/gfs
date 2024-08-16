@@ -6,7 +6,7 @@
 #include "gfs_state.h"
 #include "gfs_macros.h"
 
-global_var no_optimize bool gGameShouldStop = false;
+static volatile bool gGameShouldStop = false;
 
 bool
 StateShouldStop(void) {

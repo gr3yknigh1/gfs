@@ -45,18 +45,18 @@ typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVib
 
 typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
-global_var Win32_XInputGetStateType *Win32_xInputGetStatePtr;
-global_var Win32_XInputSetStateType *Win32_xInputSetStatePtr;
+static Win32_XInputGetStateType *Win32_xInputGetStatePtr;
+static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
 
-global_var Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
+static Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
-global_var LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
+static LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
 
-global_var BMR_Renderer gRenderer;
-global_var bool gShouldStop = false;
-global_var bool gIsSoundPlaying = false;
+static BMR_Renderer gRenderer;
+static bool gShouldStop = false;
+static bool gIsSoundPlaying = false;
 
-global_var struct {
+static struct {
     Rect Rect;
     Color4 Color;
 
@@ -81,7 +81,7 @@ global_var struct {
 
 typedef enum { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR } Win32_LoadXInputResult;
 
-internal Win32_LoadXInputResult
+static Win32_LoadXInputResult
 Win32_LoadXInput(void) {
     // TODO(ilya.a): Handle different versions of xinput. Check for newer. If
     // fails, use older one. [2024/05/24]
@@ -113,7 +113,7 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
-internal Win32_InitDSoundResult
+static Win32_InitDSoundResult
 Win32_InitDSound(HWND window, i32 samplesPerSecond, usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
 
@@ -194,7 +194,7 @@ typedef struct {
     i32 latencySampleCount;
 } Win32_SoundOutput;
 
-internal Win32_SoundOutput
+static Win32_SoundOutput
 Win32_SoundOutputMake(void) {
     Win32_SoundOutput ret = {0};
     ret.samplesPerSecond = 48000;
@@ -210,16 +210,16 @@ Win32_SoundOutputMake(void) {
     return ret;
 }
 
-internal procedure
+static void
 Win32_SoundOutputSetTone(Win32_SoundOutput *soundOutput, i32 toneHZ) {
     soundOutput->toneHZ = toneHZ;
     soundOutput->wavePeriod = soundOutput->samplesPerSecond / soundOutput->toneHZ;
 }
 
-internal procedure
+static void
 Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, DWORD byteToLock, DWORD bytesToWrite) {
     VOID *region1, *region2;
-    usize region1Size, region2Size;
+    DWORD region1Size, region2Size;
 
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
     VCALL(g_Win32_AudioBuffer, Lock, byteToLock, bytesToWrite, &region1, &region1Size, &region2, &region2Size, 0);
@@ -322,8 +322,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     } break;
     }
 
-    persist_var LPCSTR CLASS_NAME = "GFS";
-    persist_var LPCSTR WINDOW_TITLE = "GFS";
+    static LPCSTR CLASS_NAME = "GFS";
+    static LPCSTR WINDOW_TITLE = "GFS";
 
     WNDCLASS windowClass = {0};
     windowClass.style = CS_VREDRAW | CS_HREDRAW;

@@ -21,7 +21,7 @@ typedef struct PlatformWindow {
     WNDCLASS windowClass;
 } PlatformWindow;
 
-global_var BMR_Renderer gRenderer;
+static BMR_Renderer gRenderer;
 
 LRESULT CALLBACK
 Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {

@@ -18,7 +18,7 @@
 
 #define BMR_RENDER_COMMAND_CAPACITY 1024
 
-internal void
+static void
 Win32_UpdateWindow(BMR_Renderer *renderer, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
     StretchDIBits(
         renderer->DC, windowXOffset, windowYOffset, windowWidth, windowHeight, renderer->XOffset, renderer->YOffset,
