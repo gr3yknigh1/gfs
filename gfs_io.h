@@ -34,7 +34,7 @@ typedef u8 IOPermissions;
 #define IO_WRITE MKFLAG(2)
 #define IO_READ_WRITE IO_READ | IO_WRITE
 
-IOResult IOOpenFile(cstr8 filePath, FileHandle *handleOut, IOPermissions perms);
+IOResult IOOpenFile(cstring8 filePath, FileHandle *handleOut, IOPermissions perms);
 IOResult IOLoadBytesFromFile(FileHandle *handle, void *buffer, usize numberOfBytes);
 IOResult IOLoadBytesFromFileEx(FileHandle *handle, void *buffer, usize numberOfBytes, usize offset);
 

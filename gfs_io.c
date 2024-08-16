@@ -12,8 +12,8 @@
 #include "gfs_string.h"
 
 IOResult
-IOOpenFile(cstr8 filePath, FileHandle *handleOut, IOPermissions perms) {
-    if (filePath == NULL || handleOut == NULL || CStr8IsEmpty(filePath)) {
+IOOpenFile(cstring8 filePath, FileHandle *handleOut, IOPermissions perms) {
+    if (filePath == NULL || handleOut == NULL || CString8IsEmpty(filePath)) {
         return IO_ERR_INVALID_ARGS;
     }
 

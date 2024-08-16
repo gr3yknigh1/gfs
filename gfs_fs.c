@@ -11,6 +11,6 @@
 #include "gfs_types.h"
 
 bool
-FSIsPathExists(cstr8 path) {
+FSIsPathExists(cstring8 path) {
     return PathFileExistsA(path);
 }

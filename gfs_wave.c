@@ -12,8 +12,8 @@
 #include "gfs_io.h"
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstr8 assetPath, WaveAsset *waveAssetOut) {
-    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CStr8IsEmpty(assetPath)) {
+WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {
+    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CString8IsEmpty(assetPath)) {
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
 

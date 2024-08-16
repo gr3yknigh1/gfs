@@ -33,8 +33,6 @@
 #include "gfs_win32_misc.h"
 #include "gfs_assert.h"
 
-#if 0
-
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define PI32 3.14159265358979323846f
 
@@ -475,4 +473,3 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     return 0;
 }
-#endif

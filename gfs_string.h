@@ -9,8 +9,8 @@
 
 #include "gfs_types.h"
 
-usize CStr8GetLength(cstr8 s);
-bool CStr8IsEmpty(cstr8 s);
-bool CStr8IsEqual(cstr8 s0, cstr8 s1);
+usize CString8GetLength(cstring8 s);
+bool CString8IsEmpty(cstring8 s);
+bool CString8IsEqual(cstring8 s0, cstring8 s1);
 
 #endif // GFS_STRING_H_INCLUDED

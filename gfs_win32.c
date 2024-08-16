@@ -79,11 +79,11 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
 }
 
 PlatformWindow *
-PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstr8 title) {
+PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
-    usize titleLength = CStr8GetLength(title);
+    usize titleLength = CString8GetLength(title);
     char8 *copiedTitle = ScratchAllocatorAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
 
@@ -165,4 +165,3 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     GameMainloop();
 }
-

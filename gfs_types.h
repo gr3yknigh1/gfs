@@ -47,13 +47,11 @@ GFS_EXPECT_TYPE_SIZE(byte, 1);
 GFS_EXPECT_TYPE_SIZE(usize, POINTER_SIZE);
 
 typedef char char8;
-typedef const char *cstr8; // NOTE(ilya.a): Explicitly distiguasing C style
-                           // string (null terminated).  [2024/05/26]
+typedef const char *cstring8; // NOTE(ilya.a): Explicitly distiguasing C style
+                              // string (null terminated).  [2024/05/26]
 
 GFS_EXPECT_TYPE_SIZE(char8, 1);
-GFS_EXPECT_TYPE_SIZE(cstr8, POINTER_SIZE);
-
-
+GFS_EXPECT_TYPE_SIZE(cstring8, POINTER_SIZE);
 
 typedef _Bool bool;
 

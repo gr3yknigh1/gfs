@@ -74,7 +74,7 @@ typedef enum {
     WAVEASSET_LOAD_ERR_INVALID_MAGIC,   // Asset failed signature checks.
 } WaveAssetLoadResult;
 
-WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, cstr8 assetPath, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, cstring8 assetPath, WaveAsset *waveAssetOut);
 WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);

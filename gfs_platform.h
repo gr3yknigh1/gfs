@@ -16,7 +16,7 @@ typedef struct PlatformSoundDevice PlatformSoundDevice;
 /*
  * @breaf Opens platforms window.
  * */
-PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstr8 title);
+PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
@@ -42,7 +42,6 @@ void *PlatformMemoryAllocate(usize size);
  * @breaf Unmaps memory page.
  * */
 void PlatformMemoryFree(void *data);
-
 
 PlatformSoundDevice *PlatformSoundDeviceOpen();
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);

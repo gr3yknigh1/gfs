@@ -8,7 +8,7 @@
 #include "gfs_types.h"
 
 usize
-CStr8GetLength(cstr8 s) {
+CString8GetLength(cstring8 s) {
     usize size = 0;
     while (s[size] != '\0') {
         size++;
@@ -17,12 +17,12 @@ CStr8GetLength(cstr8 s) {
 }
 
 bool
-CStr8IsEmpty(cstr8 s) {
+CString8IsEmpty(cstring8 s) {
     return *s == '\0';
 }
 
 bool
-CStr8IsEqual(cstr8 s0, cstr8 s1) {
+CString8IsEqual(cstring8 s0, cstring8 s1) {
     while (*s0 != '\0' && *s1 != '\0') {
         if (*s0 != *s1) {
             return false;
