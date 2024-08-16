@@ -41,7 +41,7 @@ void *PlatformMemoryAllocate(usize size);
 /*
  * @breaf Unmaps memory page.
  * */
-void PlatformMemoryFree(void *ptr);
+void PlatformMemoryFree(void *data);
 
 
 PlatformSoundDevice *PlatformSoundDeviceOpen();
