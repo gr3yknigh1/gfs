@@ -53,6 +53,8 @@ typedef const char *cstr8; // NOTE(ilya.a): Explicitly distiguasing C style
 GFS_EXPECT_TYPE_SIZE(char8, 1);
 GFS_EXPECT_TYPE_SIZE(cstr8, POINTER_SIZE);
 
+
+
 typedef _Bool bool;
 
 GFS_EXPECT_TYPE_SIZE(bool, 1);

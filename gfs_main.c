@@ -54,25 +54,6 @@ static LPDIRECTSOUNDBUFFER g_Win32_AudioBuffer;
 
 static BMR_Renderer gRenderer;
 static bool gShouldStop = false;
-static bool gIsSoundPlaying = false;
-
-static struct {
-    Rect Rect;
-    Color4 Color;
-
-    struct {
-        bool LeftPressed;
-        bool RightPressed;
-        bool UpPressed;
-        bool DownPressed;
-    } Input;
-} gPlayer;
-
-#define PLAYER_INIT_X 100
-#define PLAYER_INIT_Y 60
-#define PLAYER_WIDTH 160
-#define PLAYER_HEIGHT 80
-#define PLAYER_SPEED 10
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -360,12 +341,6 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     u32 xOffset = 0;
     u32 yOffset = 0;
 
-    gPlayer.Rect.X = PLAYER_INIT_X;
-    gPlayer.Rect.Y = PLAYER_INIT_Y;
-    gPlayer.Rect.Width = PLAYER_WIDTH;
-    gPlayer.Rect.Height = PLAYER_HEIGHT;
-    gPlayer.Color = Color4Add(COLOR_RED, COLOR_BLUE);
-
     gRenderer.ClearColor = COLOR_WHITE;
 
     LARGE_INTEGER performanceCounterFrequency = {0};
@@ -417,18 +392,11 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
                 xOffset += leftStickX / 4096;
                 yOffset += leftStickY / 4096;
 
-                gPlayer.Input.RightPressed = dPadRight;
-                gPlayer.Input.LeftPressed = dPadLeft;
-
-                gPlayer.Input.UpPressed = dPadUp;
-                gPlayer.Input.DownPressed = dPadDown;
-
                 Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f * ((f32)leftStickY / 30000.0f)) + 512);
 
                 XINPUT_VIBRATION vibrationState = {0};
 
-                if (gPlayer.Input.RightPressed || gPlayer.Input.LeftPressed || gPlayer.Input.UpPressed ||
-                    gPlayer.Input.DownPressed) {
+                if (dPadRight || dPadLeft || dPadUp || dPadDown) {
 #if 0
                     vibrationState.wLeftMotorSpeed = 60000;
                     vibrationState.wRightMotorSpeed = 60000;
@@ -448,27 +416,10 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
             }
         }
 
-        if (gPlayer.Input.LeftPressed) {
-            gPlayer.Rect.X -= PLAYER_SPEED;
-        }
-
-        if (gPlayer.Input.RightPressed) {
-            gPlayer.Rect.X += PLAYER_SPEED;
-        }
-
-        if (gPlayer.Input.DownPressed) {
-            gPlayer.Rect.Y -= PLAYER_SPEED;
-        }
-
-        if (gPlayer.Input.UpPressed) {
-            gPlayer.Rect.Y += PLAYER_SPEED;
-        }
-
         BMR_BeginDrawing(&gRenderer);
 
         BMR_Clear(&gRenderer);
         BMR_DrawGrad(&gRenderer, xOffset, yOffset);
-        BMR_DrawRectR(&gRenderer, gPlayer.Rect, gPlayer.Color);
         BMR_DrawLine(&gRenderer, 100, 200, 500, 600);
 
         DWORD playCursor;
