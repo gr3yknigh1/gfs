@@ -13,9 +13,19 @@
 typedef struct PlatformWindow PlatformWindow;
 typedef struct PlatformSoundDevice PlatformSoundDevice;
 
+/*
+ * @breaf Opens platforms window.
+ * */
 PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstr8 title);
+
+/*
+ * @breaf Closes platform's window.
+ * */
 void PlatformWindowClose(PlatformWindow *window);
 
+/*
+ * @breaf Processes platform's events.
+ * */
 void PlatformPoolEvents(PlatformWindow *window);
 
 /*
