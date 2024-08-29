@@ -6,6 +6,8 @@
  * */
 #define GFS_WAVE_H_INCLUDED
 
-void GameMainloop(void);
+#include "gfs_win32_bmr.h"
+
+void GameMainloop(Renderer *renderer);
 
 #endif // GFS_WAVE_H_INCLUDED

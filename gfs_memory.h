@@ -17,7 +17,7 @@
 usize Align2PageSize(usize size);
 
 /*
- * Scratch Allocator.
+ * @breaf Scratch Allocator.
  */
 typedef struct {
     void *Data;
@@ -44,7 +44,7 @@ typedef struct Block {
 Block *BlockMake(usize size);
 
 /*
- * Block Allocator
+ * @breaf Block Allocator
  */
 typedef struct {
     Block *Head;

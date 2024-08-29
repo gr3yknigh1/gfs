@@ -8,7 +8,6 @@ project(gfs
 add_executable(
   gfs
   WIN32
-  ${PROJECT_SOURCE_DIR}/gfs_main.c
   ${PROJECT_SOURCE_DIR}/gfs_string.c
   ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
 

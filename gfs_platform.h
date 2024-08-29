@@ -9,6 +9,7 @@
 #include "gfs_types.h"
 #include "gfs_macros.h"
 #include "gfs_memory.h"
+#include "gfs_geometry.h"
 
 typedef struct PlatformWindow PlatformWindow;
 typedef struct PlatformSoundDevice PlatformSoundDevice;
@@ -22,6 +23,12 @@ PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 hei
  * @breaf Closes platform's window.
  * */
 void PlatformWindowClose(PlatformWindow *window);
+
+
+void PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
+void PlatformWindowResize(PlatformWindow *window, i32 width, i32 height);
+
+Rect32 PlatformWindowGetRectangle(PlatformWindow *window);
 
 /*
  * @breaf Processes platform's events.
@@ -38,12 +45,18 @@ usize PlatformGetPageSize();
  * */
 void *PlatformMemoryAllocate(usize size);
 
+typedef enum {
+    PLATFORM_MEMORY_FREE_OK,
+    PLATFORM_MEMORY_FREE_ERR,
+} PlatformMemoryFreeResult;
+
 /*
  * @breaf Unmaps memory page.
  * */
-void PlatformMemoryFree(void *data);
+PlatformMemoryFreeResult PlatformMemoryFree(void *data);
 
-PlatformSoundDevice *PlatformSoundDeviceOpen();
+PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window);
+
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);
 
 #endif // GFS_PLATFORM_H_INCLUDED
