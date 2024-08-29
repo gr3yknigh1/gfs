@@ -10,13 +10,13 @@
 #include "gfs_types.h"
 
 typedef struct {
-    i32 X;
-    i32 Y;
-} v2i32;
+    i32 x;
+    i32 y;
+} Vector2I32;
 
 typedef struct {
-    u32 X;
-    u32 Y;
-} v2u32;
+    u32 x;
+    u32 y;
+} Vector2U32;
 
 #endif // GFS_LINALG_H_INCLUDED

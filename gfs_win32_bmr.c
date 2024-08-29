@@ -84,23 +84,23 @@ EndDrawing(Renderer *renderer) {
                     *pixel = color;
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_RECT): {
-                    Rect rect = *(Rect *)(renderer->commandQueue.begin + offset);
+                    RectangleU16 rect = *(RectangleU16 *)(renderer->commandQueue.begin + offset);
                     offset += sizeof(rect);
 
                     Color4 color = *(Color4 *)(renderer->commandQueue.begin + offset);
                     offset += sizeof(Color4);
 
-                    if (RectIsInside(rect, x, y)) {
+                    if (RectangleU16IsInside(rect, x, y)) {
                         *pixel = color;
                     }
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_GRADIENT): {
-                    v2u32 v = *(v2u32 *)(renderer->commandQueue.begin + offset);
-                    offset += sizeof(v2u32);
+                    Vector2U32 v = *(Vector2U32 *)(renderer->commandQueue.begin + offset);
+                    offset += sizeof(Vector2U32);
 
                     *pixel = (Color4){
-                        .b=x + v.X,
-                        .g=y + v.Y,
+                        .b=x + v.x,
+                        .g=y + v.y,
                         .r=0,
                         .a=0
                     };
@@ -117,7 +117,7 @@ EndDrawing(Renderer *renderer) {
         row += pitch;
     }
 
-    Rect32 windowRect = PlatformWindowGetRectangle(renderer->window);
+    Rectangle32 windowRect = PlatformWindowGetRectangle(renderer->window);
     PlatformWindowUpdate(renderer->window, windowRect.x, windowRect.y, windowRect.width, windowRect.height);
 
     renderer->commandQueue.end = renderer->commandQueue.begin;
@@ -166,10 +166,10 @@ DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4 co
 }
 
 void
-DrawRectangleRec(Renderer *renderer, Rect rect, Color4 color) {
+DrawRectangleRec(Renderer *renderer, RectangleU16 rect, Color4 color) {
     struct {
         RenderCommandType Type;
-        Rect Rect;
+        RectangleU16 Rect;
         Color4 Color;
     } payload;
 

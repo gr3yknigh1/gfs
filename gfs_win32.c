@@ -19,7 +19,7 @@
 #include <dsound.h>
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
-#define ASSERT_VCALL(S, M, ...) GFS_ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
+#define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -53,20 +53,20 @@ Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
     *height = r->bottom - r->top;
 }
 
-static inline Rect32
+static inline Rectangle32
 Win32_ConvertRECTToRect32(RECT rect) {
-    Rect32 result;
+    Rectangle32 result;
     result.x = rect.left;
     result.y = rect.top;
     Win32_GetRectSize(&rect, &result.width, &result.height);
     return result;
 }
 
-Rect32
+Rectangle32
 PlatformWindowGetRectangle(PlatformWindow *window) {
     RECT win32WindowRect;
     ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
-    Rect32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
+    Rectangle32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
     return windowRect;
 }
 
@@ -85,7 +85,7 @@ PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
     // TODO(ilya.a):
     //     - [ ] Checkout how it works.
     //     - [ ] Handle allocation error.
-    GFS_ASSERT(!(renderer->pixels.Buffer != NULL && PlatformMemoryFree(renderer->pixels.Buffer) != PLATFORM_MEMORY_FREE_ERR));
+    ASSERT(!(renderer->pixels.Buffer != NULL && PlatformMemoryFree(renderer->pixels.Buffer) != PLATFORM_MEMORY_FREE_ERR));
 
     renderer->pixels.Width = width;
     renderer->pixels.Height = height;
@@ -293,7 +293,7 @@ PlatformPoolEvents(PlatformWindow *window) {
             // But it will be too frequent log, cause we have no plans on multiple controllers.
         } else {
             OutputDebugString("E: Some of xInput's device are not connected!\n");
-            GFS_ASSERT(FALSE);
+            ASSERT(false);
         }
     }
 }

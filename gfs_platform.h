@@ -28,7 +28,7 @@ void PlatformWindowClose(PlatformWindow *window);
 void PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
 void PlatformWindowResize(PlatformWindow *window, i32 width, i32 height);
 
-Rect32 PlatformWindowGetRectangle(PlatformWindow *window);
+Rectangle32 PlatformWindowGetRectangle(PlatformWindow *window);
 
 /*
  * @breaf Processes platform's events.

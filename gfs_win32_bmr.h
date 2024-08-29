@@ -66,7 +66,7 @@ void EndDrawing(Renderer *renderer);
 void ClearBackground(Renderer *renderer);
 
 void DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 w, u32 h, Color4 c);
-void DrawRectangleRec(Renderer *renderer, Rect r, Color4 c);
+void DrawRectangleRec(Renderer *renderer, RectangleU16 r, Color4 c);
 
 void DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset);
 

@@ -56,7 +56,7 @@ typedef struct {
 } WaveFileHeader;
 #pragma pack(pop)
 
-GFS_EXPECT_TYPE_SIZE(WaveFileHeader, WAVEFILE_HEADER_SIZE);
+EXPECT_TYPE_SIZE(WaveFileHeader, WAVEFILE_HEADER_SIZE);
 
 typedef struct {
     WaveFileHeader Header;

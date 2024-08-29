@@ -9,18 +9,18 @@
 #include "gfs_geometry.h"
 
 bool
-RectIsInside(Rect r, u16 x, u16 y) {
-    return x >= r.X && x <= r.X + r.Width && y >= r.Y && y <= r.Y + r.Height;
+RectangleU16IsInside(RectangleU16 r, u16 x, u16 y) {
+    return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
 }
 
 // TODO(ilya.a): Fix bug when `r` is bigger than `this`.
 bool
-RectIsOverlapping(Rect r) {
-    return RectIsInside(r, r.X + 0, r.Y + 0) || RectIsInside(r, r.X + r.Width, r.Y + r.Height) ||
-           RectIsInside(r, r.X + r.Width, r.Y + 0) || RectIsInside(r, r.X + 0, r.Y + r.Height);
+RectangleU16IsOverlapping(RectangleU16 r) {
+    return RectangleU16IsInside(r, r.x + 0, r.y + 0) || RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
+           RectangleU16IsInside(r, r.x + r.width, r.y + 0) || RectangleU16IsInside(r, r.x + 0, r.y + r.height);
 }
 
 u64
-GetOffset(u64 width, u64 y, u64 x) {
+GetOffsetForGridArray(u64 width, u64 y, u64 x) {
     return width * y + x;
 }
