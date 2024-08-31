@@ -19,7 +19,7 @@ ScratchAllocator
 ScratchAllocatorMake(usize size) {
     void *data = PlatformMemoryAllocate(size);
     return (ScratchAllocator){
-        .Data = data,
+        .data = data,
         .Capacity = size,
         .Occupied = 0,
     };
@@ -27,30 +27,30 @@ ScratchAllocatorMake(usize size) {
 
 void *
 ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
-    if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
+    if (scratchAllocator == NULL || scratchAllocator->data == NULL) {
         return NULL;
     }
 
-    if (scratchAllocator->Occupied + size > scratchAllocator->Capacity) {
+    if (scratchAllocator->occupied + size > scratchAllocator->capacity) {
         return NULL;
     }
 
-    void *data = ((byte *)scratchAllocator->Data) + scratchAllocator->Occupied;
-    scratchAllocator->Occupied += size;
+    void *data = ((byte *)scratchAllocator->data) + scratchAllocator->occupied;
+    scratchAllocator->occupied += size;
     return data;
 }
 
 void
 ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
-    if (scratchAllocator == NULL || scratchAllocator->Data == NULL) {
+    if (scratchAllocator == NULL || scratchAllocator->data == NULL) {
         return;
     }
 
-    PlatformMemoryFree(scratchAllocator->Data);
+    PlatformMemoryFree(scratchAllocator->data);
 
-    scratchAllocator->Data = NULL;
-    scratchAllocator->Capacity = 0;
-    scratchAllocator->Occupied = 0;
+    scratchAllocator->data = NULL;
+    scratchAllocator->capacity = 0;
+    scratchAllocator->occupied = 0;
 }
 
 // TODO(ilya.a): Use SIMD [2024/05/19]
@@ -98,10 +98,10 @@ BlockMake(usize size) {
     void *data = (byte *)(allocatedData) + sizeof(Block);
 
     segment = allocatedData;
-    segment->arena.Data = data;
-    segment->arena.Capacity = bytesAllocated - sizeof(Block);
-    segment->arena.Occupied = 0;
-    segment->Next = NULL;
+    segment->arena.data = data;
+    segment->arena.capacity = bytesAllocated - sizeof(Block);
+    segment->arena.occupied = 0;
+    segment->next = NULL;
 
     return segment;
 }
@@ -109,14 +109,14 @@ BlockMake(usize size) {
 BlockAllocator
 BlockAllocatorMake() {
     BlockAllocator allocator;
-    allocator.Head = NULL;
+    allocator.head = NULL;
     return allocator;
 }
 
 BlockAllocator
 BlockAllocatorMakeEx(usize size) {
     BlockAllocator allocator = {0};
-    allocator.Head = BlockMake(size);
+    allocator.head = BlockMake(size);
     return allocator;
 }
 
@@ -127,12 +127,12 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
     }
 
     Block *previousBlock = NULL;
-    Block *currentBlock = allocator->Head;
+    Block *currentBlock = allocator->head;
 
     while (currentBlock != NULL) {
         if (!SCRATCH_ALLOCATOR_HAS_SPACE(&currentBlock->arena, size)) {
             previousBlock = currentBlock;
-            currentBlock = currentBlock->Next;
+            currentBlock = currentBlock->next;
             continue;
         }
         return ScratchAllocatorAlloc(&currentBlock->arena, size);
@@ -140,10 +140,10 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
 
     Block *newBlock = BlockMake(size);
 
-    if (allocator->Head == NULL) {
-        allocator->Head = newBlock;
+    if (allocator->head == NULL) {
+        allocator->head = newBlock;
     } else {
-        previousBlock->Next = newBlock;
+        previousBlock->next = newBlock;
     }
 
     return ScratchAllocatorAlloc(&newBlock->arena, size);
@@ -158,19 +158,19 @@ BlockAllocatorAllocZ(BlockAllocator *allocator, usize size) {
 
 void
 BlockAllocatorFree(BlockAllocator *allocator) {
-    if (allocator == NULL || allocator->Head == NULL) {
+    if (allocator == NULL || allocator->head == NULL) {
         return;
     }
 
     Block *previousBlock = NULL;
-    Block *currentBlock = allocator->Head;
+    Block *currentBlock = allocator->head;
 
     while (currentBlock != NULL) {
         previousBlock = currentBlock;
-        currentBlock = currentBlock->Next;
+        currentBlock = currentBlock->next;
 
         PlatformMemoryFree(previousBlock);
     }
 
-    allocator->Head = NULL;
+    allocator->head = NULL;
 }

@@ -20,9 +20,9 @@ usize Align2PageSize(usize size);
  * @breaf Scratch Allocator.
  */
 typedef struct {
-    void *Data;
-    usize Capacity;
-    usize Occupied;
+    void *data;
+    usize capacity;
+    usize occupied;
 } ScratchAllocator;
 
 #define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE) ((ALLOCATORPTR)->Occupied + (SIZE) <= (ALLOCATORPTR)->Capacity)
@@ -38,7 +38,7 @@ void MemoryZero(void *data, usize size);
 
 typedef struct Block {
     ScratchAllocator arena;
-    struct Block *Next;
+    struct Block *next;
 } Block;
 
 Block *BlockMake(usize size);
@@ -47,7 +47,7 @@ Block *BlockMake(usize size);
  * @breaf Block Allocator
  */
 typedef struct {
-    Block *Head;
+    Block *head;
 } BlockAllocator;
 
 BlockAllocator BlockAllocatorMake();
