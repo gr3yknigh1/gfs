@@ -54,21 +54,10 @@ typedef struct PlatformFileHandle {
     HANDLE win32Handle;
 } PlatformFileHandle;
 
-typedef struct {
-    u32 runningSampleIndex;
-    u32 toneHZ;
-    i32 samplesPerSecond;
-    i32 toneVolume;
-    i32 wavePeriod;
-    usize bytesPerSample;
-    usize audioBufferSize;
-
-    i32 latencySampleCount;
-} Win32_SoundOutput;
-
 typedef struct PlatformSoundDevice {
     //Win32_SoundOutput soundOutput;
     LPDIRECTSOUNDBUFFER audioBuffer;
+    LPDIRECTSOUNDBUFFER primaryAudioBuffer;
 } PlatformSoundDevice;
 
 static inline void
@@ -463,7 +452,7 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_InitDSoundResult
-Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
+Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, LPDIRECTSOUNDBUFFER *primaryAudioBuffer, i32 samplesPerSecond, usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
 
     if (library == NULL) {
@@ -497,8 +486,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
     primaryBufferDesc.dwBufferBytes = 0;  // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
     primaryBufferDesc.lpwfxFormat = NULL; // NOTE(ilya.a): Primary buffer wfx format should be NULL. [2024/05/25]
 
-    LPDIRECTSOUNDBUFFER primaryBuffer;
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primaryBuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, primaryAudioBuffer, NULL))) {
         return WIN32_INITDSOUND_ERR;
     }
 
@@ -511,7 +499,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
     waveFormat.cbSize = 0;
 
-    if (!SUCCEEDED(VCALL(primaryBuffer, SetFormat, &waveFormat))) {
+    if (!SUCCEEDED(VCALL(*primaryAudioBuffer, SetFormat, &waveFormat))) {
         return WIN32_INITDSOUND_ERR;
     }
 
@@ -548,47 +536,20 @@ PlatformSoundOutputMake(i32 samplesPerSecond) {
     return ret;
 }
 
-#if 0
-static void
-Win32_SoundOutputSetTone(Win32_SoundOutput *soundOutput, i32 toneHZ) {
-    soundOutput->toneHZ = toneHZ;
-    soundOutput->wavePeriod = soundOutput->samplesPerSecond / soundOutput->toneHZ;
+
+PlatformSoundDeviceGetCurrentPositionResult
+PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
+    if (!SUCCEEDED(VCALL(device->primaryAudioBuffer, GetCurrentPosition, playCursor, writeCursor))) {
+        return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
+    }
+    return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK;
 }
 
-static void
-Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, LPDIRECTSOUNDBUFFER soundBuffer, DWORD byteToLock, DWORD bytesToWrite) {
-    VOID *region1, *region2;
-    DWORD region1Size, region2Size;
-
-    // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
-    VCALL(soundBuffer, Lock, byteToLock, bytesToWrite, &region1, &region1Size, &region2, &region2Size, 0);
-
-    DWORD region1SampleCount = region1Size / soundOutput->bytesPerSample;
-    i16 *sampleOut = (i16 *)region1;
-    for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
-        *sampleOut++ = sampleValue;
-        *sampleOut++ = sampleValue;
-        ++soundOutput->runningSampleIndex;
-    }
-
-    DWORD region2SampleCount = region2Size / soundOutput->bytesPerSample;
-    sampleOut = (i16 *)region2;
-    for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
-        *sampleOut++ = sampleValue;
-        *sampleOut++ = sampleValue;
-        ++soundOutput->runningSampleIndex;
-    }
-
-    // TODO(ilya.a): Check for succeed. [2024/05/25]
-    ASSERT_VCALL(soundBuffer, Unlock, region1, region1Size, region2, region2Size);
+void
+PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ) {
+    output->toneHZ = toneHZ;
+    output->wavePeriod = output->samplesPerSecond / output->toneHZ;
 }
-#endif
 
 void
 PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size) {
@@ -615,15 +576,10 @@ PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 s
     PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
 
-    // device->soundOutput = Win32_SoundOutputMake();
-
     Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(
-        window->windowHandle, &device->audioBuffer, samplesPerSecond,
+        window->windowHandle, &device->audioBuffer, &device->primaryAudioBuffer, samplesPerSecond,
         audioBufferSize);
     ASSERT_ISOK(initDSoundResult);
-
-    // Win32_FillSoundBuffer(
-    //     &device->soundOutput, device->audioBuffer, 0, device->soundOutput.latencySampleCount * device->soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
 
     return device;
 }

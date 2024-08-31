@@ -11,10 +11,19 @@
 #include "gfs_memory.h"
 #include "gfs_physics.h"
 
+/*
+ * @breaf Actual platform-depended window represantation.
+ */
 typedef struct PlatformWindow PlatformWindow;
 
+/*
+ * @breaf Actual platform-dependend sound output device.
+ */
 typedef struct PlatformSoundDevice PlatformSoundDevice;
 
+/*
+ * @breaf Sound output metadata.
+ */
 typedef struct {
     u32 runningSampleIndex;
     u32 toneHZ;
@@ -27,6 +36,9 @@ typedef struct {
     i32 latencySampleCount;
 } PlatformSoundOutput;
 
+/*
+ * @breaf Actual platform-dependend file handle represantation.
+ */
 typedef struct PlatformFileHandle PlatformFileHandle;
 
 /*
@@ -119,9 +131,23 @@ PlatformMemoryFreeResult PlatformMemoryFree(void *data);
  */
 bool PlatformIsPathExists(cstring8 path);
 
+/*
+ * @breaf Initializes `PlatformSoundOutput` struct with default values.
+ *
+ * TODO(ilya.a): Expose move parameters to the arguments [2024/08/31]
+ */
 PlatformSoundOutput PlatformSoundOutputMake(i32 samplesPerSecond);
 
+void PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ);
+
 PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize);
+
+typedef enum {
+    PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
+    PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
+} PlatformSoundDeviceGetCurrentPositionResult;
+
+PlatformSoundDeviceGetCurrentPositionResult PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
 void PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size);
 void PlatformSoundDeviceUnlockBuffer(PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);

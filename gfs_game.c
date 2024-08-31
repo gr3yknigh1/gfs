@@ -20,7 +20,7 @@
 #define PI32 3.14159265358979323846f
 
 static void
-GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *soundOutput, u32 byteToLock, u32 bytesToWrite) {
+GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
 
     void *region0, *region1;
@@ -32,26 +32,26 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *soundOutpu
     ASSERT_NONNULL(region0);
     // ASSERT_NONNULL(region1);
 
-    u32 region0SampleCount = region0Size / soundOutput->bytesPerSample;
+    u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
+        i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;
-        ++soundOutput->runningSampleIndex;
+        ++output->runningSampleIndex;
     }
 
-    DWORD region2SampleCount = region1Size / soundOutput->bytesPerSample;
+    DWORD region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
+        i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;
-        ++soundOutput->runningSampleIndex;
+        ++output->runningSampleIndex;
     }
 
     PlatformSoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
@@ -71,7 +71,7 @@ GameMainloop(Renderer *renderer) {
 
     PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
     PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
-    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample  /* soundOutput.audioBufferSize */);
+    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample  /* output.audioBufferSize */);
     PlatformSoundDevicePlay(soundDevice);
 
     u32 xOffset = 0;
@@ -90,38 +90,39 @@ GameMainloop(Renderer *renderer) {
     while (!GameStateShouldStop()) {
         PlatformPoolEvents(window);
 
+        ///< Rendering
         BeginDrawing(renderer);
 
         ClearBackground(renderer);
         DrawGradient(renderer, xOffset, yOffset);
 
-#if 0
-        DWORD playCursor;
-        DWORD writeCursor;
-
-        if (SUCCEEDED(VCALL(g_Win32_AudioBuffer, GetCurrentPosition, &playCursor, &writeCursor))) {
-            DWORD byteToLock =
-                (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
-            DWORD targetCursor = (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) %
-                                 soundOutput.audioBufferSize;
-            DWORD bytesToWrite = 0;
-
-            if (byteToLock > targetCursor) {
-                bytesToWrite = soundOutput.audioBufferSize - byteToLock;
-                bytesToWrite += targetCursor;
-            } else {
-                bytesToWrite = targetCursor - byteToLock;
-            }
-
-            Win32_FillSoundBuffer(&soundOutput, byteToLock, bytesToWrite);
-        }
-#endif
-
         EndDrawing(renderer);
+
+        ///< Playing sound
+        u32 playCursor;
+        u32 writeCursor;
+
+        ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
+        u32 byteToLock =
+            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
+        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) %
+                             soundOutput.audioBufferSize;
+        u32 bytesToWrite = 0;
+
+        if (byteToLock > targetCursor) {
+            bytesToWrite = soundOutput.audioBufferSize - byteToLock;
+            bytesToWrite += targetCursor;
+        } else {
+            bytesToWrite = targetCursor - byteToLock;
+        }
+
+        GameFillSoundBuffer(soundDevice, &soundOutput, byteToLock, bytesToWrite);
+
 
         xOffset++;
         yOffset++;
 
+        ///< Perfomance
         {
             u64 endCycleCount = __rdtsc();
 
