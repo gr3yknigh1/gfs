@@ -25,7 +25,6 @@
 
 #define PI32 3.14159265358979323846f
 
-
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
@@ -55,6 +54,10 @@ typedef struct PlatformWindow {
     BITMAPINFO bitMapInfo;
 } PlatformWindow;
 
+typedef struct PlatformFileHandle {
+    HANDLE win32Handle;
+} PlatformFileHandle;
+
 static inline void
 Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
     *width = r->right - r->left;
@@ -69,6 +72,90 @@ Win32_ConvertRECTToRect32(RECT rect) {
     Win32_GetRectSize(&rect, &result.width, &result.height);
     return result;
 }
+
+bool
+PlatformFileHandleIsValid(PlatformFileHandle *handle) {
+    return handle->win32Handle != INVALID_HANDLE_VALUE;
+}
+
+PlatformFileOpenResult
+PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions) {
+    ASSERT_NONNULL(filePath);
+    ASSERT(!CString8IsEmpty(filePath));
+
+    PlatformFileOpenResult result;
+    DWORD desiredAccess = 0;
+
+    if (HASANYBIT(permissions, PLATFORM_PERMISSION_READ)) {
+        desiredAccess |= GENERIC_READ;
+    }
+
+    if (HASANYBIT(permissions, PLATFORM_PERMISSION_WRITE)) {
+        desiredAccess |= GENERIC_WRITE;
+    }
+
+    // TODO(ilya.a): Expose sharing options [2024/05/26]
+    // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+    DWORD shareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
+
+    HANDLE win32Handle = CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (win32Handle == INVALID_HANDLE_VALUE) {
+        result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
+        result.handle = NULL;
+    } else {
+        result.handle = ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
+        result.handle->win32Handle = win32Handle;
+        result.code = PLATFORM_FILE_OPEN_OK;
+    }
+    return result;
+}
+
+PlatformFileLoadResult
+PlatformFileLoadToBuffer(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,  usize *numberOfBytesLoaded) {
+    return PlatformFileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
+}
+
+PlatformFileLoadResult
+PlatformFileLoadToBufferEx(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
+    ASSERT_NONNULL(handle);
+    ASSERT(PlatformFileHandleIsValid(handle));
+    ASSERT_NONNULL(buffer);
+    ASSERT_NONZERO(numberOfBytesToLoad);
+
+
+#if 0
+    // TODO(ilya.a): Check what was wrong about this piece of code.
+    // (Unable to offset and read properly). [2024/05/26]
+
+    LARGE_INTEGER offsetPair;
+    offsetPair.LowPart = ((U32 *)&offset)[1];
+    offsetPair.HighPart = ((U32 *)&offset)[0];
+#endif
+
+    DWORD setFilePointerResult = SetFilePointer(
+        handle->win32Handle,
+        (u32)loadOffset, // XXX(ilya.a): Hack [2024/05/26]
+        NULL, FILE_BEGIN);
+
+    if (setFilePointerResult == INVALID_SET_FILE_POINTER) {
+        return PLATFORM_FILE_FAILED_TO_READ;
+    }
+
+    DWORD numberOfBytesRead = 0;
+    BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);
+
+    if (readFileResult != TRUE) {
+        return PLATFORM_FILE_FAILED_TO_READ;
+    }
+
+    if (numberOfBytesLoaded != NULL) {
+        *numberOfBytesLoaded = numberOfBytesRead;
+    }
+
+    return PLATFORM_FILE_LOAD_OK;
+}
+
 
 void
 PlatformExitProcess(u32 code) {

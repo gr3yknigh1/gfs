@@ -14,6 +14,41 @@
 typedef struct PlatformWindow PlatformWindow;
 typedef struct PlatformSoundDevice PlatformSoundDevice;
 
+typedef struct PlatformFileHandle PlatformFileHandle;
+
+/*
+ * @breaf Checks if platform file handle is valid.
+ */
+bool PlatformFileHandleIsValid(PlatformFileHandle *handle);
+
+typedef u8 PlatformPermissions;
+
+#define PLATFORM_PERMISSION_READ MKFLAG(1)
+#define PLATFORM_PERMISSION_WRITE MKFLAG(2)
+#define PLATFORM_PERMISSION_READ_WRITE (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
+
+typedef enum {
+    PLATFORM_FILE_OPEN_OK,
+    PLATFORM_FILE_OPEN_FAILED_TO_OPEN,
+} PlatformFileOpenResultCode;
+
+typedef struct {
+    PlatformFileHandle *handle;
+    PlatformFileOpenResultCode code;
+} PlatformFileOpenResult;
+
+// PlatformFileOpenResult PlatformFileOpen(cstring8 filePath);
+
+PlatformFileOpenResult PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions);
+
+typedef enum {
+    PLATFORM_FILE_LOAD_OK,
+    PLATFORM_FILE_FAILED_TO_READ,
+} PlatformFileLoadResult;
+
+PlatformFileLoadResult PlatformFileLoadToBuffer(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
+PlatformFileLoadResult PlatformFileLoadToBufferEx(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded,  usize loadOffset);
+
 /*
  * @breaf Opens platforms window.
  * */

@@ -20,9 +20,6 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_string.h
   ${PROJECT_SOURCE_DIR}/gfs_string.c
 
-  ${PROJECT_SOURCE_DIR}/gfs_io.h
-  ${PROJECT_SOURCE_DIR}/gfs_io.c
-
   ${PROJECT_SOURCE_DIR}/gfs_wave.h
   ${PROJECT_SOURCE_DIR}/gfs_wave.c
 
@@ -36,8 +33,6 @@ add_executable(
 
   ${PROJECT_SOURCE_DIR}/gfs_platform.h
   ${PROJECT_SOURCE_DIR}/gfs_platform_win32.c
-  ${PROJECT_SOURCE_DIR}/gfs_platform_win32_keys.h
-
 
   ${PROJECT_SOURCE_DIR}/gfs_game.c
   ${PROJECT_SOURCE_DIR}/gfs_game.h

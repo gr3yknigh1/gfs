@@ -66,11 +66,9 @@ typedef struct {
 typedef enum {
     WAVEASSET_LOAD_OK,                  // It's okey.
     WAVEASSET_LOAD_ERR,                 // General error.
-    WAVEASSET_LOAD_ERR_INVALID_ARGS,    // You typed invalid arguments.
     WAVEASSET_LOAD_ERR_FILE_NOT_FOUND,  // Path which you typed is not existing.
     WAVEASSET_LOAD_ERR_FAILED_TO_OPEN,  // IO error. Failed to open the asset file.
     WAVEASSET_LOAD_ERR_FAILED_TO_READ,  // IO error. Opened the file, but failed to read it.
-    WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC, // Out of memory with Arena.
     WAVEASSET_LOAD_ERR_INVALID_MAGIC,   // Asset failed signature checks.
 } WaveAssetLoadResult;
 

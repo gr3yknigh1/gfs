@@ -6,38 +6,36 @@
 
 #include "gfs_wave.h"
 
+#include "gfs_assert.h"
 #include "gfs_platform.h"
 #include "gfs_types.h"
 #include "gfs_string.h"
-#include "gfs_io.h"
 
 WaveAssetLoadResult
 WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {
-    if (scratchAllocator == NULL || assetPath == NULL || waveAssetOut == NULL || CString8IsEmpty(assetPath)) {
-        return WAVEASSET_LOAD_ERR_INVALID_ARGS;
-    }
+    ASSERT_NONNULL(scratchAllocator);
+    ASSERT_NONNULL(assetPath);
+    ASSERT(!CString8IsEmpty(assetPath));
 
     if (!PlatformIsPathExists(assetPath)) {
         return WAVEASSET_LOAD_ERR_FILE_NOT_FOUND;
     }
 
-    FileHandle assetFileHandle;
-    IOResult openAssetFileResult = IOOpenFile(assetPath, &assetFileHandle, IO_READ);
-
-    if (openAssetFileResult != IO_OK) {
+    ///< Openning handle of assert.
+    PlatformFileOpenResult assetOpenResult = PlatformFileOpenEx(assetPath, scratchAllocator, PLATFORM_PERMISSION_READ);
+    if (assetOpenResult.code != PLATFORM_FILE_OPEN_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_OPEN;
     }
+    PlatformFileHandle *assetFileHandle = assetOpenResult.handle;
 
+    ///< Loading assert's header.
     WaveFileHeader header;
-
-    IOResult loadFromAssetFile;
-
-    loadFromAssetFile = IOLoadBytesFromFile(&assetFileHandle, &header, sizeof(header));
-
-    if (loadFromAssetFile != IO_OK) {
+    PlatformFileLoadResult assertHeaderLoadResult = PlatformFileLoadToBuffer(assetFileHandle, &header, sizeof(header), NULL);  // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
+    if (assertHeaderLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
+    ///< Checking magic.
     // TODO(ilya.a): Implement magic check [2024/06/08]
     // if (!CStr8IsEqual(header.FileTypeBlocID, WAVEFILE_FILETYPE) ||
     //     !CStr8IsEqual(header.FileFormatID,   WAVEFILE_FORMATID) ||
@@ -47,21 +45,16 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     //     return WAVEASSET_LOAD_ERR_INVALID_MAGIC;
     // }
 
+    ///< Loading body of the asset.
     void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
-
-    if (data == NULL) {
-        return WAVEASSET_LOAD_ERR_FAILED_TO_ALLOC;
-    }
-
-    loadFromAssetFile = IOLoadBytesFromFileEx(&assetFileHandle, data, header.DataSize, sizeof(header));
-
-    if (loadFromAssetFile != IO_OK) {
+    ASSERT_NONNULL(data);
+    PlatformFileLoadResult assertDataLoadResult = PlatformFileLoadToBufferEx(assetFileHandle, data, header.DataSize, NULL, sizeof(header));
+    if (assertDataLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
     waveAssetOut->Header = header;
     waveAssetOut->Data = data;
-
     return WAVEASSET_LOAD_OK;
 }
 
