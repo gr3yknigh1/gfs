@@ -25,7 +25,7 @@ typedef struct {
     usize occupied;
 } ScratchAllocator;
 
-#define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE) ((ALLOCATORPTR)->Occupied + (SIZE) <= (ALLOCATORPTR)->Capacity)
+#define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE) ((ALLOCATORPTR)->occupied + (SIZE) <= (ALLOCATORPTR)->capacity)
 
 ScratchAllocator ScratchAllocatorMake(usize size);
 

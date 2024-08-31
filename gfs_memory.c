@@ -8,6 +8,7 @@
 
 #include "gfs_platform.h"
 #include "gfs_types.h"
+#include "gfs_assert.h"
 
 usize
 Align2PageSize(usize size) {
@@ -20,16 +21,15 @@ ScratchAllocatorMake(usize size) {
     void *data = PlatformMemoryAllocate(size);
     return (ScratchAllocator){
         .data = data,
-        .Capacity = size,
-        .Occupied = 0,
+        .capacity = size,
+        .occupied = 0,
     };
 }
 
 void *
 ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
-    if (scratchAllocator == NULL || scratchAllocator->data == NULL) {
-        return NULL;
-    }
+    ASSERT_NONNULL(scratchAllocator);
+    ASSERT_NONNULL(scratchAllocator->data);
 
     if (scratchAllocator->occupied + size > scratchAllocator->capacity) {
         return NULL;
@@ -42,9 +42,8 @@ ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
 
 void
 ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
-    if (scratchAllocator == NULL || scratchAllocator->data == NULL) {
-        return;
-    }
+    ASSERT_NONNULL(scratchAllocator);
+    ASSERT_NONNULL(scratchAllocator->data);
 
     PlatformMemoryFree(scratchAllocator->data);
 
@@ -122,9 +121,7 @@ BlockAllocatorMakeEx(usize size) {
 
 void *
 BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
-    if (allocator == NULL) {
-        return NULL;
-    }
+    ASSERT_NONNULL(allocator);
 
     Block *previousBlock = NULL;
     Block *currentBlock = allocator->head;
@@ -158,9 +155,8 @@ BlockAllocatorAllocZ(BlockAllocator *allocator, usize size) {
 
 void
 BlockAllocatorFree(BlockAllocator *allocator) {
-    if (allocator == NULL || allocator->head == NULL) {
-        return;
-    }
+    ASSERT_NONNULL(allocator);
+    ASSERT_NONNULL(allocator->head);
 
     Block *previousBlock = NULL;
     Block *currentBlock = allocator->head;
