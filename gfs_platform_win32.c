@@ -57,7 +57,6 @@ typedef struct PlatformFileHandle {
 typedef struct PlatformSoundDevice {
     //Win32_SoundOutput soundOutput;
     LPDIRECTSOUNDBUFFER audioBuffer;
-    LPDIRECTSOUNDBUFFER primaryAudioBuffer;
 } PlatformSoundDevice;
 
 static inline void
@@ -452,7 +451,7 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_InitDSoundResult
-Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, LPDIRECTSOUNDBUFFER *primaryAudioBuffer, i32 samplesPerSecond, usize bufferSize) {
+Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
 
     if (library == NULL) {
@@ -486,7 +485,8 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, LPDIRECTSOUNDBUF
     primaryBufferDesc.dwBufferBytes = 0;  // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
     primaryBufferDesc.lpwfxFormat = NULL; // NOTE(ilya.a): Primary buffer wfx format should be NULL. [2024/05/25]
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, primaryAudioBuffer, NULL))) {
+    LPDIRECTSOUNDBUFFER primarySoundbuffer;
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primarySoundbuffer, NULL))) {
         return WIN32_INITDSOUND_ERR;
     }
 
@@ -499,7 +499,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, LPDIRECTSOUNDBUF
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
     waveFormat.cbSize = 0;
 
-    if (!SUCCEEDED(VCALL(*primaryAudioBuffer, SetFormat, &waveFormat))) {
+    if (!SUCCEEDED(VCALL(primarySoundbuffer, SetFormat, &waveFormat))) {
         return WIN32_INITDSOUND_ERR;
     }
 
@@ -539,7 +539,7 @@ PlatformSoundOutputMake(i32 samplesPerSecond) {
 
 PlatformSoundDeviceGetCurrentPositionResult
 PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
-    if (!SUCCEEDED(VCALL(device->primaryAudioBuffer, GetCurrentPosition, playCursor, writeCursor))) {
+    if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
         return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
     }
     return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK;
@@ -577,7 +577,7 @@ PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 s
     ASSERT_NONNULL(device);
 
     Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(
-        window->windowHandle, &device->audioBuffer, &device->primaryAudioBuffer, samplesPerSecond,
+        window->windowHandle, &device->audioBuffer, samplesPerSecond,
         audioBufferSize);
     ASSERT_ISOK(initDSoundResult);
 

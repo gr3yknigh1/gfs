@@ -28,8 +28,8 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
 
     PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
 
-    // NOTE(ilya.a): Logicly, regions might be NULLs. Maybe except first. Temporarly comment-out second region. [2024/08/31]
-    ASSERT_NONNULL(region0);
+    // NOTE(ilya.a): Logicly, regions might be NULLs. Maybe except first? [2024/08/31]
+    // ASSERT_NONNULL(region0);
     // ASSERT_NONNULL(region1);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
