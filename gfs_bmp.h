@@ -1,8 +1,10 @@
+#if !defined(GFS_BMP_H_INCLUDED)
 /*
  * FILE      gfs_bmp.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
+#define GFS_BMP_H_INCLUDED
 
 #include "gfs_types.h"
 
@@ -50,3 +52,5 @@ typedef struct {
     u32 colorImportant;
 } BmpHeader;
 #pragma pack(pop)
+
+#endif // GFS_BMP_H_INCLUDED

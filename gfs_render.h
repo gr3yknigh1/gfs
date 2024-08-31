@@ -1,13 +1,10 @@
+#if !defined(GFS_RENDER_H_INCLUDED)
 /*
  * FILE      gfs_render.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-
-#if !defined(GFS_RENDER_H_INCLUDED)
 #define GFS_RENDER_H_INCLUDED
-
-#include <Windows.h>
 
 #include "gfs_types.h"
 #include "gfs_physics.h"

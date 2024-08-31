@@ -1,7 +1,5 @@
 /*
- * GFS. Bitmap renderer.
- *
- * FILE      gfs_win32_bmr.c
+ * FILE      gfs_render.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */

@@ -5,17 +5,26 @@
  * */
 #include "gfs_game.h"
 
+#include <Windows.h>
+
 #include "gfs_game_state.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
 #include "gfs_assert.h"
 #include "gfs_render.h"
+#include "gfs_wave.h"
 
 void
 GameMainloop(Renderer *renderer) {
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
+    ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(12));
 
     PlatformWindow *window = PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
+    ASSERT_NONNULL(window);
+
+    WaveAsset musicAsset;
+    WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
+    ASSERT_ISOK(musicLoadResult);
 
 #if 0
     PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window);
