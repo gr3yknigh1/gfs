@@ -6,9 +6,9 @@
 
 #include "gfs_wave.h"
 
+#include "gfs_platform.h"
 #include "gfs_types.h"
 #include "gfs_string.h"
-#include "gfs_fs.h"
 #include "gfs_io.h"
 
 WaveAssetLoadResult
@@ -17,7 +17,7 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
         return WAVEASSET_LOAD_ERR_INVALID_ARGS;
     }
 
-    if (!FSIsPathExists(assetPath)) {
+    if (!PlatformIsPathExists(assetPath)) {
         return WAVEASSET_LOAD_ERR_FILE_NOT_FOUND;
     }
 

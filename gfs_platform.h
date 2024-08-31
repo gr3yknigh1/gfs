@@ -66,8 +66,31 @@ typedef enum {
  * */
 PlatformMemoryFreeResult PlatformMemoryFree(void *data);
 
+/*
+ * @breaf Checks if path exists in filesystem.
+ */
+bool PlatformIsPathExists(cstring8 path);
+
 PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window);
 
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);
+
+/*
+ * @breaf Puts whole null terminated string to stdout.
+ *
+ * NOTE: Currently calls `OutputDebugString` for win32 platform.
+ * TODO: Propertly implement IO on platform layer.
+ */
+void PlatformPutString(cstring8 s);
+
+/*
+ * @breaf Calls platform specific break function.
+ */
+void PlatformDebugBreak(void);
+
+/*
+ * @breaf Exits the process with specified code.
+ */
+void PlatformExitProcess(u32 code);
 
 #endif // GFS_PLATFORM_H_INCLUDED

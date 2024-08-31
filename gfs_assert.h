@@ -1,19 +1,19 @@
+#if !defined(GFS_ASSERT_H_INCLUDED)
 /*
  * FILE      gfs_assert.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#if !defined(GFS_ASSERT_H)
-#define GFS_ASSERT_H
+#define GFS_ASSERT_H_INCLUDED
 
-#include <Windows.h>
+#include "gfs_platform.h"
 
 #define ASSERT(COND)                                                                                               \
     do {                                                                                                               \
         if (!(COND)) {                                                                                                 \
-            OutputDebugString("E: Assertion error: '" #COND "'.");                                                     \
-            DebugBreak();                                                                                              \
-            ExitProcess(1);                                                                                            \
+            PlatformPutString("E: Assertion error: '" #COND "'.");                                                     \
+            PlatformDebugBreak();                                                                                              \
+            PlatformExitProcess(1);                                                                                            \
         }                                                                                                              \
     } while (0)
 
@@ -22,7 +22,5 @@
 #define ASSERT_EQ(EXPR, VAL) ASSERT((EXPR) == (VAL))
 #define ASSERT_NONNULL(EXPR) ASSERT((EXPR) != NULL)
 
-#define STATIC_ASSERT(COND) _Static_assert((COND), "")
-#define EXPECT_TYPE_SIZE(TYPE, SIZE) STATIC_ASSERT(sizeof(TYPE) == (SIZE))
 
-#endif // GFS_ASSERT_H
+#endif // GFS_ASSERT_H_INCLUDED

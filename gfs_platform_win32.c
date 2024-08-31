@@ -5,6 +5,14 @@
  * */
 #include "gfs_platform.h"
 
+#include <math.h> // TODO(ilya.a): Replace with custom code [2024/06/08]
+
+#include <Windows.h>
+#include <shlwapi.h>  // PathFileExistsA
+
+#include <xinput.h>
+#include <dsound.h>
+
 #include "gfs_assert.h"
 #include "gfs_physics.h"
 #include "gfs_types.h"
@@ -15,9 +23,8 @@
 #include "gfs_macros.h"
 #include "gfs_render.h"
 
-#include <Windows.h>
-#include <xinput.h>
-#include <dsound.h>
+#define PI32 3.14159265358979323846f
+
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
@@ -61,6 +68,26 @@ Win32_ConvertRECTToRect32(RECT rect) {
     result.y = rect.top;
     Win32_GetRectSize(&rect, &result.width, &result.height);
     return result;
+}
+
+void
+PlatformExitProcess(u32 code) {
+    ExitProcess(code);
+}
+
+void
+PlatformPutString(cstring8 s) {
+    OutputDebugString(s);
+}
+
+void
+PlatformDebugBreak(void) {
+    DebugBreak();
+}
+
+bool
+PlatformIsPathExists(cstring8 path) {
+    return PathFileExistsA(path);
 }
 
 RectangleI32
@@ -442,9 +469,6 @@ Win32_SoundOutputSetTone(Win32_SoundOutput *soundOutput, i32 toneHZ) {
     soundOutput->toneHZ = toneHZ;
     soundOutput->wavePeriod = soundOutput->samplesPerSecond / soundOutput->toneHZ;
 }
-
-#define PI32 3.14159265358979323846f
-#include <math.h> // TODO(ilya.a): Replace with custom code [2024/06/08]
 
 static void
 Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, LPDIRECTSOUNDBUFFER soundBuffer, DWORD byteToLock, DWORD bytesToWrite) {

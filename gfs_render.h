@@ -10,9 +10,30 @@
 #include <Windows.h>
 
 #include "gfs_types.h"
-#include "gfs_color.h"
 #include "gfs_physics.h"
 #include "gfs_platform.h"
+
+// NOTE(ilya.a): Ordered according to GDI requirements.
+// TODO(ilya.a): Replace ordering with RGA order.
+typedef struct {
+    u8 b;
+    u8 g;
+    u8 r;
+    u8 a;
+} Color4;
+
+Color4 Color4Add(Color4 a, Color4 b);
+
+#define COLOR_WHITE                                                                                                    \
+    (Color4) { 255, 255, 255, 255 }
+#define COLOR_RED                                                                                                      \
+    (Color4) { 255, 0, 0, 0 }
+#define COLOR_GREEN                                                                                                    \
+    (Color4) { 0, 255, 0, 0 }
+#define COLOR_BLUE                                                                                                     \
+    (Color4) { 0, 0, 255, 0 }
+#define COLOR_BLACK                                                                                                    \
+    (Color4) { 0, 0, 0, 0 }
 
 /*
  * Actuall BitMap Renderer Renderer.

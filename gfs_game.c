@@ -8,7 +8,7 @@
 #include "gfs_game_state.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
-#include "gfs_color.h"
+#include "gfs_assert.h"
 #include "gfs_render.h"
 
 void

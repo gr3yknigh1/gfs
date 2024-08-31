@@ -6,8 +6,6 @@
 
 #include "gfs_memory.h"
 
-#include <Windows.h>
-
 #include "gfs_platform.h"
 #include "gfs_types.h"
 

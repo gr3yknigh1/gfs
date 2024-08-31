@@ -11,10 +11,21 @@
 #include "gfs_types.h"
 #include "gfs_physics.h"
 #include "gfs_memory.h"
-#include "gfs_color.h"
 #include "gfs_macros.h"
+#include "gfs_assert.h"
 
 #define RENDER_COMMAND_CAPACITY 1024
+
+
+Color4
+Color4Add(Color4 a, Color4 b) {
+    return (Color4){
+        .b = a.b + b.b,
+        .g = a.g + b.g,
+        .r = a.r + b.r,
+        .a = a.a + b.a,
+    };
+}
 
 Renderer
 RendererMake(PlatformWindow *window, Color4 clearColor) {

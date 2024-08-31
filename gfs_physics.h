@@ -47,6 +47,4 @@ typedef struct {
     i32 height;
 } RectangleI32;
 
-
-
 #endif // GFS_PHYSICS_H_INCLUDED

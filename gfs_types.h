@@ -1,29 +1,26 @@
+#if !defined(GFS_TYPES_H_INCLUDED)
 /*
  * FILE      gfs_types.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#if !defined(GFS_TYPES_H_INCLUDED)
 #define GFS_TYPES_H_INCLUDED
 
-#include "gfs_assert.h"
+#include "gfs_static_assert.h"
 
 #if defined(WIN32)
-#define REAL_LONG_64 long long
+#define _LONG_64 long long
 #else
-#define REAL_LONG_64 long
+#define _LONG_64 long
 #endif
 
-#define LONG_SIZE sizeof(long)
-#define LONG_LONG_SIZE sizeof(long long)
-#define INT_SIZE sizeof(int)
-#define POINTER_SIZE sizeof(void *)
+#define POINTER_SIZE 8
 
 typedef signed char i8;
 typedef signed short i16;
 typedef signed int i32;
-typedef signed REAL_LONG_64 i64;
+typedef signed _LONG_64 i64;
 
 EXPECT_TYPE_SIZE(i8, 1);
 EXPECT_TYPE_SIZE(i16, 2);
@@ -33,7 +30,7 @@ EXPECT_TYPE_SIZE(i64, 8);
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-typedef unsigned REAL_LONG_64 u64;
+typedef unsigned _LONG_64 u64;
 
 EXPECT_TYPE_SIZE(u8, 1);
 EXPECT_TYPE_SIZE(u16, 2);
@@ -76,10 +73,5 @@ EXPECT_TYPE_SIZE(bool, 1);
 #endif // NULL
 
 #define BYTE_BITS 8
-
-#define U8_MAX 255
-#define U16_MAX 65535
-#define U32_MAX 4294967295
-#define U64_MAX 18446744073709551615
 
 #endif // GFS_TYPES_H_INCLUDED

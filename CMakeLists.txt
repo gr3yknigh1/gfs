@@ -11,9 +11,6 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_string.c
   ${PROJECT_SOURCE_DIR}/gfs_string.h
 
-  ${PROJECT_SOURCE_DIR}/gfs_color.h
-  ${PROJECT_SOURCE_DIR}/gfs_color.c
-
   ${PROJECT_SOURCE_DIR}/gfs_physics.h
   ${PROJECT_SOURCE_DIR}/gfs_physics.c
 
@@ -23,14 +20,16 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_string.h
   ${PROJECT_SOURCE_DIR}/gfs_string.c
 
-  ${PROJECT_SOURCE_DIR}/gfs_fs.h
-  ${PROJECT_SOURCE_DIR}/gfs_fs.c
-
   ${PROJECT_SOURCE_DIR}/gfs_io.h
   ${PROJECT_SOURCE_DIR}/gfs_io.c
 
   ${PROJECT_SOURCE_DIR}/gfs_wave.h
   ${PROJECT_SOURCE_DIR}/gfs_wave.c
+
+  ${PROJECT_SOURCE_DIR}/gfs_static_assert.h
+  ${PROJECT_SOURCE_DIR}/gfs_assert.h
+  ${PROJECT_SOURCE_DIR}/gfs_types.h
+  ${PROJECT_SOURCE_DIR}/gfs_macros.h
 
   ${PROJECT_SOURCE_DIR}/gfs_render.h
   ${PROJECT_SOURCE_DIR}/gfs_render.c
@@ -39,9 +38,6 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_platform_win32.c
   ${PROJECT_SOURCE_DIR}/gfs_platform_win32_keys.h
 
-  ${PROJECT_SOURCE_DIR}/gfs_assert.h
-  ${PROJECT_SOURCE_DIR}/gfs_types.h
-  ${PROJECT_SOURCE_DIR}/gfs_macros.h
 
   ${PROJECT_SOURCE_DIR}/gfs_game.c
   ${PROJECT_SOURCE_DIR}/gfs_game.h
