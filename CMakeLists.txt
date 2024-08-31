@@ -5,8 +5,7 @@ project(gfs
   LANGUAGES C
 )
 
-add_executable(
-  gfs
+add_executable(gfs
   WIN32
   ${PROJECT_SOURCE_DIR}/gfs_string.c
   ${PROJECT_SOURCE_DIR}/gfs_string.h
@@ -40,32 +39,33 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_game_state.h
 )
 
-target_compile_features(
-  gfs
+target_compile_features(gfs
   PRIVATE
     c_std_17
 )
 
-target_link_options(
-  gfs
+target_link_options(gfs
   PUBLIC
     /DEBUG:FULL
 )
 
-
-target_compile_options(
-  gfs
+target_compile_options(gfs
   PRIVATE
     /MP  # Build with multiple processes
     /W4  # Warning level
 )
 
-target_link_libraries(
-  gfs
+target_link_libraries(gfs
   PRIVATE
     shlwapi.lib
 )
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/External/glad)
+
+target_link_libraries(gfs
+  PRIVATE
+    glad
+)
 
 # TODO(ilya.a): Add unicode support. [2024/05/24]
 # target_compile_definitions(
