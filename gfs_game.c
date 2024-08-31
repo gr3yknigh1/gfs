@@ -7,6 +7,9 @@
 
 #include <Windows.h>
 
+#include <math.h> // sinf
+                  // TODO(ilya.a): Replace with custom code [2024/06/08]
+
 #include "gfs_game_state.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
@@ -14,10 +17,50 @@
 #include "gfs_render.h"
 #include "gfs_wave.h"
 
+#define PI32 3.14159265358979323846f
+
+static void
+GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *soundOutput, u32 byteToLock, u32 bytesToWrite) {
+    ASSERT_NONNULL(device);
+
+    void *region0, *region1;
+    u32 region0Size, region1Size;
+
+    PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+
+    // NOTE(ilya.a): Logicly, regions might be NULLs. Maybe except first. Temporarly comment-out second region. [2024/08/31]
+    ASSERT_NONNULL(region0);
+    // ASSERT_NONNULL(region1);
+
+    u32 region0SampleCount = region0Size / soundOutput->bytesPerSample;
+    i16 *sampleOut = (i16 *)region0;
+    for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
+        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sineValue = sinf(sinePosition);
+        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
+        *sampleOut++ = sampleValue;
+        *sampleOut++ = sampleValue;
+        ++soundOutput->runningSampleIndex;
+    }
+
+    DWORD region2SampleCount = region1Size / soundOutput->bytesPerSample;
+    sampleOut = (i16 *)region1;
+    for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
+        f32 sinePosition = 2.0f * PI32 * (f32)soundOutput->runningSampleIndex / (f32)soundOutput->wavePeriod;
+        f32 sineValue = sinf(sinePosition);
+        i16 sampleValue = (i16)(sineValue * soundOutput->toneVolume);
+        *sampleOut++ = sampleValue;
+        *sampleOut++ = sampleValue;
+        ++soundOutput->runningSampleIndex;
+    }
+
+    PlatformSoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
+}
+
 void
 GameMainloop(Renderer *renderer) {
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
-    ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(12));
+    ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(10));
 
     PlatformWindow *window = PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
     ASSERT_NONNULL(window);
@@ -26,7 +69,10 @@ GameMainloop(Renderer *renderer) {
     WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
     ASSERT_ISOK(musicLoadResult);
 
-    PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window);
+    PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
+    PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
+    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample  /* soundOutput.audioBufferSize */);
+    PlatformSoundDevicePlay(soundDevice);
 
     u32 xOffset = 0;
     u32 yOffset = 0;
@@ -99,5 +145,7 @@ GameMainloop(Renderer *renderer) {
     }
 
     PlatformWindowClose(window);
+    PlatformSoundDeviceClose(soundDevice);
     ScratchAllocatorFree(&platformScratch);
+    ScratchAllocatorFree(&assetScratch);
 }

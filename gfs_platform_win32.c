@@ -5,8 +5,6 @@
  * */
 #include "gfs_platform.h"
 
-#include <math.h> // TODO(ilya.a): Replace with custom code [2024/06/08]
-
 #include <Windows.h>
 #include <shlwapi.h>  // PathFileExistsA
 
@@ -22,8 +20,6 @@
 #include "gfs_string.h"
 #include "gfs_macros.h"
 #include "gfs_render.h"
-
-#define PI32 3.14159265358979323846f
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
@@ -71,7 +67,7 @@ typedef struct {
 } Win32_SoundOutput;
 
 typedef struct PlatformSoundDevice {
-    Win32_SoundOutput soundOutput;
+    //Win32_SoundOutput soundOutput;
     LPDIRECTSOUNDBUFFER audioBuffer;
 } PlatformSoundDevice;
 
@@ -535,10 +531,11 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
     return WIN32_INITDSOUND_OK;
 }
 
-static Win32_SoundOutput
-Win32_SoundOutputMake(void) {
-    Win32_SoundOutput ret = {0};
-    ret.samplesPerSecond = 48000;
+PlatformSoundOutput
+PlatformSoundOutputMake(i32 samplesPerSecond) {
+    PlatformSoundOutput ret;
+
+    ret.samplesPerSecond = samplesPerSecond;
     ret.runningSampleIndex = 0;
     ret.toneHZ = 256;
     ret.toneVolume = 1000;
@@ -551,6 +548,7 @@ Win32_SoundOutputMake(void) {
     return ret;
 }
 
+#if 0
 static void
 Win32_SoundOutputSetTone(Win32_SoundOutput *soundOutput, i32 toneHZ) {
     soundOutput->toneHZ = toneHZ;
@@ -590,26 +588,42 @@ Win32_FillSoundBuffer(Win32_SoundOutput *soundOutput, LPDIRECTSOUNDBUFFER soundB
     // TODO(ilya.a): Check for succeed. [2024/05/25]
     ASSERT_VCALL(soundBuffer, Unlock, region1, region1Size, region2, region2Size);
 }
+#endif
 
+void
+PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size) {
+    // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
+    VCALL(device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1, (LPDWORD)region1Size, 0);
+}
+
+void
+PlatformSoundDeviceUnlockBuffer(PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size) {
+    ASSERT_VCALL(device->audioBuffer, Unlock, region0, region0Size, region1, region1Size);
+}
+
+void
+PlatformSoundDevicePlay(PlatformSoundDevice *device) {
+    ASSERT_VCALL(device->audioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+}
 
 PlatformSoundDevice *
-PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window) {
+PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
 
     PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
-    device->soundOutput = Win32_SoundOutputMake();
+
+    // device->soundOutput = Win32_SoundOutputMake();
 
     Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(
-        window->windowHandle, &device->audioBuffer, device->soundOutput.samplesPerSecond,
-        device->soundOutput.audioBufferSize);
+        window->windowHandle, &device->audioBuffer, samplesPerSecond,
+        audioBufferSize);
     ASSERT_ISOK(initDSoundResult);
 
-    Win32_FillSoundBuffer(
-        &device->soundOutput, device->audioBuffer, 0, device->soundOutput.latencySampleCount * device->soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
-    ASSERT_VCALL(device->audioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
+    // Win32_FillSoundBuffer(
+    //     &device->soundOutput, device->audioBuffer, 0, device->soundOutput.latencySampleCount * device->soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
 
     return device;
 }

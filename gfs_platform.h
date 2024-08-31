@@ -12,7 +12,20 @@
 #include "gfs_physics.h"
 
 typedef struct PlatformWindow PlatformWindow;
+
 typedef struct PlatformSoundDevice PlatformSoundDevice;
+
+typedef struct {
+    u32 runningSampleIndex;
+    u32 toneHZ;
+    i32 samplesPerSecond;
+    i32 toneVolume;
+    i32 wavePeriod;
+    usize bytesPerSample;
+    usize audioBufferSize;
+
+    i32 latencySampleCount;
+} PlatformSoundOutput;
 
 typedef struct PlatformFileHandle PlatformFileHandle;
 
@@ -106,7 +119,13 @@ PlatformMemoryFreeResult PlatformMemoryFree(void *data);
  */
 bool PlatformIsPathExists(cstring8 path);
 
-PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window);
+PlatformSoundOutput PlatformSoundOutputMake(i32 samplesPerSecond);
+
+PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize);
+
+void PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size);
+void PlatformSoundDeviceUnlockBuffer(PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+void PlatformSoundDevicePlay(PlatformSoundDevice *device);
 
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);
 
