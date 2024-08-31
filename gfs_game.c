@@ -26,9 +26,7 @@ GameMainloop(Renderer *renderer) {
     WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
     ASSERT_ISOK(musicLoadResult);
 
-#if 0
     PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window);
-#endif
 
     u32 xOffset = 0;
     u32 yOffset = 0;

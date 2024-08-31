@@ -58,6 +58,23 @@ typedef struct PlatformFileHandle {
     HANDLE win32Handle;
 } PlatformFileHandle;
 
+typedef struct {
+    u32 runningSampleIndex;
+    u32 toneHZ;
+    i32 samplesPerSecond;
+    i32 toneVolume;
+    i32 wavePeriod;
+    usize bytesPerSample;
+    usize audioBufferSize;
+
+    i32 latencySampleCount;
+} Win32_SoundOutput;
+
+typedef struct PlatformSoundDevice {
+    Win32_SoundOutput soundOutput;
+    LPDIRECTSOUNDBUFFER audioBuffer;
+} PlatformSoundDevice;
+
 static inline void
 Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
     *width = r->right - r->left;
@@ -283,23 +300,6 @@ Win32_LoadXInput(void) {
     return WIN32_LOADXINPUT_OK;
 }
 
-typedef struct {
-    u32 runningSampleIndex;
-    u32 toneHZ;
-    i32 samplesPerSecond;
-    i32 toneVolume;
-    i32 wavePeriod;
-    usize bytesPerSample;
-    usize audioBufferSize;
-
-    i32 latencySampleCount;
-} Win32_SoundOutput;
-
-typedef struct PlatformSoundDevice {
-    Win32_SoundOutput soundOutput;
-    LPDIRECTSOUNDBUFFER audioBuffer;
-} PlatformSoundDevice;
-
 PlatformWindow *
 PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
@@ -467,7 +467,7 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_InitDSoundResult
-Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER soundBuffer, i32 samplesPerSecond, usize bufferSize) {
+Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
 
     if (library == NULL) {
@@ -528,7 +528,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER soundBuffer, i32 samplesPerSec
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, &soundBuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer, NULL))) {
         return WIN32_INITDSOUND_ERR;
     }
 
@@ -603,9 +603,9 @@ PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window) {
     device->soundOutput = Win32_SoundOutputMake();
 
     Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(
-        window->windowHandle, device->audioBuffer, device->soundOutput.samplesPerSecond,
+        window->windowHandle, &device->audioBuffer, device->soundOutput.samplesPerSecond,
         device->soundOutput.audioBufferSize);
-    ASSERT_EQ(initDSoundResult, WIN32_INITDSOUND_OK);
+    ASSERT_ISOK(initDSoundResult);
 
     Win32_FillSoundBuffer(
         &device->soundOutput, device->audioBuffer, 0, device->soundOutput.latencySampleCount * device->soundOutput.bytesPerSample /* soundOutput.audioBufferSize */);
