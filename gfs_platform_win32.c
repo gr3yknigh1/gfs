@@ -3,8 +3,10 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_assert.h"
 #include "gfs_platform.h"
+
+#include "gfs_assert.h"
+#include "gfs_physics.h"
 #include "gfs_types.h"
 #include "gfs_memory.h"
 #include "gfs_game_state.h"
@@ -52,20 +54,20 @@ Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
     *height = r->bottom - r->top;
 }
 
-static inline Rectangle32
+static inline RectangleI32
 Win32_ConvertRECTToRect32(RECT rect) {
-    Rectangle32 result;
+    RectangleI32 result;
     result.x = rect.left;
     result.y = rect.top;
     Win32_GetRectSize(&rect, &result.width, &result.height);
     return result;
 }
 
-Rectangle32
+RectangleI32
 PlatformWindowGetRectangle(PlatformWindow *window) {
     RECT win32WindowRect;
     ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
-    Rectangle32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
+    RectangleI32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
     return windowRect;
 }
 

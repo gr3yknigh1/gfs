@@ -14,8 +14,8 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_color.h
   ${PROJECT_SOURCE_DIR}/gfs_color.c
 
-  ${PROJECT_SOURCE_DIR}/gfs_geometry.h
-  ${PROJECT_SOURCE_DIR}/gfs_geometry.c
+  ${PROJECT_SOURCE_DIR}/gfs_physics.h
+  ${PROJECT_SOURCE_DIR}/gfs_physics.c
 
   ${PROJECT_SOURCE_DIR}/gfs_memory.h
   ${PROJECT_SOURCE_DIR}/gfs_memory.c
@@ -41,7 +41,6 @@ add_executable(
 
   ${PROJECT_SOURCE_DIR}/gfs_assert.h
   ${PROJECT_SOURCE_DIR}/gfs_types.h
-  ${PROJECT_SOURCE_DIR}/gfs_linalg.h
   ${PROJECT_SOURCE_DIR}/gfs_macros.h
 
   ${PROJECT_SOURCE_DIR}/gfs_game.c

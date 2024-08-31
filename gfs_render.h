@@ -1,23 +1,17 @@
 /*
- * GFS. Bitmap renderer.
- *
- * Keeps one global backbuffer.
- *
- * FILE      gfs_win32_bmr.h
+ * FILE      gfs_render.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#if !defined(GFS_BMR_H_INCLUDED)
-#define GFS_BMR_H_INCLUDED
+#if !defined(GFS_RENDER_H_INCLUDED)
+#define GFS_RENDER_H_INCLUDED
 
 #include <Windows.h>
 
 #include "gfs_types.h"
 #include "gfs_color.h"
-#include "gfs_linalg.h"
-#include "gfs_geometry.h"
-
+#include "gfs_physics.h"
 #include "gfs_platform.h"
 
 /*
@@ -43,10 +37,6 @@ typedef struct {
         u64 Height;
     } pixels;
 
-    // BITMAPINFO Info;
-    // HWND Window;
-    // HDC DC;
-
     PlatformWindow *window;
 } Renderer;
 
@@ -70,4 +60,4 @@ void DrawRectangleRec(Renderer *renderer, RectangleU16 r, Color4 c);
 
 void DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset);
 
-#endif // GFS_BMR_H_INCLUDED
+#endif // GFS_RENDER_H_INCLUDED

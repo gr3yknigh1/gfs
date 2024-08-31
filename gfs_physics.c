@@ -1,12 +1,10 @@
 /*
- * FILE      gfs_geometry.c
+ * FILE      gfs_physics.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-
+#include "gfs_physics.h"
 #include "gfs_types.h"
-
-#include "gfs_geometry.h"
 
 bool
 RectangleU16IsInside(RectangleU16 r, u16 x, u16 y) {

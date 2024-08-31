@@ -9,7 +9,7 @@
 #include "gfs_types.h"
 #include "gfs_macros.h"
 #include "gfs_memory.h"
-#include "gfs_geometry.h"
+#include "gfs_physics.h"
 
 typedef struct PlatformWindow PlatformWindow;
 typedef struct PlatformSoundDevice PlatformSoundDevice;
@@ -24,11 +24,22 @@ PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 hei
  * */
 void PlatformWindowClose(PlatformWindow *window);
 
-
+/*
+ * @breaf Blits render buffer to PlatformWindow.
+ */
 void PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
+
+/*
+ * @breaf Resizes render buffer.
+ */
 void PlatformWindowResize(PlatformWindow *window, i32 width, i32 height);
 
-Rectangle32 PlatformWindowGetRectangle(PlatformWindow *window);
+/*
+ * @breaf Returns rectangle of platform's window.
+ *
+ * TODO(ilya.a): Check X and Y values [2024/08/31]
+ */
+RectangleI32 PlatformWindowGetRectangle(PlatformWindow *window);
 
 /*
  * @breaf Processes platform's events.

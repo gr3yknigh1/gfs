@@ -9,14 +9,12 @@
 #include "gfs_render.h"
 
 #include "gfs_types.h"
-#include "gfs_linalg.h"
-#include "gfs_geometry.h"
+#include "gfs_physics.h"
 #include "gfs_memory.h"
 #include "gfs_color.h"
 #include "gfs_macros.h"
 
 #define RENDER_COMMAND_CAPACITY 1024
-
 
 Renderer
 RendererMake(PlatformWindow *window, Color4 clearColor) {
@@ -41,18 +39,16 @@ RendererMake(PlatformWindow *window, Color4 clearColor) {
 
 void
 RendererDestroy(Renderer *renderer) {
-    if (renderer->commandQueue.begin != NULL && VirtualFree(renderer->commandQueue.begin, 0, MEM_RELEASE) == 0) {
-        // TODO(ilya.a): Handle memory free error.
-    } else {
-        renderer->commandQueue.begin = NULL;
-        renderer->commandQueue.end = NULL;
+    if (renderer->commandQueue.begin != NULL) {
+        ASSERT_ISZERO(PlatformMemoryFree(renderer->commandQueue.begin));
     }
+    renderer->commandQueue.begin = NULL;
+    renderer->commandQueue.end = NULL;
 
-    if (renderer->pixels.Buffer != NULL && VirtualFree(renderer->pixels.Buffer, 0, MEM_RELEASE) == 0) {
-        // TODO(ilya.a): Handle memory free error.
-    } else {
-        renderer->pixels.Buffer = NULL;
+    if (renderer->pixels.Buffer != NULL) {
+        ASSERT_ISZERO(PlatformMemoryFree(renderer->pixels.Buffer));
     }
+    renderer->pixels.Buffer = NULL;
 }
 
 void
@@ -116,7 +112,7 @@ EndDrawing(Renderer *renderer) {
         row += pitch;
     }
 
-    Rectangle32 windowRect = PlatformWindowGetRectangle(renderer->window);
+    RectangleI32 windowRect = PlatformWindowGetRectangle(renderer->window);
     PlatformWindowUpdate(renderer->window, windowRect.x, windowRect.y, windowRect.width, windowRect.height);
 
     renderer->commandQueue.end = renderer->commandQueue.begin;
