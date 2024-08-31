@@ -1,5 +1,5 @@
 /*
- * FILE      gfs_win32.c
+ * FILE      gfs_platform_win32.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
@@ -7,12 +7,11 @@
 #include "gfs_platform.h"
 #include "gfs_types.h"
 #include "gfs_memory.h"
-#include "gfs_state.h"
+#include "gfs_game_state.h"
 #include "gfs_game.h"
 #include "gfs_string.h"
 #include "gfs_macros.h"
-
-#include "gfs_win32_bmr.h"
+#include "gfs_render.h"
 
 #include <Windows.h>
 #include <xinput.h>
@@ -119,7 +118,7 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_CLOSE: {
         // TODO(ilya.a): Ask for closing?
         OutputDebugString("T: WM_CLOSE\n");
-        StateStop();
+        GameStateStop();
     } break;
     case WM_DESTROY: {
         // TODO(ilya.a): Casey says that we maybe should recreate window later?
@@ -239,7 +238,7 @@ PlatformPoolEvents(PlatformWindow *window) {
     while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
         if (message.message == WM_QUIT) {
             // NOTE(ilya.a): Make sure that we will quit the mainloop.
-            StateStop();
+            GameStateStop();
         }
 
         TranslateMessage(&message);

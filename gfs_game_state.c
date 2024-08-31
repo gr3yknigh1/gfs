@@ -1,19 +1,19 @@
 /*
- * FILE      gfs_state.c
+ * FILE      gfs_game_state.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_state.h"
+#include "gfs_game_state.h"
 #include "gfs_macros.h"
 
 static volatile bool gGameShouldStop = false;
 
 bool
-StateShouldStop(void) {
+GameStateShouldStop(void) {
     return gGameShouldStop == true;
 }
 
 void
-StateStop(void) {
+GameStateStop(void) {
     gGameShouldStop = true;
 }

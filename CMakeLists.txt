@@ -9,7 +9,7 @@ add_executable(
   gfs
   WIN32
   ${PROJECT_SOURCE_DIR}/gfs_string.c
-  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
+  ${PROJECT_SOURCE_DIR}/gfs_string.h
 
   ${PROJECT_SOURCE_DIR}/gfs_color.h
   ${PROJECT_SOURCE_DIR}/gfs_color.c
@@ -32,26 +32,22 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/gfs_wave.h
   ${PROJECT_SOURCE_DIR}/gfs_wave.c
 
-  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.h
-  ${PROJECT_SOURCE_DIR}/gfs_win32_bmr.c
+  ${PROJECT_SOURCE_DIR}/gfs_render.h
+  ${PROJECT_SOURCE_DIR}/gfs_render.c
 
-  ${PROJECT_SOURCE_DIR}/gfs_win32_misc.h
-  ${PROJECT_SOURCE_DIR}/gfs_win32_misc.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_win32_keys.h
+  ${PROJECT_SOURCE_DIR}/gfs_platform.h
+  ${PROJECT_SOURCE_DIR}/gfs_platform_win32.c
+  ${PROJECT_SOURCE_DIR}/gfs_platform_win32_keys.h
 
   ${PROJECT_SOURCE_DIR}/gfs_assert.h
   ${PROJECT_SOURCE_DIR}/gfs_types.h
   ${PROJECT_SOURCE_DIR}/gfs_linalg.h
   ${PROJECT_SOURCE_DIR}/gfs_macros.h
-  ${PROJECT_SOURCE_DIR}/gfs_platform.h
-  ${PROJECT_SOURCE_DIR}/gfs_win32.c
 
   ${PROJECT_SOURCE_DIR}/gfs_game.c
   ${PROJECT_SOURCE_DIR}/gfs_game.h
-
-  ${PROJECT_SOURCE_DIR}/gfs_state.c
-  ${PROJECT_SOURCE_DIR}/gfs_state.h
+  ${PROJECT_SOURCE_DIR}/gfs_game_state.c
+  ${PROJECT_SOURCE_DIR}/gfs_game_state.h
 )
 
 target_compile_features(

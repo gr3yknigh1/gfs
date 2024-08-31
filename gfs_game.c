@@ -4,11 +4,12 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 #include "gfs_game.h"
-#include "gfs_state.h"
+
+#include "gfs_game_state.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
 #include "gfs_color.h"
-#include "gfs_win32_bmr.h"
+#include "gfs_render.h"
 
 void
 GameMainloop(Renderer *renderer) {
@@ -33,7 +34,7 @@ GameMainloop(Renderer *renderer) {
 
     u64 lastCycleCount = __rdtsc();
 
-    while (!StateShouldStop()) {
+    while (!GameStateShouldStop()) {
         PlatformPoolEvents(window);
 
         BeginDrawing(renderer);

@@ -6,7 +6,7 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_win32_bmr.h"
+#include "gfs_render.h"
 
 #include "gfs_types.h"
 #include "gfs_linalg.h"
@@ -14,7 +14,6 @@
 #include "gfs_memory.h"
 #include "gfs_color.h"
 #include "gfs_macros.h"
-#include "gfs_win32_misc.h"
 
 #define RENDER_COMMAND_CAPACITY 1024
 
