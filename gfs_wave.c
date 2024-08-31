@@ -46,15 +46,15 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     // }
 
     ///< Loading body of the asset.
-    void *data = ScratchAllocatorAlloc(scratchAllocator, header.DataSize);
+    void *data = ScratchAllocatorAlloc(scratchAllocator, header.dataSize);
     ASSERT_NONNULL(data);
-    PlatformFileLoadResult assertDataLoadResult = PlatformFileLoadToBufferEx(assetFileHandle, data, header.DataSize, NULL, sizeof(header));
+    PlatformFileLoadResult assertDataLoadResult = PlatformFileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
     if (assertDataLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
-    waveAssetOut->Header = header;
-    waveAssetOut->Data = data;
+    waveAssetOut->header = header;
+    waveAssetOut->data = data;
     return WAVEASSET_LOAD_OK;
 }
 

@@ -36,31 +36,31 @@ typedef u16 WaveFileAudioFormatTag;
  */
 typedef struct {
     /* Master RIFF chunk */
-    char8 FileTypeBlocID[4]; // Identifier [RIFF]  (0x52, 0x49, 0x46, 0x46)
-    u32 FileSize;            // Overall file size minus 8 bytes
-    char8 FileFormatID[4];   // Format = [WAVE]  (0x57, 0x41, 0x56, 0x45)
+    char8 fileTypeBlocID[4]; // Identifier [RIFF]  (0x52, 0x49, 0x46, 0x46)
+    u32 fileSize;            // Overall file size minus 8 bytes
+    char8 fileFormatID[4];   // Format = [WAVE]  (0x57, 0x41, 0x56, 0x45)
 
     /* Chunk describing the data format */
-    char8 FormatBlocID[4];              // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
-    u32 BlockSize;                      // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
-    WaveFileAudioFormatTag AudioFormat; // Audio format (1: PCM integer, 3: IIEE float)
-    u16 NumberOfChannels;               // Number of channels
-    u32 FreqHZ;                         // Sample rate (in hertz)
-    u32 BytePerSec;                     // Number of bytes to read per second (Frequence * BytePerBloc)
-    u16 BytePerBloc;                    // Number of bytes per block (NbrChannels * BitsPerSample / 8)
-    u16 BitsPerSample;                  // Number of bits per sample
+    char8 formatBlocID[4];              // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
+    u32 blockSize;                      // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
+    WaveFileAudioFormatTag audioFormat; // Audio format (1: PCM integer, 3: IIEE float)
+    u16 numberOfChannels;               // Number of channels
+    u32 freqHZ;                         // Sample rate (in hertz)
+    u32 bytePerSec;                     // Number of bytes to read per second (Frequence * BytePerBloc)
+    u16 bytePerBloc;                    // Number of bytes per block (NbrChannels * BitsPerSample / 8)
+    u16 bitsPerSample;                  // Number of bits per sample
 
     /* Chunk containing the sampled data */
-    char8 DataBlocID[4]; // Identifier "data"  (0x64, 0x61, 0x74, 0x61)
-    u32 DataSize;        // SampledData size
+    char8 dataBlocID[4]; // Identifier "data"  (0x64, 0x61, 0x74, 0x61)
+    u32 dataSize;        // SampledData size
 } WaveFileHeader;
 #pragma pack(pop)
 
 EXPECT_TYPE_SIZE(WaveFileHeader, WAVEFILE_HEADER_SIZE);
 
 typedef struct {
-    WaveFileHeader Header;
-    void *Data;
+    WaveFileHeader header;
+    void *data;
 } WaveAsset;
 
 typedef enum {
