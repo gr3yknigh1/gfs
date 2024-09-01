@@ -90,7 +90,7 @@ GameFillSoundBufferWaveAsset(
     u32 region1SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
-        if (gSoundPlayerIndex > waveAsset->header.dataSize) {
+        if (gSoundPlayerIndex > waveAsset->header.dataSize / 2) {
             gSoundPlayerIndex = 0;
         }
 
@@ -118,8 +118,10 @@ GameMainloop(Renderer *renderer) {
     ASSERT_ISOK(musicLoadResult);
 
     // PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
-    PlatformSoundOutput soundOutput =
-        PlatformSoundOutputMake(musicAsset.header.bytePerSec / (musicAsset.header.bitsPerSample / 8));
+    PlatformSoundOutput soundOutput = PlatformSoundOutputMake(musicAsset.header.freqHZ);
+    soundOutput.bytesPerSample = musicAsset.header.bitsPerSample / 8;
+
+
     PlatformSoundDevice *soundDevice =
         PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
     GameFillSoundBufferWaveAsset(
@@ -152,8 +154,8 @@ GameMainloop(Renderer *renderer) {
         EndDrawing(renderer);
 
         ///< Playing sound
-        u32 playCursor;
-        u32 writeCursor;
+        u32 playCursor = 0;
+        u32 writeCursor = 0;
 
         ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
         u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
