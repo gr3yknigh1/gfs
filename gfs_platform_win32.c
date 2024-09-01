@@ -556,7 +556,7 @@ PlatformSoundDeviceLockBuffer(
     PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
     u32 *region1Size) {
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
-    VCALL(
+    ASSERT_VCALL(
         device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1,
         (LPDWORD)region1Size, 0);
 }
