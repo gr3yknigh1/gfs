@@ -64,15 +64,18 @@ typedef struct {
 
 // PlatformFileOpenResult PlatformFileOpen(cstring8 filePath);
 
-PlatformFileOpenResult PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions);
+PlatformFileOpenResult PlatformFileOpenEx(
+    cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
     PLATFORM_FILE_FAILED_TO_READ,
 } PlatformFileLoadResult;
 
-PlatformFileLoadResult PlatformFileLoadToBuffer(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
-PlatformFileLoadResult PlatformFileLoadToBufferEx(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded,  usize loadOffset);
+PlatformFileLoadResult PlatformFileLoadToBuffer(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
+PlatformFileLoadResult PlatformFileLoadToBufferEx(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
 
 /*
  * @breaf Opens platforms window.
@@ -87,7 +90,8 @@ void PlatformWindowClose(PlatformWindow *window);
 /*
  * @breaf Blits render buffer to PlatformWindow.
  */
-void PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
+void PlatformWindowUpdate(
+    PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
 
 /*
  * @breaf Resizes render buffer.
@@ -140,17 +144,22 @@ PlatformSoundOutput PlatformSoundOutputMake(i32 samplesPerSecond);
 
 void PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ);
 
-PlatformSoundDevice *PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize);
+PlatformSoundDevice *PlatformSoundDeviceOpen(
+    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize);
 
 typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } PlatformSoundDeviceGetCurrentPositionResult;
 
-PlatformSoundDeviceGetCurrentPositionResult PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor);
+PlatformSoundDeviceGetCurrentPositionResult PlatformSoundDeviceGetCurrentPosition(
+    PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
-void PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size);
-void PlatformSoundDeviceUnlockBuffer(PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+void PlatformSoundDeviceLockBuffer(
+    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
+    u32 *region1Size);
+void PlatformSoundDeviceUnlockBuffer(
+    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
 void PlatformSoundDevicePlay(PlatformSoundDevice *device);
 
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);

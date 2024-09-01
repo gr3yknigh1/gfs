@@ -61,14 +61,15 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
 static usize gSoundPlayerIndex = 0;
 
 static void
-GameFillSoundBufferWaveAsset(PlatformSoundDevice *device, PlatformSoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
+GameFillSoundBufferWaveAsset(
+    PlatformSoundDevice *device, PlatformSoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
     ASSERT_NONNULL(waveAsset);
 
     void *region0, *region1;
     u32 region0Size, region1Size;
-    byte *sampleOut;
+    i16 *sampleOut;
 
     PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
 
@@ -79,7 +80,7 @@ GameFillSoundBufferWaveAsset(PlatformSoundDevice *device, PlatformSoundOutput *o
             gSoundPlayerIndex = 0;
         }
 
-        i16 *sampleValue = (i16 *) waveAsset->data + gSoundPlayerIndex;
+        i16 *sampleValue = (i16 *)waveAsset->data + gSoundPlayerIndex;
 
         *sampleOut = *sampleValue;
         ++sampleOut;
@@ -93,16 +94,15 @@ GameFillSoundBufferWaveAsset(PlatformSoundDevice *device, PlatformSoundOutput *o
             gSoundPlayerIndex = 0;
         }
 
-        i16 *sampleValue = (i16 *) waveAsset->data + gSoundPlayerIndex;
+        i16 *sampleValue = (i16 *)waveAsset->data + gSoundPlayerIndex;
 
-        *sampleOut = sampleValue;
+        *sampleOut = *sampleValue;
         ++sampleOut;
         ++gSoundPlayerIndex;
     }
 
     PlatformSoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
 }
-
 
 void
 GameMainloop(Renderer *renderer) {
@@ -113,13 +113,18 @@ GameMainloop(Renderer *renderer) {
     ASSERT_NONNULL(window);
 
     WaveAsset musicAsset;
-    WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
+    WaveAssetLoadResult musicLoadResult =
+        WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
     ASSERT_ISOK(musicLoadResult);
 
-    //PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
-    PlatformSoundOutput soundOutput = PlatformSoundOutputMake(musicAsset.header.bytePerSec / (musicAsset.header.bitsPerSample / 8));
-    PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
-    GameFillSoundBufferWaveAsset(soundDevice, &soundOutput, &musicAsset, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample  /* output.audioBufferSize */);
+    // PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
+    PlatformSoundOutput soundOutput =
+        PlatformSoundOutputMake(musicAsset.header.bytePerSec / (musicAsset.header.bitsPerSample / 8));
+    PlatformSoundDevice *soundDevice =
+        PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
+    GameFillSoundBufferWaveAsset(
+        soundDevice, &soundOutput, &musicAsset, 0,
+        soundOutput.latencySampleCount * soundOutput.bytesPerSample /* output.audioBufferSize */);
     PlatformSoundDevicePlay(soundDevice);
 
     u32 xOffset = 0;
@@ -151,10 +156,9 @@ GameMainloop(Renderer *renderer) {
         u32 writeCursor;
 
         ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock =
-            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
-        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) %
-                             soundOutput.audioBufferSize;
+        u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
+        u32 targetCursor =
+            (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) % soundOutput.audioBufferSize;
         u32 bytesToWrite = 0;
 
         if (byteToLock > targetCursor) {
@@ -165,7 +169,6 @@ GameMainloop(Renderer *renderer) {
         }
 
         GameFillSoundBufferWaveAsset(soundDevice, &soundOutput, &musicAsset, byteToLock, bytesToWrite);
-
 
         xOffset++;
         yOffset++;

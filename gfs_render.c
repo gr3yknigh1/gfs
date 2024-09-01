@@ -14,7 +14,6 @@
 
 #define RENDER_COMMAND_CAPACITY 1024
 
-
 Color4
 Color4Add(Color4 a, Color4 b) {
     return (Color4){
@@ -102,12 +101,7 @@ EndDrawing(Renderer *renderer) {
                     Vector2U32 v = *(Vector2U32 *)(renderer->commandQueue.begin + offset);
                     offset += sizeof(Vector2U32);
 
-                    *pixel = (Color4){
-                        .b=x + v.x,
-                        .g=y + v.y,
-                        .r=0,
-                        .a=0
-                    };
+                    *pixel = (Color4){.b = x + v.x, .g = y + v.y, .r = 0, .a = 0};
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_NOP):
                 default: {

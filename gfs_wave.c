@@ -30,7 +30,8 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
 
     ///< Loading assert's header.
     WaveFileHeader header;
-    PlatformFileLoadResult assertHeaderLoadResult = PlatformFileLoadToBuffer(assetFileHandle, &header, sizeof(header), NULL);  // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
+    PlatformFileLoadResult assertHeaderLoadResult = PlatformFileLoadToBuffer(
+        assetFileHandle, &header, sizeof(header), NULL); // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
     if (assertHeaderLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
@@ -48,7 +49,8 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     ///< Loading body of the asset.
     void *data = ScratchAllocatorAlloc(scratchAllocator, header.dataSize);
     ASSERT_NONNULL(data);
-    PlatformFileLoadResult assertDataLoadResult = PlatformFileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
+    PlatformFileLoadResult assertDataLoadResult =
+        PlatformFileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
     if (assertDataLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }

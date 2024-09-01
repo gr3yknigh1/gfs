@@ -6,7 +6,7 @@
 #include "gfs_platform.h"
 
 #include <Windows.h>
-#include <shlwapi.h>  // PathFileExistsA
+#include <shlwapi.h> // PathFileExistsA
 
 #include <xinput.h>
 #include <dsound.h>
@@ -55,7 +55,7 @@ typedef struct PlatformFileHandle {
 } PlatformFileHandle;
 
 typedef struct PlatformSoundDevice {
-    //Win32_SoundOutput soundOutput;
+    // Win32_SoundOutput soundOutput;
     LPDIRECTSOUNDBUFFER audioBuffer;
 } PlatformSoundDevice;
 
@@ -99,7 +99,8 @@ PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermi
     // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
     DWORD shareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 
-    HANDLE win32Handle = CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE win32Handle =
+        CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (win32Handle == INVALID_HANDLE_VALUE) {
         result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
@@ -113,17 +114,18 @@ PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermi
 }
 
 PlatformFileLoadResult
-PlatformFileLoadToBuffer(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,  usize *numberOfBytesLoaded) {
+PlatformFileLoadToBuffer(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded) {
     return PlatformFileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
 PlatformFileLoadResult
-PlatformFileLoadToBufferEx(PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
+PlatformFileLoadToBufferEx(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
     ASSERT_NONNULL(handle);
     ASSERT(PlatformFileHandleIsValid(handle));
     ASSERT_NONNULL(buffer);
     ASSERT_NONZERO(numberOfBytesToLoad);
-
 
 #if 0
     // TODO(ilya.a): Check what was wrong about this piece of code.
@@ -157,7 +159,6 @@ PlatformFileLoadToBufferEx(PlatformFileHandle *handle, void *buffer, usize numbe
     return PLATFORM_FILE_LOAD_OK;
 }
 
-
 void
 PlatformExitProcess(u32 code) {
     ExitProcess(code);
@@ -189,9 +190,9 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 void
 PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
     StretchDIBits(
-        window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset, gRenderer.yOffset,
-        gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer, &window->bitMapInfo, DIB_RGB_COLORS,
-        SRCCOPY);
+        window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset,
+        gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
+        &window->bitMapInfo, DIB_RGB_COLORS, SRCCOPY);
 }
 
 void
@@ -201,14 +202,16 @@ PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
     // TODO(ilya.a):
     //     - [ ] Checkout how it works.
     //     - [ ] Handle allocation error.
-    ASSERT(!(renderer->pixels.Buffer != NULL && PlatformMemoryFree(renderer->pixels.Buffer) != PLATFORM_MEMORY_FREE_ERR));
+    ASSERT(
+        !(renderer->pixels.Buffer != NULL && PlatformMemoryFree(renderer->pixels.Buffer) != PLATFORM_MEMORY_FREE_ERR));
 
     renderer->pixels.Width = width;
     renderer->pixels.Height = height;
 
     window->bitMapInfo.bmiHeader.biSize = sizeof(window->bitMapInfo.bmiHeader);
     window->bitMapInfo.bmiHeader.biWidth = width;
-    window->bitMapInfo.bmiHeader.biHeight = height; // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
+    window->bitMapInfo.bmiHeader.biHeight =
+        height; // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
     window->bitMapInfo.bmiHeader.biPlanes = 1;
     window->bitMapInfo.bmiHeader.biBitCount = 32; // NOTE: Align to WORD
     window->bitMapInfo.bmiHeader.biCompression = BI_RGB;
@@ -217,7 +220,6 @@ PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
     window->bitMapInfo.bmiHeader.biYPelsPerMeter = 0;
     window->bitMapInfo.bmiHeader.biClrUsed = 0;
     window->bitMapInfo.bmiHeader.biClrImportant = 0;
-
 
     usize bufferSize = width * height * renderer->bytesPerPixel;
     renderer->pixels.Buffer = PlatformMemoryAllocate(bufferSize);
@@ -426,7 +428,6 @@ PlatformMemoryAllocate(usize size) {
     return data;
 }
 
-
 PlatformMemoryFreeResult
 PlatformMemoryFree(void *data) {
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
@@ -536,7 +537,6 @@ PlatformSoundOutputMake(i32 samplesPerSecond) {
     return ret;
 }
 
-
 PlatformSoundDeviceGetCurrentPositionResult
 PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
     if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
@@ -552,13 +552,18 @@ PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ) {
 }
 
 void
-PlatformSoundDeviceLockBuffer(PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1, u32 *region1Size) {
+PlatformSoundDeviceLockBuffer(
+    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
+    u32 *region1Size) {
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
-    VCALL(device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1, (LPDWORD)region1Size, 0);
+    VCALL(
+        device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1,
+        (LPDWORD)region1Size, 0);
 }
 
 void
-PlatformSoundDeviceUnlockBuffer(PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size) {
+PlatformSoundDeviceUnlockBuffer(
+    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size) {
     ASSERT_VCALL(device->audioBuffer, Unlock, region0, region0Size, region1, region1Size);
 }
 
@@ -568,7 +573,8 @@ PlatformSoundDevicePlay(PlatformSoundDevice *device) {
 }
 
 PlatformSoundDevice *
-PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize) {
+PlatformSoundDeviceOpen(
+    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
@@ -576,9 +582,8 @@ PlatformSoundDeviceOpen(ScratchAllocator *scratch, PlatformWindow *window, i32 s
     PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
 
-    Win32_InitDSoundResult initDSoundResult = Win32_InitDSound(
-        window->windowHandle, &device->audioBuffer, samplesPerSecond,
-        audioBufferSize);
+    Win32_InitDSoundResult initDSoundResult =
+        Win32_InitDSound(window->windowHandle, &device->audioBuffer, samplesPerSecond, audioBufferSize);
     ASSERT_ISOK(initDSoundResult);
 
     return device;
