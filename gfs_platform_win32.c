@@ -9,7 +9,8 @@
 #include <shlwapi.h> // PathFileExistsA
 
 #include <xinput.h>
-#include <dsound.h>
+#include <dsound.h>  // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
+#include <xaudio2.h>
 
 #include "gfs_assert.h"
 #include "gfs_physics.h"
