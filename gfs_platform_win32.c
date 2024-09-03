@@ -36,7 +36,7 @@ static Win32_XInputGetStateType *Win32_xInputGetStatePtr;
 static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
 
 #define WIN32_DIRECTSOUNDCREATE_PROCNAME "DirectSoundCreate"
-#define WIN32_DSOUND_DLL "dsound.dll"
+#define WIN32_DIRECTSOUND_DLL "dsound.dll"
 
 typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
@@ -445,7 +445,7 @@ PlatformMemoryFree(void *data) {
     return PLATFORM_MEMORY_FREE_OK;
 }
 
-typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_LOAD } Win32_InitDSoundResult;
+typedef enum { WIN32_DIRECTSOUND_INIT_OK, WIN32_DIRECTSOUND_INIT_ERR, WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR } Win32_DirectSoundInitResult;
 
 /*
  * Loads DirectrSound library and initializes it.
@@ -453,28 +453,28 @@ typedef enum { WIN32_INITDSOUND_OK, WIN32_INITDSOUND_ERR, WIN32_INITDSOUND_DLL_L
  * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
-static Win32_InitDSoundResult
-Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
-    HMODULE library = LoadLibrary(WIN32_DSOUND_DLL);
+static Win32_DirectSoundInitResult
+Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
+    HMODULE library = LoadLibrary(WIN32_DIRECTSOUND_DLL);
 
     if (library == NULL) {
-        return WIN32_INITDSOUND_DLL_LOAD;
+        return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
     }
 
     Win32_DirectSoundCreatePtr =
         (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
     if (Win32_DirectSoundCreatePtr == NULL) {
-        return WIN32_INITDSOUND_DLL_LOAD;
+        return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
     }
 
     LPDIRECTSOUND directSound;
     if (!SUCCEEDED(Win32_DirectSoundCreatePtr(0, &directSound, NULL))) {
-        return WIN32_INITDSOUND_ERR;
+        return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
     if (!SUCCEEDED(VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY))) {
-        return WIN32_INITDSOUND_ERR;
+        return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
     // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to
@@ -490,7 +490,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
 
     LPDIRECTSOUNDBUFFER primarySoundbuffer;
     if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primarySoundbuffer, NULL))) {
-        return WIN32_INITDSOUND_ERR;
+        return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
     WAVEFORMATEX waveFormat;
@@ -503,7 +503,7 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
     waveFormat.cbSize = 0;
 
     if (!SUCCEEDED(VCALL(primarySoundbuffer, SetFormat, &waveFormat))) {
-        return WIN32_INITDSOUND_ERR;
+        return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
     // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
@@ -516,10 +516,10 @@ Win32_InitDSound(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSe
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
     if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer, NULL))) {
-        return WIN32_INITDSOUND_ERR;
+        return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
-    return WIN32_INITDSOUND_OK;
+    return WIN32_DIRECTSOUND_INIT_OK;
 }
 
 PlatformSoundOutput
@@ -584,9 +584,9 @@ PlatformSoundDeviceOpen(
     PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
 
-    Win32_InitDSoundResult initDSoundResult =
-        Win32_InitDSound(window->windowHandle, &device->audioBuffer, samplesPerSecond, audioBufferSize);
-    ASSERT_ISOK(initDSoundResult);
+    Win32_DirectSoundInitResult result =
+        Win32_DirectSoundInit(window->windowHandle, &device->audioBuffer, samplesPerSecond, audioBufferSize);
+    ASSERT_ISOK(result);
 
     return device;
 }
