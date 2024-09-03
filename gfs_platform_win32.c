@@ -210,8 +210,9 @@ PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
 
     window->bitMapInfo.bmiHeader.biSize = sizeof(window->bitMapInfo.bmiHeader);
     window->bitMapInfo.bmiHeader.biWidth = width;
-    window->bitMapInfo.bmiHeader.biHeight =
-        height; // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
+    window->bitMapInfo.bmiHeader.biHeight = height;
+    //                                      ^^^^^^
+    // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
     window->bitMapInfo.bmiHeader.biPlanes = 1;
     window->bitMapInfo.bmiHeader.biBitCount = 32; // NOTE: Align to WORD
     window->bitMapInfo.bmiHeader.biCompression = BI_RGB;
