@@ -1,11 +1,10 @@
 /*
- * FILE      Code\GameState.cpp
+ * FILE      gfs_game_state.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * */
-#include "GameState.hpp"
-#include "Macros.hpp"
-#include "Types.hpp"
+#include "gfs_game_state.h"
+#include "gfs_macros.h"
 
 static volatile bool gGameShouldStop = false;
 

@@ -1,15 +1,15 @@
 /*
- * FILE      Code\WaveAudio.cpp
+ * FILE      gfs_wave.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "WaveAudio.hpp"
+#include "gfs_wave.h"
 
-#include "Assert.hpp"
-#include "Platform.hpp"
-#include "Types.hpp"
-#include "String.hpp"
+#include "gfs_assert.h"
+#include "gfs_platform.h"
+#include "gfs_types.h"
+#include "gfs_string.h"
 
 WaveAssetLoadResult
 WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {

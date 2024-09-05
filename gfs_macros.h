@@ -1,17 +1,14 @@
-#pragma once
+#if !defined(GFS_MACROS_H_INCLUDED)
 /*
- * FILE      Code\Macros.hpp
+ * FILE      gfs_macros.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
+#define GFS_MACROS_H_INCLUDED
 
 #define UNUSED(X) ((void)(X))
 
 #define MKFLAG(BITINDEX) (1 << (BITINDEX))
 #define HASANYBIT(MASK, FLAG) ((MASK) | (FLAG))
 
-#if defined(__cplusplus)
-#define LITERAL(T) T
-#else
-#define LITERAL(T) (T)
-#endif
+#endif // GFS_MACROS_H_INCLUDED

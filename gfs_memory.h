@@ -1,12 +1,14 @@
-#pragma once
+#if !defined(GFS_MEMORY_H_INCLUDED)
 /*
- * FILE      Code\Memory.hpp
+ * FILE      gfs_memory.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "Types.hpp"
-#include "Macros.hpp"
+#define GFS_MEMORY_H_INCLUDED
+
+#include "gfs_types.h"
+#include "gfs_macros.h"
 
 #define KILOBYTES(X) (1024 * (X))
 #define MEGABYTES(X) (1024 * 1024 * (X))
@@ -55,3 +57,5 @@ void *BlockAllocatorAlloc(BlockAllocator *allocator, usize size);
 void *BlockAllocatorAllocZ(BlockAllocator *allocator, usize size);
 
 void BlockAllocatorFree(BlockAllocator *allocator);
+
+#endif // GFS_MEMORY_H_INCLUDED

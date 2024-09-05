@@ -1,11 +1,12 @@
-#pragma once
+#if !defined(GFS_PHYSICS_H_INCLUDED)
+#define GFS_PHYSICS_H_INCLUDED
 /*
- * FILE      Code\Physics.hpp
+ * FILE      gfs_physics.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "Types.hpp"
+#include "gfs_types.h"
 
 /*
  * @breaf Gets offset from beginning of the array, as if this array represents grid.
@@ -36,7 +37,7 @@ typedef struct {
     u16 height;
 } RectangleU16;
 
-bool RectangleU16IsInside(RectangleU16 r, u32 x, u32 y);
+bool RectangleU16IsInside(RectangleU16 r, u16 x, u16 y);
 bool RectangleU16IsOverlapping(RectangleU16 r);
 
 typedef struct {
@@ -45,3 +46,5 @@ typedef struct {
     i32 width;
     i32 height;
 } RectangleI32;
+
+#endif // GFS_PHYSICS_H_INCLUDED

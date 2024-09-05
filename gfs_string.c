@@ -1,11 +1,11 @@
 /*
- * FILE      Code\String.cpp
+ * FILE      gfs_string.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "String.hpp"
+#include "gfs_string.h"
 
-#include "Types.hpp"
+#include "gfs_types.h"
 
 usize
 CString8GetLength(cstring8 s) {

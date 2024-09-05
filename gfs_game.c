@@ -1,21 +1,21 @@
 /*
- * FILE      Code\Game.cpp
+ * FILE      gfs_game.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "Game.hpp"
+#include "gfs_game.h"
 
 #include <Windows.h>
 
 #include <math.h> // sinf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
 
-#include "GameState.hpp"
-#include "Platform.hpp"
-#include "Memory.hpp"
-#include "Assert.hpp"
-#include "Render.hpp"
-#include "WaveAudio.hpp"
+#include "gfs_game_state.h"
+#include "gfs_platform.h"
+#include "gfs_memory.h"
+#include "gfs_assert.h"
+#include "gfs_render.h"
+#include "gfs_wave.h"
 
 #define PI32 3.14159265358979323846f
 
@@ -33,9 +33,9 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
     // ASSERT_NONNULL(region0);
     // ASSERT_NONNULL(region1);
 
-    u64 region0SampleCount = (u64)region0Size / output->bytesPerSample;
+    u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
-    for (u64 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
+    for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
         f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
@@ -44,9 +44,9 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
         ++output->runningSampleIndex;
     }
 
-    u64 region2SampleCount = (u64)region1Size / output->bytesPerSample;
+    u32 region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
-    for (u64 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
+    for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
         f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
@@ -73,9 +73,9 @@ GameFillSoundBufferWaveAsset(
 
     PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
 
-    u64 region0SampleCount = (u64)region0Size / output->bytesPerSample;
+    u32 region0SampleCount = region0Size / output->bytesPerSample;
     sampleOut = (i16 *)region0;
-    for (u64 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
+    for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
         if (gSoundPlayerIndex > waveAsset->header.dataSize / 2) {
             gSoundPlayerIndex = 0;
         }
@@ -87,9 +87,9 @@ GameFillSoundBufferWaveAsset(
         ++gSoundPlayerIndex;
     }
 
-    u64 region1SampleCount = (u64)region1Size / output->bytesPerSample;
+    u32 region1SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
-    for (u64 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
+    for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
         if (gSoundPlayerIndex > waveAsset->header.dataSize / 2) {
             gSoundPlayerIndex = 0;
         }
@@ -126,7 +126,7 @@ GameMainloop(Renderer *renderer) {
         PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
     GameFillSoundBufferWaveAsset(
         soundDevice, &soundOutput, &musicAsset, 0,
-        (u32)(soundOutput.latencySampleCount * soundOutput.bytesPerSample) /* output.audioBufferSize */);
+        soundOutput.latencySampleCount * soundOutput.bytesPerSample /* output.audioBufferSize */);
     PlatformSoundDevicePlay(soundDevice);
 
     u32 xOffset = 0;

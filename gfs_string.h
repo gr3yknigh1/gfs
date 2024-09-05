@@ -1,12 +1,15 @@
-#pragma once
+#if !defined(GFS_STRING_H_INCLUDED)
 /*
- * FILE      Code\String.hpp
+ * FILE      gfs_string.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
+#define GFS_STRING_H_INCLUDED
 
-#include "Types.hpp"
+#include "gfs_types.h"
 
 usize CString8GetLength(cstring8 s);
 bool CString8IsEmpty(cstring8 s);
 bool CString8IsEqual(cstring8 s0, cstring8 s1);
+
+#endif // GFS_STRING_H_INCLUDED

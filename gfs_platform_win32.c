@@ -1,9 +1,9 @@
 /*
- * FILE      Code\PlatformWin32.cpp
+ * FILE      gfs_platform_win32.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "Platform.hpp"
+#include "gfs_platform.h"
 
 #include <Windows.h>
 #include <shlwapi.h> // PathFileExistsA
@@ -12,23 +12,18 @@
 #include <dsound.h>  // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
 #include <xaudio2.h>
 
-#include "Assert.hpp"
-#include "Physics.hpp"
-#include "Types.hpp"
-#include "Memory.hpp"
-#include "GameState.hpp"
-#include "Game.hpp"
-#include "String.hpp"
-#include "Macros.hpp"
-#include "Render.hpp"
+#include "gfs_assert.h"
+#include "gfs_physics.h"
+#include "gfs_types.h"
+#include "gfs_memory.h"
+#include "gfs_game_state.h"
+#include "gfs_game.h"
+#include "gfs_string.h"
+#include "gfs_macros.h"
+#include "gfs_render.h"
 
-#if !defined(__cplusplus)
-#define VCALL(S, M, ...) ((S)->lpVtbl->M((S), __VA_ARGS__))
-#else
-#define VCALL(S, M, ...) ((S)->M(__VA_ARGS__))
-#endif
-
-#define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED(VCALL(S, M, __VA_ARGS__)))
+#define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
+#define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -112,7 +107,7 @@ PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermi
         result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
         result.handle = NULL;
     } else {
-        result.handle = (PlatformFileHandle *)ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
+        result.handle = ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
         result.handle->win32Handle = win32Handle;
         result.code = PLATFORM_FILE_OPEN_OK;
     }
@@ -152,7 +147,7 @@ PlatformFileLoadToBufferEx(
     }
 
     DWORD numberOfBytesRead = 0;
-    BOOL readFileResult = ReadFile(handle->win32Handle, buffer, (DWORD)numberOfBytesToLoad, &numberOfBytesRead, NULL);
+    BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);
 
     if (readFileResult != TRUE) {
         return PLATFORM_FILE_FAILED_TO_READ;
@@ -196,8 +191,8 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 void
 PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
     StretchDIBits(
-        window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, (DWORD)gRenderer.xOffset,
-        (DWORD)gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
+        window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset,
+        gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
         &window->bitMapInfo, DIB_RGB_COLORS, SRCCOPY);
 }
 
@@ -299,10 +294,10 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
     ASSERT_NONNULL(title);
 
     usize titleLength = CString8GetLength(title);
-    char8 *copiedTitle = (char8 *)ScratchAllocatorAlloc(scratch, titleLength + 1);
+    char8 *copiedTitle = ScratchAllocatorAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
 
-    PlatformWindow *window = (PlatformWindow *)ScratchAllocatorAlloc(scratch, sizeof(PlatformWindow));
+    PlatformWindow *window = ScratchAllocatorAlloc(scratch, sizeof(PlatformWindow));
     ASSERT_NONNULL(window);
 
     MemoryZero(window, sizeof(PlatformWindow));
@@ -586,7 +581,7 @@ PlatformSoundDeviceOpen(
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
 
-    PlatformSoundDevice *device = (PlatformSoundDevice *)ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
+    PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
 
     Win32_DirectSoundInitResult result =
