@@ -1,13 +1,11 @@
-#if !defined(GFS_TYPES_H_INCLUDED)
+#pragma once
 /*
- * FILE      gfs_types.h
+ * FILE      Code\Types.hpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#define GFS_TYPES_H_INCLUDED
-
-#include "gfs_static_assert.h"
+#include "StaticAssert.hpp"
 
 #if defined(WIN32)
 #define _LONG_64 long long
@@ -56,9 +54,13 @@ typedef const char *cstring8; // NOTE(ilya.a): Explicitly distiguasing C style
 EXPECT_TYPE_SIZE(char8, 1);
 EXPECT_TYPE_SIZE(cstring8, POINTER_SIZE);
 
+#if !defined(__cplusplus)
 typedef _Bool bool;
+#endif
 
 EXPECT_TYPE_SIZE(bool, 1);
+
+#if !defined(__cplusplus)
 
 #ifndef true
 #define true 1
@@ -72,6 +74,12 @@ EXPECT_TYPE_SIZE(bool, 1);
 #define NULL ((void *)0)
 #endif // NULL
 
-#define BYTE_BITS 8
+#else
 
-#endif // GFS_TYPES_H_INCLUDED
+#ifndef NULL
+#define NULL nullptr
+#endif // NULL
+
+#endif
+
+#define BYTE_BITS 8

@@ -20,7 +20,7 @@ if exist %vc2022_bootstrap% (
   )
 )
 
-set vcpkg_toolchain=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake
+:: set vcpkg_toolchain=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake
 
 set project_path=%~dp0
 pushd %project_path%

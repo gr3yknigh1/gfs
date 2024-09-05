@@ -1,14 +1,13 @@
-#if !defined(GFS_WAVE_H_INCLUDED)
+#pragma once
 /*
- * FILE      gfs_wave.h
+ * FILE      Code\WaveAudio.hpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#define GFS_WAVE_H_INCLUDED
 
-#include "gfs_assert.h"
-#include "gfs_types.h"
-#include "gfs_memory.h"
+#include "Assert.hpp"
+#include "Types.hpp"
+#include "Memory.hpp"
 
 #define WAVEFILE_FILETYPE "RIFF"
 #define WAVEFILE_FORMATID "WAVE"
@@ -76,5 +75,3 @@ WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, cstring8 asse
 WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);
-
-#endif // GFS_WAVE_H_INCLUDED

@@ -1,15 +1,14 @@
-#if !defined(GFS_PLATFORM_H_INCLUDED)
+#pragma once
 /*
- * FILE      gfs_platform.h
+ * FILE      Code\Platform.hpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#define GFS_PLATFORM_H_INCLUDED
 
-#include "gfs_types.h"
-#include "gfs_macros.h"
-#include "gfs_memory.h"
-#include "gfs_physics.h"
+#include "Types.hpp"
+#include "Macros.hpp"
+#include "Memory.hpp"
+#include "Physics.hpp"
 
 /*
  * @breaf Actual platform-depended window represantation.
@@ -33,7 +32,7 @@ typedef struct {
     usize bytesPerSample;
     usize audioBufferSize;
 
-    i32 latencySampleCount;
+    u64 latencySampleCount;
 } PlatformSoundOutput;
 
 /*
@@ -181,5 +180,3 @@ void PlatformDebugBreak(void);
  * @breaf Exits the process with specified code.
  */
 void PlatformExitProcess(u32 code);
-
-#endif // GFS_PLATFORM_H_INCLUDED

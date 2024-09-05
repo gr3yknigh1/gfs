@@ -1,14 +1,15 @@
 /*
- * FILE      gfs_memory.c
+ * FILE      Code\Memory.cpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_memory.h"
+#include "Memory.hpp"
 
-#include "gfs_platform.h"
-#include "gfs_types.h"
-#include "gfs_assert.h"
+#include "Platform.hpp"
+#include "Types.hpp"
+#include "Assert.hpp"
+#include "Macros.hpp"
 
 usize
 Align2PageSize(usize size) {
@@ -19,7 +20,7 @@ Align2PageSize(usize size) {
 ScratchAllocator
 ScratchAllocatorMake(usize size) {
     void *data = PlatformMemoryAllocate(size);
-    return (ScratchAllocator){
+    return LITERAL(ScratchAllocator) {
         .data = data,
         .capacity = size,
         .occupied = 0,
@@ -96,7 +97,7 @@ BlockMake(usize size) {
     Block *segment = (Block *)allocatedData;
     void *data = (byte *)(allocatedData) + sizeof(Block);
 
-    segment = allocatedData;
+    segment = (Block *)allocatedData;
     segment->arena.data = data;
     segment->arena.capacity = bytesAllocated - sizeof(Block);
     segment->arena.occupied = 0;

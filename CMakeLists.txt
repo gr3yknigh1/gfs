@@ -1,68 +1,64 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-project(gfs
+project(GameFromScratch
   VERSION 0.0.1
-  LANGUAGES C
+  LANGUAGES CXX
 )
 
-add_executable(gfs
+add_executable(GameFromScratch
   WIN32
-  ${PROJECT_SOURCE_DIR}/gfs_string.c
-  ${PROJECT_SOURCE_DIR}/gfs_string.h
 
-  ${PROJECT_SOURCE_DIR}/gfs_physics.h
-  ${PROJECT_SOURCE_DIR}/gfs_physics.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_memory.h
-  ${PROJECT_SOURCE_DIR}/gfs_memory.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_string.h
-  ${PROJECT_SOURCE_DIR}/gfs_string.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_wave.h
-  ${PROJECT_SOURCE_DIR}/gfs_wave.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_static_assert.h
-  ${PROJECT_SOURCE_DIR}/gfs_assert.h
-  ${PROJECT_SOURCE_DIR}/gfs_types.h
-  ${PROJECT_SOURCE_DIR}/gfs_macros.h
-
-  ${PROJECT_SOURCE_DIR}/gfs_render.h
-  ${PROJECT_SOURCE_DIR}/gfs_render.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_platform.h
-  ${PROJECT_SOURCE_DIR}/gfs_platform_win32.c
-
-  ${PROJECT_SOURCE_DIR}/gfs_game.c
-  ${PROJECT_SOURCE_DIR}/gfs_game.h
-  ${PROJECT_SOURCE_DIR}/gfs_game_state.c
-  ${PROJECT_SOURCE_DIR}/gfs_game_state.h
+  ${PROJECT_SOURCE_DIR}/Code/String.cpp
+  ${PROJECT_SOURCE_DIR}/Code/String.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Physics.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Physics.cpp
+  ${PROJECT_SOURCE_DIR}/Code/Memory.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Memory.cpp
+  ${PROJECT_SOURCE_DIR}/Code/WaveAudio.hpp
+  ${PROJECT_SOURCE_DIR}/Code/WaveAudio.cpp
+  ${PROJECT_SOURCE_DIR}/Code/StaticAssert.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Assert.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Types.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Macros.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Render.hpp
+  ${PROJECT_SOURCE_DIR}/Code/Render.cpp
+  ${PROJECT_SOURCE_DIR}/Code/Platform.hpp
+  ${PROJECT_SOURCE_DIR}/Code/PlatformWin32.cpp
+  ${PROJECT_SOURCE_DIR}/Code/Game.cpp
+  ${PROJECT_SOURCE_DIR}/Code/Game.hpp
+  ${PROJECT_SOURCE_DIR}/Code/GameState.cpp
+  ${PROJECT_SOURCE_DIR}/Code/GameState.hpp
 )
 
-target_compile_features(gfs
+target_include_directories(GameFromScratch
   PRIVATE
-    c_std_17
+    ${PROJECT_SOURCE_DIR}/Code
 )
 
-target_link_options(gfs
+target_compile_features(GameFromScratch
+  PRIVATE
+    cxx_std_20
+)
+
+target_link_options(GameFromScratch
   PUBLIC
     /DEBUG:FULL
 )
 
-target_compile_options(gfs
+target_compile_options(GameFromScratch
   PRIVATE
     /MP  # Build with multiple processes
     /W4  # Warning level
 )
 
-target_link_libraries(gfs
+target_link_libraries(GameFromScratch
   PRIVATE
     shlwapi.lib
 )
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/External/glad)
 
-target_link_libraries(gfs
+target_link_libraries(GameFromScratch
   PRIVATE
     glad
 )

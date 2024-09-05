@@ -1,13 +1,14 @@
 /*
- * FILE      gfs_physics.c
+ * FILE      Code\Physics.cpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_physics.h"
-#include "gfs_types.h"
+#include "Physics.hpp"
+
+#include "Types.hpp"
 
 bool
-RectangleU16IsInside(RectangleU16 r, u16 x, u16 y) {
+RectangleU16IsInside(RectangleU16 r, u32 x, u32 y) {
     return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
 }
 

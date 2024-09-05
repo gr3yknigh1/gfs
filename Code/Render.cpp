@@ -1,27 +1,27 @@
 /*
- * FILE      gfs_render.c
+ * FILE      Code\Render.cpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_render.h"
+#include "Render.hpp"
 
-#include "gfs_types.h"
-#include "gfs_physics.h"
-#include "gfs_memory.h"
-#include "gfs_macros.h"
-#include "gfs_assert.h"
+#include "Types.hpp"
+#include "Physics.hpp"
+#include "Memory.hpp"
+#include "Macros.hpp"
+#include "Assert.hpp"
 
 #define RENDER_COMMAND_CAPACITY 1024
 
 Color4
 Color4Add(Color4 a, Color4 b) {
-    return (Color4){
-        .b = a.b + b.b,
-        .g = a.g + b.g,
-        .r = a.r + b.r,
-        .a = a.a + b.a,
-    };
+    Color4 ret;
+    ret.b = a.b + b.b;
+    ret.g = a.g + b.g;
+    ret.r = a.r + b.r;
+    ret.a = a.a + b.a;
+    return ret;
 }
 
 Renderer
@@ -29,7 +29,7 @@ RendererMake(PlatformWindow *window, Color4 clearColor) {
     Renderer r;
 
     r.clearColor = clearColor;
-    r.commandQueue.begin = PlatformMemoryAllocate(RENDER_COMMAND_CAPACITY);
+    r.commandQueue.begin = (byte *)PlatformMemoryAllocate(RENDER_COMMAND_CAPACITY);
     r.commandQueue.end = r.commandQueue.begin;
     r.commandCount = 0;
 
@@ -69,13 +69,13 @@ EndDrawing(Renderer *renderer) {
     usize pitch = renderer->pixels.Width * renderer->bytesPerPixel;
     u8 *row = (u8 *)renderer->pixels.Buffer;
 
-    for (u64 y = 0; y < renderer->pixels.Height; ++y) {
+    for (u32 y = 0; y < renderer->pixels.Height; ++y) {
         Color4 *pixel = (Color4 *)row;
 
-        for (u64 x = 0; x < renderer->pixels.Width; ++x) {
+        for (u32 x = 0; x < renderer->pixels.Width; ++x) {
             usize offset = 0;
 
-            for (u64 commandIdx = 0; commandIdx < renderer->commandCount; ++commandIdx) {
+            for (u32 commandIdx = 0; commandIdx < renderer->commandCount; ++commandIdx) {
                 RenderCommandType type = *((RenderCommandType *)(renderer->commandQueue.begin + offset));
 
                 offset += sizeof(RenderCommandType);
@@ -101,7 +101,14 @@ EndDrawing(Renderer *renderer) {
                     Vector2U32 v = *(Vector2U32 *)(renderer->commandQueue.begin + offset);
                     offset += sizeof(Vector2U32);
 
-                    *pixel = (Color4){.b = x + v.x, .g = y + v.y, .r = 0, .a = 0};
+                    // TODO(ilya.a): Clamp values from U32 to U8
+
+                    *pixel = LITERAL(Color4) {
+                        .b = (u8)(x + v.x),
+                        .g = (u8)(y + v.y),
+                        .r = 0,
+                        .a = 0
+                    };
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_NOP):
                 default: {
