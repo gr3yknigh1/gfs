@@ -121,7 +121,6 @@ GameMainloop(Renderer *renderer) {
     PlatformSoundOutput soundOutput = PlatformSoundOutputMake(musicAsset.header.freqHZ);
     soundOutput.bytesPerSample = musicAsset.header.bitsPerSample / 8;
 
-
     PlatformSoundDevice *soundDevice =
         PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
     GameFillSoundBufferWaveAsset(
