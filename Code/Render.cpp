@@ -103,7 +103,12 @@ EndDrawing(Renderer *renderer) {
 
                     // TODO(ilya.a): Clamp values from U32 to U8
 
-                    *pixel = LITERAL(Color4){.b = (u8)(x + v.x), .g = (u8)(y + v.y), .r = 0, .a = 0};
+                    *pixel = LITERAL(Color4) {
+                        .b = (u8)(x + v.x),
+                        .g = (u8)(y + v.y),
+                        .r = 0,
+                        .a = 0
+                    };
                 } break;
                 case (BMR_RENDER_COMMAND_TYPE_NOP):
                 default: {

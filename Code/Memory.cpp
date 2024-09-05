@@ -20,7 +20,7 @@ Align2PageSize(usize size) {
 ScratchAllocator
 ScratchAllocatorMake(usize size) {
     void *data = PlatformMemoryAllocate(size);
-    return LITERAL(ScratchAllocator){
+    return LITERAL(ScratchAllocator) {
         .data = data,
         .capacity = size,
         .occupied = 0,

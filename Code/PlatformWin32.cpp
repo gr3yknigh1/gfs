@@ -9,7 +9,7 @@
 #include <shlwapi.h> // PathFileExistsA
 
 #include <xinput.h>
-#include <dsound.h> // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
+#include <dsound.h>  // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
 #include <xaudio2.h>
 
 #include "Assert.hpp"
@@ -450,11 +450,7 @@ PlatformMemoryFree(void *data) {
     return PLATFORM_MEMORY_FREE_OK;
 }
 
-typedef enum {
-    WIN32_DIRECTSOUND_INIT_OK,
-    WIN32_DIRECTSOUND_INIT_ERR,
-    WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR
-} Win32_DirectSoundInitResult;
+typedef enum { WIN32_DIRECTSOUND_INIT_OK, WIN32_DIRECTSOUND_INIT_ERR, WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR } Win32_DirectSoundInitResult;
 
 /*
  * Loads DirectrSound library and initializes it.
