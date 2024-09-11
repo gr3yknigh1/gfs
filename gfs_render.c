@@ -6,6 +6,10 @@
 
 #include "gfs_render.h"
 
+#include <Windows.h>
+//#include <glad/glad.h>
+#include <GL/GL.h>
+
 #include "gfs_types.h"
 #include "gfs_physics.h"
 #include "gfs_memory.h"
@@ -62,6 +66,9 @@ RendererDestroy(Renderer *renderer) {
 void
 BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
+
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void

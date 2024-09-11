@@ -173,6 +173,11 @@ void PlatformSoundDeviceClose(PlatformSoundDevice *device);
 void PlatformPutString(cstring8 s);
 
 /*
+ * @breaf Called in ASSERT macro in order to print last error of platform level code.
+ */
+void PlatformPutLastError(void);
+
+/*
  * @breaf Calls platform specific break function.
  */
 void PlatformDebugBreak(void);

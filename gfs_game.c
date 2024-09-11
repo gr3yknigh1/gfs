@@ -6,6 +6,7 @@
 #include "gfs_game.h"
 
 #include <Windows.h>
+#include <glad/glad.h>
 
 #include <math.h> // sinf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
@@ -96,6 +97,7 @@ GameFillSoundBufferWaveAsset(
 
 void
 GameMainloop(Renderer *renderer) {
+
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
     ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(10));
 

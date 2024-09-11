@@ -50,6 +50,7 @@ target_compile_options(gfs
 target_link_libraries(gfs
   PRIVATE
     shlwapi.lib
+    Opengl32.lib
 )
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/External/glad)

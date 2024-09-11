@@ -12,6 +12,8 @@
 #include <dsound.h>  // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
 #include <xaudio2.h>
 
+#include <glad/glad.h>
+
 #include "gfs_assert.h"
 #include "gfs_physics.h"
 #include "gfs_types.h"
@@ -24,6 +26,40 @@
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
+
+// See https://gist.github.com/nickrolfe/1127313ed1dbf80254b614a721b3ee9c
+// See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_pixel_format.txt for all values
+#define WGL_DRAW_TO_WINDOW_ARB                    0x2001
+#define WGL_ACCELERATION_ARB                      0x2003
+#define WGL_SUPPORT_OPENGL_ARB                    0x2010
+#define WGL_DOUBLE_BUFFER_ARB                     0x2011
+#define WGL_PIXEL_TYPE_ARB                        0x2013
+#define WGL_COLOR_BITS_ARB                        0x2014
+#define WGL_DEPTH_BITS_ARB                        0x2022
+#define WGL_STENCIL_BITS_ARB                      0x2023
+
+#define WGL_FULL_ACCELERATION_ARB                 0x2027
+#define WGL_TYPE_RGBA_ARB                         0x202B
+
+// See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt for all values
+#define WGL_CONTEXT_MAJOR_VERSION_ARB             0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB             0x2092
+#define WGL_CONTEXT_PROFILE_MASK_ARB              0x9126
+
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB          0x00000001
+
+/// Dynamicly loaded procs
+
+#define WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME "wglCreateContextAttribsARB"
+#define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
+
+typedef HGLRC WINAPI Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
+typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(
+    HDC, const int *, const FLOAT *, UINT, int *, UINT *
+);
+
+static Win32_GL_CreateContextAttribARBType *Win32_GL_CreateContextAttribARBPtr;
+static Win32_GL_ChoosePixelFormatARBType *Win32_GL_ChoosePixelFormatARBPtr;
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -49,6 +85,7 @@ typedef struct PlatformWindow {
     WNDCLASS windowClass;
     HDC deviceContext;
     BITMAPINFO bitMapInfo;
+    HGLRC renderContext;
 } PlatformWindow;
 
 typedef struct PlatformFileHandle {
@@ -175,6 +212,13 @@ PlatformDebugBreak(void) {
     DebugBreak();
 }
 
+void
+PlatformPutLastError(void) {
+    char8 printBuffer[KILOBYTES(1)];
+    wsprintf(printBuffer, "E: LastErrorCode=%i\n", GetLastError());
+    OutputDebugString(printBuffer);
+}
+
 bool
 PlatformIsPathExists(cstring8 path) {
     return PathFileExistsA(path);
@@ -190,6 +234,8 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 
 void
 PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
+    SwapBuffers(window->renderContext);
+    return;
     StretchDIBits(
         window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset,
         gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
@@ -228,30 +274,140 @@ PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
     ASSERT_NONNULL(renderer->pixels.Buffer);
 }
 
+static void
+Win32_OpenGLContextExts_Init(void) {
+
+    WNDCLASSA dummyWindowClass = {
+        .style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
+        .lpfnWndProc = DefWindowProcA,
+        .hInstance = GetModuleHandle(0),
+        .lpszClassName = "__dummy_window_class",
+    };
+    ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
+
+    HWND dummyWindowHandle = CreateWindowExA(
+        0,
+        dummyWindowClass.lpszClassName,
+        "__dummy_window",
+        0,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        0,
+        0,
+        dummyWindowClass.hInstance,
+        0
+    );
+    ASSERT_NONNULL(dummyWindowHandle);
+
+    HDC dummyDeviceContext = GetDC(dummyWindowHandle);
+
+    // NOTE(ilya.a): The worst struct I ever met [2024/09/07]
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+    pixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pixelFormatDescriptor.nVersion = 1;
+    pixelFormatDescriptor.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
+    pixelFormatDescriptor.cColorBits = 32;
+    pixelFormatDescriptor.cRedBits = 0;
+    pixelFormatDescriptor.cRedShift = 0;
+    pixelFormatDescriptor.cGreenBits = 0;
+    pixelFormatDescriptor.cGreenShift = 0;
+    pixelFormatDescriptor.cBlueBits = 0;
+    pixelFormatDescriptor.cBlueShift = 0;
+    pixelFormatDescriptor.cAlphaBits = 8;  // Should be zero?
+    pixelFormatDescriptor.cAlphaShift = 0;
+    pixelFormatDescriptor.cAccumBits = 0;
+    pixelFormatDescriptor.cAccumRedBits = 0;
+    pixelFormatDescriptor.cAccumGreenBits = 0;
+    pixelFormatDescriptor.cAccumBlueBits = 0;
+    pixelFormatDescriptor.cAccumAlphaBits = 0;
+    pixelFormatDescriptor.cDepthBits = 24;        // Number of bits for the depthbuffer
+    pixelFormatDescriptor.cStencilBits = 8;       // Number of bits for the stencilbuffer
+    pixelFormatDescriptor.cAuxBuffers = 0;        // Number of Aux buffers in the framebuffer.
+    pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
+    pixelFormatDescriptor.bReserved = 0;
+    pixelFormatDescriptor.dwLayerMask = 0;
+    pixelFormatDescriptor.dwVisibleMask = 0;
+    pixelFormatDescriptor.dwDamageMask = 0;
+
+	int pixelFormatIndex = ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
+	ASSERT_NONZERO(pixelFormatIndex);
+    ASSERT_ISTRUE(SetPixelFormat(dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
+
+    HGLRC dummyRenderContext = wglCreateContext(dummyDeviceContext);
+    ASSERT_NONNULL(dummyRenderContext);
+
+    ASSERT_ISTRUE(wglMakeCurrent(dummyDeviceContext, dummyRenderContext));
+
+    Win32_GL_CreateContextAttribARBPtr = (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
+        WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
+    Win32_GL_ChoosePixelFormatARBPtr = (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
+        WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+
+    wglMakeCurrent(dummyDeviceContext, 0);
+    wglDeleteContext(dummyRenderContext);
+    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
+    DestroyWindow(dummyWindowHandle);
+}
+
+static HGLRC
+Win32_OpenGLContext_Init(HDC deviceContext) {
+    Win32_OpenGLContextExts_Init();
+
+    int pixelFormatAttribs[] = {
+        WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
+        WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
+        WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
+        WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
+        WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
+        WGL_COLOR_BITS_ARB,         32,
+        WGL_DEPTH_BITS_ARB,         24,
+        WGL_STENCIL_BITS_ARB,       8,
+        0
+    };
+
+    int pixelFormat;
+    UINT numFormats;
+    ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
+    ASSERT_NONZERO(numFormats);
+
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+    DescribePixelFormat(deviceContext, pixelFormat, sizeof(pixelFormatDescriptor), &pixelFormatDescriptor);
+    ASSERT_ISTRUE(SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
+
+    // Specify that we want to create an OpenGL 3.3 core profile context
+    int glAttribs[] = {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+        WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0,
+    };
+
+    HGLRC renderContext = Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
+    ASSERT_NONNULL(renderContext);
+
+    ASSERT_ISTRUE(wglMakeCurrent(deviceContext, renderContext));
+
+    return renderContext;
+}
+
 static LRESULT CALLBACK
 Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result = 0;
 
     switch (message) {
     case WM_ACTIVATEAPP: {
-        OutputDebugString("T: WM_ACTIVATEAPP\n");
     } break;
     case WM_CLOSE: {
-        // TODO(ilya.a): Ask for closing?
-        OutputDebugString("T: WM_CLOSE\n");
         GameStateStop();
     } break;
-    case WM_DESTROY: {
-        // TODO(ilya.a): Casey says that we maybe should recreate window later?
-        OutputDebugString("T: WM_DESTROY\n");
-        // PostQuitMessage(0);
-    } break;
     default: {
-        // NOTE(ilya): Leave other events to default Window's handler.
         result = DefWindowProc(window, message, wParam, lParam);
     } break;
     }
-
     return result;
 }
 
@@ -304,7 +460,9 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
 
     HINSTANCE instance = GetModuleHandle(NULL);
 
-    window->windowClass.style = CS_VREDRAW | CS_HREDRAW;
+    window->windowClass.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
+    // NOTE(ilya.a): Needed by OpenGL. See Khronos's docs ^^^^^^^^
+
     window->windowClass.lpfnWndProc = Win32_MainWindowProc;
     window->windowClass.hInstance = instance;
     window->windowClass.lpszClassName = copiedTitle;
@@ -323,6 +481,16 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
 
     window->deviceContext = GetDC(window->windowHandle);
     ASSERT_NONNULL(window->deviceContext);
+
+    window->renderContext = Win32_OpenGLContext_Init(window->deviceContext);
+    ASSERT_NONNULL(window->renderContext);
+
+    //< Glad initialization
+    int version = gladLoadGL(wglGetProcAddress);
+    ASSERT_NONZERO(version);
+
+    glViewport(0, 0, width, height);
+
 
     ShowWindow(window->windowHandle, SW_SHOW);
 
