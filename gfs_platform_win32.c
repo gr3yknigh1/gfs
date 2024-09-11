@@ -234,12 +234,16 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 
 void
 PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
-    SwapBuffers(window->renderContext);
+    ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
+
     return;
+
+#if 0
     StretchDIBits(
         window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset,
         gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
         &window->bitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+#endif
 }
 
 void
@@ -486,7 +490,8 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
     ASSERT_NONNULL(window->renderContext);
 
     //< Glad initialization
-    int version = gladLoadGL(wglGetProcAddress);
+    int version = gladLoadGL();
+    //int version = gladLoadGL(wglGetProcAddress);
     ASSERT_NONZERO(version);
 
     glViewport(0, 0, width, height);
