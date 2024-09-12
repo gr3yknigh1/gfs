@@ -24,6 +24,8 @@
 #include "gfs_macros.h"
 #include "gfs_render.h"
 
+#include "gfs_render_opengl.h"
+
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
@@ -214,9 +216,21 @@ PlatformDebugBreak(void) {
 
 void
 PlatformPutLastError(void) {
-    char8 printBuffer[KILOBYTES(1)];
-    wsprintf(printBuffer, "E: LastErrorCode=%i\n", GetLastError());
-    OutputDebugString(printBuffer);
+    DWORD win32LastErrorCode = GetLastError();
+
+    if (win32LastErrorCode != ERROR_SUCCESS) {
+        char8 printBuffer[KILOBYTES(1)];
+        wsprintf(printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
+        OutputDebugString(printBuffer);
+    }
+
+    GLenum glErrorCode = glGetError();
+
+    if (glErrorCode != GL_NO_ERROR) {
+        char8 printBuffer[KILOBYTES(1)];
+        wsprintf(printBuffer, "E: OpenGL glGetError()=%i\n", glErrorCode);
+        OutputDebugString(printBuffer);
+    }
 }
 
 bool
@@ -235,7 +249,6 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 void
 PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
-
     return;
 
 #if 0
@@ -491,10 +504,9 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
 
     //< Glad initialization
     int version = gladLoadGL();
-    //int version = gladLoadGL(wglGetProcAddress);
     ASSERT_NONZERO(version);
 
-    glViewport(0, 0, width, height);
+    GL_CALL(glViewport(0, 0, width, height));
 
 
     ShowWindow(window->windowHandle, SW_SHOW);

@@ -7,8 +7,7 @@
 #include "gfs_render.h"
 
 #include <Windows.h>
-//#include <glad/glad.h>
-#include <GL/GL.h>
+#include <glad/glad.h>
 
 #include "gfs_types.h"
 #include "gfs_physics.h"

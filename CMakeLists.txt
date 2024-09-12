@@ -23,6 +23,8 @@ add_executable(gfs
   ${PROJECT_SOURCE_DIR}/gfs_macros.h
   ${PROJECT_SOURCE_DIR}/gfs_render.h
   ${PROJECT_SOURCE_DIR}/gfs_render.c
+  ${PROJECT_SOURCE_DIR}/gfs_render_opengl.h
+  ${PROJECT_SOURCE_DIR}/gfs_render_opengl.c
   ${PROJECT_SOURCE_DIR}/gfs_platform.h
   ${PROJECT_SOURCE_DIR}/gfs_platform_win32.c
   ${PROJECT_SOURCE_DIR}/gfs_game.c

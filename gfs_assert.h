@@ -26,4 +26,12 @@
 #define ASSERT_ISTRUE(EXPR) ASSERT((EXPR))
 #define ASSERT_ISFALSE(EXPR) ASSERT(!(EXPR))
 
+#define THROW(MESSAGE) \
+    do {                                                                                                               \
+        PlatformPutString((MESSAGE));                                                     \
+        PlatformPutLastError();                                                                                    \
+        PlatformDebugBreak();                                                                                      \
+        PlatformExitProcess(1);                                                                                    \
+    } while (0)
+
 #endif // GFS_ASSERT_H_INCLUDED

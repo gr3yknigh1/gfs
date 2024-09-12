@@ -6,6 +6,8 @@
  * */
 #define GFS_MACROS_H_INCLUDED
 
+#define STRINGIFY(X) #X
+
 #define UNUSED(X) ((void)(X))
 
 #define MKFLAG(BITINDEX) (1 << (BITINDEX))
