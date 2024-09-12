@@ -42,18 +42,7 @@ typedef struct {
         u8 *begin;
         u8 *end;
     } commandQueue;
-
     u64 commandCount;
-
-    u8 bytesPerPixel;
-    u64 xOffset;
-    u64 yOffset;
-
-    struct {
-        void *Buffer;
-        u64 Width;
-        u64 Height;
-    } pixels;
 
     PlatformWindow *window;
 } Renderer;

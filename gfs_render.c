@@ -15,6 +15,8 @@
 #include "gfs_macros.h"
 #include "gfs_assert.h"
 
+#include "gfs_render_opengl.h"
+
 #define RENDER_COMMAND_CAPACITY 1024
 
 Color4
@@ -36,14 +38,6 @@ RendererMake(PlatformWindow *window, Color4 clearColor) {
     r.commandQueue.end = r.commandQueue.begin;
     r.commandCount = 0;
 
-    r.bytesPerPixel = 4;
-    r.xOffset = 0;
-    r.yOffset = 0;
-
-    r.pixels.Buffer = NULL;
-    r.pixels.Width = 0;
-    r.pixels.Height = 0;
-
     r.window = window;
     return r;
 }
@@ -55,74 +49,19 @@ RendererDestroy(Renderer *renderer) {
     }
     renderer->commandQueue.begin = NULL;
     renderer->commandQueue.end = NULL;
-
-    if (renderer->pixels.Buffer != NULL) {
-        ASSERT_ISZERO(PlatformMemoryFree(renderer->pixels.Buffer));
-    }
-    renderer->pixels.Buffer = NULL;
 }
 
 void
 BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
 
-    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    GL_CALL(glClearColor(0.5f, 0.5f, 0.5f, 1.0f));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }
 
 void
 EndDrawing(Renderer *renderer) {
-    usize pitch = renderer->pixels.Width * renderer->bytesPerPixel;
-    u8 *row = (u8 *)renderer->pixels.Buffer;
-
-    for (u64 y = 0; y < renderer->pixels.Height; ++y) {
-        Color4 *pixel = (Color4 *)row;
-
-        for (u64 x = 0; x < renderer->pixels.Width; ++x) {
-            usize offset = 0;
-
-            for (u64 commandIdx = 0; commandIdx < renderer->commandCount; ++commandIdx) {
-                RenderCommandType type = *((RenderCommandType *)(renderer->commandQueue.begin + offset));
-
-                offset += sizeof(RenderCommandType);
-
-                switch (type) {
-                case (BMR_RENDER_COMMAND_TYPE_CLEAR): {
-                    Color4 color = *(Color4 *)(renderer->commandQueue.begin + offset);
-                    offset += sizeof(Color4);
-                    *pixel = color;
-                } break;
-                case (BMR_RENDER_COMMAND_TYPE_RECT): {
-                    RectangleU16 rect = *(RectangleU16 *)(renderer->commandQueue.begin + offset);
-                    offset += sizeof(rect);
-
-                    Color4 color = *(Color4 *)(renderer->commandQueue.begin + offset);
-                    offset += sizeof(Color4);
-
-                    if (RectangleU16IsInside(rect, x, y)) {
-                        *pixel = color;
-                    }
-                } break;
-                case (BMR_RENDER_COMMAND_TYPE_GRADIENT): {
-                    Vector2U32 v = *(Vector2U32 *)(renderer->commandQueue.begin + offset);
-                    offset += sizeof(Vector2U32);
-
-                    *pixel = (Color4){.b = x + v.x, .g = y + v.y, .r = 0, .a = 0};
-                } break;
-                case (BMR_RENDER_COMMAND_TYPE_NOP):
-                default: {
-                    *pixel = renderer->clearColor;
-                } break;
-                };
-            }
-            ++pixel;
-        }
-
-        row += pitch;
-    }
-
-    RectangleI32 windowRect = PlatformWindowGetRectangle(renderer->window);
-    PlatformWindowUpdate(renderer->window, windowRect.x, windowRect.y, windowRect.width, windowRect.height);
+    PlatformWindowUpdate(renderer->window);
 
     renderer->commandQueue.end = renderer->commandQueue.begin;
     renderer->commandCount = 0;

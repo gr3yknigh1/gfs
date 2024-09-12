@@ -88,10 +88,9 @@ PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 hei
 void PlatformWindowClose(PlatformWindow *window);
 
 /*
- * @breaf Blits render buffer to PlatformWindow.
+ * @breaf Updates window.
  */
-void PlatformWindowUpdate(
-    PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight);
+void PlatformWindowUpdate(PlatformWindow *window);
 
 /*
  * @breaf Resizes render buffer.

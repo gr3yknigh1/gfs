@@ -9,7 +9,7 @@
 #include <shlwapi.h> // PathFileExistsA
 
 #include <xinput.h>
-#include <dsound.h>  // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
+#include <dsound.h> // TODO(ilya.a): Remove as soon as you rewrite it in XAudio2 [2024/09/01]
 #include <xaudio2.h>
 
 #include <glad/glad.h>
@@ -31,24 +31,24 @@
 
 // See https://gist.github.com/nickrolfe/1127313ed1dbf80254b614a721b3ee9c
 // See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_pixel_format.txt for all values
-#define WGL_DRAW_TO_WINDOW_ARB                    0x2001
-#define WGL_ACCELERATION_ARB                      0x2003
-#define WGL_SUPPORT_OPENGL_ARB                    0x2010
-#define WGL_DOUBLE_BUFFER_ARB                     0x2011
-#define WGL_PIXEL_TYPE_ARB                        0x2013
-#define WGL_COLOR_BITS_ARB                        0x2014
-#define WGL_DEPTH_BITS_ARB                        0x2022
-#define WGL_STENCIL_BITS_ARB                      0x2023
+#define WGL_DRAW_TO_WINDOW_ARB 0x2001
+#define WGL_ACCELERATION_ARB 0x2003
+#define WGL_SUPPORT_OPENGL_ARB 0x2010
+#define WGL_DOUBLE_BUFFER_ARB 0x2011
+#define WGL_PIXEL_TYPE_ARB 0x2013
+#define WGL_COLOR_BITS_ARB 0x2014
+#define WGL_DEPTH_BITS_ARB 0x2022
+#define WGL_STENCIL_BITS_ARB 0x2023
 
-#define WGL_FULL_ACCELERATION_ARB                 0x2027
-#define WGL_TYPE_RGBA_ARB                         0x202B
+#define WGL_FULL_ACCELERATION_ARB 0x2027
+#define WGL_TYPE_RGBA_ARB 0x202B
 
 // See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt for all values
-#define WGL_CONTEXT_MAJOR_VERSION_ARB             0x2091
-#define WGL_CONTEXT_MINOR_VERSION_ARB             0x2092
-#define WGL_CONTEXT_PROFILE_MASK_ARB              0x9126
+#define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
+#define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
 
-#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB          0x00000001
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
 
 /// Dynamicly loaded procs
 
@@ -56,9 +56,7 @@
 #define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
 
 typedef HGLRC WINAPI Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
-typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(
-    HDC, const int *, const FLOAT *, UINT, int *, UINT *
-);
+typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
 
 static Win32_GL_CreateContextAttribARBType *Win32_GL_CreateContextAttribARBPtr;
 static Win32_GL_ChoosePixelFormatARBType *Win32_GL_ChoosePixelFormatARBPtr;
@@ -247,48 +245,18 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 }
 
 void
-PlatformWindowUpdate(PlatformWindow *window, i32 windowXOffset, i32 windowYOffset, i32 windowWidth, i32 windowHeight) {
+PlatformWindowUpdate(PlatformWindow *window) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
-    return;
-
-#if 0
-    StretchDIBits(
-        window->deviceContext, windowXOffset, windowYOffset, windowWidth, windowHeight, gRenderer.xOffset,
-        gRenderer.yOffset, gRenderer.pixels.Width, gRenderer.pixels.Height, gRenderer.pixels.Buffer,
-        &window->bitMapInfo, DIB_RGB_COLORS, SRCCOPY);
-#endif
 }
 
 void
 PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
     Renderer *renderer = &gRenderer;
 
-    // TODO(ilya.a):
-    //     - [ ] Checkout how it works.
-    //     - [ ] Handle allocation error.
-    ASSERT(
-        !(renderer->pixels.Buffer != NULL && PlatformMemoryFree(renderer->pixels.Buffer) != PLATFORM_MEMORY_FREE_ERR));
-
-    renderer->pixels.Width = width;
-    renderer->pixels.Height = height;
-
-    window->bitMapInfo.bmiHeader.biSize = sizeof(window->bitMapInfo.bmiHeader);
-    window->bitMapInfo.bmiHeader.biWidth = width;
-    window->bitMapInfo.bmiHeader.biHeight = height;
-    //                                      ^^^^^^
-    // NOTE: Treat coordinates bottom-up. Can flip sign and make it top-down.
-    window->bitMapInfo.bmiHeader.biPlanes = 1;
-    window->bitMapInfo.bmiHeader.biBitCount = 32; // NOTE: Align to WORD
-    window->bitMapInfo.bmiHeader.biCompression = BI_RGB;
-    window->bitMapInfo.bmiHeader.biSizeImage = 0;
-    window->bitMapInfo.bmiHeader.biXPelsPerMeter = 0;
-    window->bitMapInfo.bmiHeader.biYPelsPerMeter = 0;
-    window->bitMapInfo.bmiHeader.biClrUsed = 0;
-    window->bitMapInfo.bmiHeader.biClrImportant = 0;
-
-    usize bufferSize = width * height * renderer->bytesPerPixel;
-    renderer->pixels.Buffer = PlatformMemoryAllocate(bufferSize);
-    ASSERT_NONNULL(renderer->pixels.Buffer);
+    UNUSED(renderer);
+    UNUSED(window);
+    UNUSED(width);
+    UNUSED(height);
 }
 
 static void
@@ -303,19 +271,8 @@ Win32_OpenGLContextExts_Init(void) {
     ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
 
     HWND dummyWindowHandle = CreateWindowExA(
-        0,
-        dummyWindowClass.lpszClassName,
-        "__dummy_window",
-        0,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        0,
-        0,
-        dummyWindowClass.hInstance,
-        0
-    );
+        0, dummyWindowClass.lpszClassName, "__dummy_window", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, 0, 0, dummyWindowClass.hInstance, 0);
     ASSERT_NONNULL(dummyWindowHandle);
 
     HDC dummyDeviceContext = GetDC(dummyWindowHandle);
@@ -333,24 +290,24 @@ Win32_OpenGLContextExts_Init(void) {
     pixelFormatDescriptor.cGreenShift = 0;
     pixelFormatDescriptor.cBlueBits = 0;
     pixelFormatDescriptor.cBlueShift = 0;
-    pixelFormatDescriptor.cAlphaBits = 8;  // Should be zero?
+    pixelFormatDescriptor.cAlphaBits = 8; // Should be zero?
     pixelFormatDescriptor.cAlphaShift = 0;
     pixelFormatDescriptor.cAccumBits = 0;
     pixelFormatDescriptor.cAccumRedBits = 0;
     pixelFormatDescriptor.cAccumGreenBits = 0;
     pixelFormatDescriptor.cAccumBlueBits = 0;
     pixelFormatDescriptor.cAccumAlphaBits = 0;
-    pixelFormatDescriptor.cDepthBits = 24;        // Number of bits for the depthbuffer
-    pixelFormatDescriptor.cStencilBits = 8;       // Number of bits for the stencilbuffer
-    pixelFormatDescriptor.cAuxBuffers = 0;        // Number of Aux buffers in the framebuffer.
+    pixelFormatDescriptor.cDepthBits = 24;  // Number of bits for the depthbuffer
+    pixelFormatDescriptor.cStencilBits = 8; // Number of bits for the stencilbuffer
+    pixelFormatDescriptor.cAuxBuffers = 0;  // Number of Aux buffers in the framebuffer.
     pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
     pixelFormatDescriptor.bReserved = 0;
     pixelFormatDescriptor.dwLayerMask = 0;
     pixelFormatDescriptor.dwVisibleMask = 0;
     pixelFormatDescriptor.dwDamageMask = 0;
 
-	int pixelFormatIndex = ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
-	ASSERT_NONZERO(pixelFormatIndex);
+    int pixelFormatIndex = ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
+    ASSERT_NONZERO(pixelFormatIndex);
     ASSERT_ISTRUE(SetPixelFormat(dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
 
     HGLRC dummyRenderContext = wglCreateContext(dummyDeviceContext);
@@ -358,10 +315,10 @@ Win32_OpenGLContextExts_Init(void) {
 
     ASSERT_ISTRUE(wglMakeCurrent(dummyDeviceContext, dummyRenderContext));
 
-    Win32_GL_CreateContextAttribARBPtr = (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
-        WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
-    Win32_GL_ChoosePixelFormatARBPtr = (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
-        WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+    Win32_GL_CreateContextAttribARBPtr =
+        (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
+    Win32_GL_ChoosePixelFormatARBPtr =
+        (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
@@ -374,16 +331,23 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     Win32_OpenGLContextExts_Init();
 
     int pixelFormatAttribs[] = {
-        WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
-        WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
-        WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
-        WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
-        WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
-        WGL_COLOR_BITS_ARB,         32,
-        WGL_DEPTH_BITS_ARB,         24,
-        WGL_STENCIL_BITS_ARB,       8,
-        0
-    };
+        WGL_DRAW_TO_WINDOW_ARB,
+        GL_TRUE,
+        WGL_SUPPORT_OPENGL_ARB,
+        GL_TRUE,
+        WGL_DOUBLE_BUFFER_ARB,
+        GL_TRUE,
+        WGL_ACCELERATION_ARB,
+        WGL_FULL_ACCELERATION_ARB,
+        WGL_PIXEL_TYPE_ARB,
+        WGL_TYPE_RGBA_ARB,
+        WGL_COLOR_BITS_ARB,
+        32,
+        WGL_DEPTH_BITS_ARB,
+        24,
+        WGL_STENCIL_BITS_ARB,
+        8,
+        0};
 
     int pixelFormat;
     UINT numFormats;
@@ -396,11 +360,8 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
 
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-        WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-        WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        0,
+        WGL_CONTEXT_MAJOR_VERSION_ARB,    3, WGL_CONTEXT_MINOR_VERSION_ARB, 3, WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 0,
     };
 
     HGLRC renderContext = Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
@@ -507,10 +468,12 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
     ASSERT_NONZERO(version);
 
     GL_CALL(glViewport(0, 0, width, height));
-
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     ShowWindow(window->windowHandle, SW_SHOW);
-
     gRenderer = RendererMake(window, COLOR_WHITE);
     PlatformWindowResize(window, width, height);
 
@@ -630,7 +593,11 @@ PlatformMemoryFree(void *data) {
     return PLATFORM_MEMORY_FREE_OK;
 }
 
-typedef enum { WIN32_DIRECTSOUND_INIT_OK, WIN32_DIRECTSOUND_INIT_ERR, WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR } Win32_DirectSoundInitResult;
+typedef enum {
+    WIN32_DIRECTSOUND_INIT_OK,
+    WIN32_DIRECTSOUND_INIT_ERR,
+    WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR
+} Win32_DirectSoundInitResult;
 
 /*
  * Loads DirectrSound library and initializes it.
