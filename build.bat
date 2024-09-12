@@ -25,7 +25,7 @@ set vcpkg_toolchain=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake
 set project_path=%~dp0
 pushd %project_path%
 
-set configuration_path=%project_path%\Build
+set configuration_path=%project_path%\build
 
 if exist %configuration_path%\ (
   echo I: Debug configuration already exists!
