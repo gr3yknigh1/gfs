@@ -33,7 +33,7 @@ Color4 Color4Add(Color4 a, Color4 b);
     (Color4) { 0, 0, 0, 0 }
 
 /*
- * Actuall BitMap Renderer Renderer.
+ * @breaf Actual BitMap Renderer Renderer.
  */
 typedef struct {
     Color4 clearColor;
