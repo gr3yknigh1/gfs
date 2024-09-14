@@ -6,10 +6,38 @@
 #include "gfs_render_opengl.h"
 
 #include "gfs_assert.h"
+#include "gfs_platform.h"
+#include "gfs_memory.h"
 
 #include <glad/glad.h>
 
 #include <Windows.h> // wsprintf
+
+GLShaderID
+GLCompileShaderFromFile(ScratchAllocator *allocator, cstring8 shaderFilePath, GLShaderType shaderType) {
+    ASSERT_ISTRUE(PlatformIsPathExists(shaderFilePath));
+    ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
+
+    PlatformFileOpenResult shaderFileOpenResult =
+        PlatformFileOpenEx(shaderFilePath, allocator, PLATFORM_PERMISSION_READ);
+    ASSERT_ISOK(shaderFileOpenResult.code);
+    ASSERT_ISTRUE(PlatformFileHandleIsValid(shaderFileOpenResult.handle));
+
+    PlatformFileHandle *shaderFileHandle = shaderFileOpenResult.handle;
+
+    // TODO(ilya.a): Replace with checking file size and allocating according to file size. [2024/09/12]
+    void *shaderFileBuffer = ScratchAllocatorAlloc(allocator, KILOBYTES(1));
+    MemoryZero(shaderFileBuffer, KILOBYTES(1));
+    PlatformFileLoadResult fileLoadResult =
+        PlatformFileLoadToBuffer(shaderFileHandle, shaderFileBuffer, KILOBYTES(1), NULL);
+    ASSERT_ISOK(fileLoadResult);
+
+    return GLCompileShader(shaderFileBuffer, shaderType);
+}
+
+GLShaderID
+GLCompileShader(cstring8 shaderSourceString, GLShaderType shaderType) {
+}
 
 cstring8
 GLGetErrorString(i32 errorCode) {

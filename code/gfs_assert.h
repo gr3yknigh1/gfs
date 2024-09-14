@@ -11,7 +11,7 @@
 #define ASSERT(COND)                                                                                                   \
     do {                                                                                                               \
         if (!(COND)) {                                                                                                 \
-            PlatformPutString("E: Assertion error: '" #COND "'.\n");                                                     \
+            PlatformPutString("E: Assertion error: '" #COND "'.\n");                                                   \
             PlatformPutLastError();                                                                                    \
             PlatformDebugBreak();                                                                                      \
             PlatformExitProcess(1);                                                                                    \
@@ -22,16 +22,17 @@
 #define ASSERT_ISOK(EXPR) ASSERT_ISZERO(EXPR)
 #define ASSERT_NONZERO(EXPR) ASSERT((EXPR) != 0)
 #define ASSERT_EQ(EXPR, VAL) ASSERT((EXPR) == (VAL))
+#define ASSERT_NOTEQ(EXPR, VAL) ASSERT((EXPR) != (VAL))
 #define ASSERT_NONNULL(EXPR) ASSERT((EXPR) != NULL)
 #define ASSERT_ISTRUE(EXPR) ASSERT((EXPR))
 #define ASSERT_ISFALSE(EXPR) ASSERT(!(EXPR))
 
-#define THROW(MESSAGE) \
+#define THROW(MESSAGE)                                                                                                 \
     do {                                                                                                               \
-        PlatformPutString((MESSAGE));                                                     \
-        PlatformPutLastError();                                                                                    \
-        PlatformDebugBreak();                                                                                      \
-        PlatformExitProcess(1);                                                                                    \
+        PlatformPutString((MESSAGE));                                                                                  \
+        PlatformPutLastError();                                                                                        \
+        PlatformDebugBreak();                                                                                          \
+        PlatformExitProcess(1);                                                                                        \
     } while (0)
 
 #endif // GFS_ASSERT_H_INCLUDED

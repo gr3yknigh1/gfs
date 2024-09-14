@@ -7,6 +7,13 @@
 
 #include "gfs_types.h"
 
+StringView StringViewFromCString(cstring8 s) {
+    StringView sv = {0};
+    sv.buffer = s;
+    sv.length = CString8GetLength(s);
+    return sv;
+}
+
 usize
 CString8GetLength(cstring8 s) {
     usize size = 0;
