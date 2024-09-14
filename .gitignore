@@ -5,8 +5,7 @@
 
 ## Sublime text
 *.sublime-*
-
-!gfs.sublime-project
+!*.sublime-project
 
 ## RemedyBG
 *.rdbg
@@ -20,7 +19,11 @@ compile_commands.json
 out/
 
 ## VS Code
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 ## Emacs
 \#*#
@@ -43,6 +46,9 @@ docs/sphinx/source/api
 __pycache__
 *.egg-info
 
-## venv
-.venv
+## Virtual environment
 venv
+.venv
+
+venv-*
+.venv-*
