@@ -1,0 +1,16 @@
+@INCLUDE                    = "./Doxyfile.default"
+
+GENERATE_HTML               = NO
+GENERATE_XML                = YES
+
+XML_PROGRAMLISTING          = NO
+
+
+PROJECT_NAME                = "GFS"
+PROJECT_BRIEF               = "Game From Scratch!"
+
+OUTPUT_DIRECTORY            = "./generated"
+
+
+INPUT                       = "./../../code"
+RECURSIVE                   = NO

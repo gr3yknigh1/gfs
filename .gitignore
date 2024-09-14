@@ -29,3 +29,20 @@ out/
 *.obj
 *.exe
 [Bb]uild/
+
+# Documentation
+
+## Doxygen
+docs/doxygen/generated
+
+## Sphinx
+docs/sphinx/build
+docs/sphinx/source/api
+
+# Python
+__pycache__
+*.egg-info
+
+## venv
+.venv
+venv
