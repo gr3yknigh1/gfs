@@ -12,7 +12,9 @@
 #include "gfs_string.h"
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {
+WaveAssetLoadFromFile(
+    ScratchAllocator *scratchAllocator, cstring8 assetPath,
+    WaveAsset *waveAssetOut) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(assetPath);
     ASSERT(!CString8IsEmpty(assetPath));
@@ -22,7 +24,8 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     }
 
     ///< Openning handle of assert.
-    PlatformFileOpenResult assetOpenResult = PlatformFileOpenEx(assetPath, scratchAllocator, PLATFORM_PERMISSION_READ);
+    PlatformFileOpenResult assetOpenResult = PlatformFileOpenEx(
+        assetPath, scratchAllocator, PLATFORM_PERMISSION_READ);
     if (assetOpenResult.code != PLATFORM_FILE_OPEN_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_OPEN;
     }
@@ -30,8 +33,10 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
 
     ///< Loading assert's header.
     WaveFileHeader header;
-    PlatformFileLoadResult assertHeaderLoadResult = PlatformFileLoadToBuffer(
-        assetFileHandle, &header, sizeof(header), NULL); // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
+    PlatformFileLoadResultCode assertHeaderLoadResult =
+        PlatformFileLoadToBuffer(
+            assetFileHandle, &header, sizeof(header),
+            NULL); // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
     if (assertHeaderLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
@@ -49,8 +54,9 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     ///< Loading body of the asset.
     void *data = ScratchAllocatorAlloc(scratchAllocator, header.dataSize);
     ASSERT_NONNULL(data);
-    PlatformFileLoadResult assertDataLoadResult =
-        PlatformFileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
+    PlatformFileLoadResultCode assertDataLoadResult =
+        PlatformFileLoadToBufferEx(
+            assetFileHandle, data, header.dataSize, NULL, sizeof(header));
     if (assertDataLoadResult != PLATFORM_FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
@@ -60,6 +66,7 @@ WaveAssetLoadFromFile(ScratchAllocator *scratchAllocator, cstring8 assetPath, Wa
     return WAVEASSET_LOAD_OK;
 }
 
-WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(
+    ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);

@@ -14,8 +14,10 @@ RectangleU16IsInside(RectangleU16 r, u16 x, u16 y) {
 // TODO(ilya.a): Fix bug when `r` is bigger than `this`.
 bool
 RectangleU16IsOverlapping(RectangleU16 r) {
-    return RectangleU16IsInside(r, r.x + 0, r.y + 0) || RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
-           RectangleU16IsInside(r, r.x + r.width, r.y + 0) || RectangleU16IsInside(r, r.x + 0, r.y + r.height);
+    return RectangleU16IsInside(r, r.x + 0, r.y + 0) ||
+           RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
+           RectangleU16IsInside(r, r.x + r.width, r.y + 0) ||
+           RectangleU16IsInside(r, r.x + 0, r.y + r.height);
 }
 
 u64

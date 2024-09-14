@@ -8,35 +8,75 @@
 #include "gfs_assert.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
+#include "gfs_string.h"
 
 #include <glad/glad.h>
 
 #include <Windows.h> // wsprintf
 
 GLShaderID
-GLCompileShaderFromFile(ScratchAllocator *allocator, cstring8 shaderFilePath, GLShaderType shaderType) {
-    ASSERT_ISTRUE(PlatformIsPathExists(shaderFilePath));
+GLCompileShaderFromFile(
+    ScratchAllocator *allocator, cstring8 sourceFilePath,
+    GLShaderType shaderType) {
+    ASSERT_ISTRUE(PlatformIsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
 
-    PlatformFileOpenResult shaderFileOpenResult =
-        PlatformFileOpenEx(shaderFilePath, allocator, PLATFORM_PERMISSION_READ);
-    ASSERT_ISOK(shaderFileOpenResult.code);
-    ASSERT_ISTRUE(PlatformFileHandleIsValid(shaderFileOpenResult.handle));
+    PlatformFileOpenResult sourceFileOpenResult =
+        PlatformFileOpenEx(sourceFilePath, allocator, PLATFORM_PERMISSION_READ);
+    ASSERT_ISOK(sourceFileOpenResult.code);
 
-    PlatformFileHandle *shaderFileHandle = shaderFileOpenResult.handle;
+    PlatformFileHandle *sourceHandle = sourceFileOpenResult.handle;
+    ASSERT_ISTRUE(PlatformFileHandleIsValid(sourceHandle));
 
-    // TODO(ilya.a): Replace with checking file size and allocating according to file size. [2024/09/12]
-    void *shaderFileBuffer = ScratchAllocatorAlloc(allocator, KILOBYTES(1));
-    MemoryZero(shaderFileBuffer, KILOBYTES(1));
-    PlatformFileLoadResult fileLoadResult =
-        PlatformFileLoadToBuffer(shaderFileHandle, shaderFileBuffer, KILOBYTES(1), NULL);
-    ASSERT_ISOK(fileLoadResult);
+    usize sourceFileSize = PlatformFileGetSize(sourceHandle);
+    ASSERT_NONZERO(sourceFileSize);
 
-    return GLCompileShader(shaderFileBuffer, shaderType);
+    void *sourceBuffer = ScratchAllocatorAllocZero(allocator, sourceFileSize);
+    ASSERT_NONNULL(sourceBuffer);
+
+    PlatformFileLoadResultCode sourceLoadResult = PlatformFileLoadToBuffer(
+        sourceHandle, sourceBuffer, sourceFileSize, NULL);
+    ASSERT_ISOK(sourceLoadResult);
+
+    return GLCompileShader(sourceBuffer, shaderType);
+}
+
+static GLenum
+OpenGL_ConvertShaderTypeToGLEnum(GLShaderType type) {
+    if (type == GL_SHADER_TYPE_VERT) {
+        return GL_VERTEX_SHADER;
+    }
+
+    if (type == GL_SHADER_TYPE_FRAG) {
+        return GL_FRAGMENT_SHADER;
+    }
+
+    return 0;
 }
 
 GLShaderID
-GLCompileShader(cstring8 shaderSourceString, GLShaderType shaderType) {
+GLCompileShader(cstring8 shaderSource, GLShaderType shaderType) {
+    ASSERT_NONNULL(shaderSource);
+    ASSERT_ISFALSE(CString8IsEmpty(shaderSource));
+    ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
+
+    GLShaderID shaderId = 0;
+
+    GLenum glShaderType = OpenGL_ConvertShaderTypeToGLEnum(shaderType);
+
+    GL_CALL_O(glCreateShader(glShaderType), &shaderId);
+    GL_CALL(glShaderSource(shaderId, 1, &shaderSource, NULL));
+    GL_CALL(glCompileShader(shaderId));
+
+    GLint compileStatus = 0;
+    GL_CALL(glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus));
+
+    if (compileStatus == GL_FALSE) {
+
+        return 0;
+    }
+
+    return shaderId;
 }
 
 cstring8
@@ -58,10 +98,9 @@ GLGetErrorString(i32 errorCode) {
         return STRINGIFY(GL_STACK_UNDERFLOW);
     case GL_STACK_OVERFLOW:
         return STRINGIFY(GL_STACK_OVERFLOW);
-    default:
-        return "GL_UNHANDLED_ERROR";
     }
-    THROW("Unreachable!");
+
+    return "GL_UNKNOWN_ERROR";
 }
 
 void
@@ -76,8 +115,9 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
     while ((errorCode = glGetError()) != GL_NO_ERROR) {
         char8 printBuffer[KILOBYTES(1)];
         wsprintf(
-            printBuffer, "E: [GL] Error code=%s[%i] - '%s' at %s:%lu\n", GLGetErrorString(errorCode), errorCode,
-            expression, sourceFile, sourceLine);
+            printBuffer, "E: [GL] Error code=%s[%i] - '%s' at %s:%lu\n",
+            GLGetErrorString(errorCode), errorCode, expression, sourceFile,
+            sourceLine);
         THROW(printBuffer);
     }
 }

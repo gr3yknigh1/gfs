@@ -9,7 +9,8 @@
 #include "gfs_types.h"
 
 /*
- * @breaf Gets offset from beginning of the array, as if this array represents grid.
+ * @breaf Gets offset from beginning of the array, as if this array represents
+ * grid.
  */
 u64 GetOffsetForGridArray(u64 width, u64 y, u64 x);
 

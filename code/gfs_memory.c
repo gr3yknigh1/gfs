@@ -40,6 +40,9 @@ ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
     return data;
 }
 
+void *
+ScratchAllocatorAllocZero(ScratchAllocator *scratchAllocator, usize size) {}
+
 void
 ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
     ASSERT_NONNULL(scratchAllocator);

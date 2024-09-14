@@ -21,7 +21,8 @@ typedef enum {
 } WaveFileAudioFormat;
 
 /* NOTE(ilya.a): This piece of code just for the sake of the shame
- * I have with MSVC and C language. Which doesn't support fixed-size enums. [2024/05/26]
+ * I have with MSVC and C language. Which doesn't support fixed-size enums.
+ * [2024/05/26]
  */
 typedef u16 WaveFileAudioFormatTag;
 
@@ -41,14 +42,17 @@ typedef struct {
     char8 fileFormatID[4];   // Format = [WAVE]  (0x57, 0x41, 0x56, 0x45)
 
     /* Chunk describing the data format */
-    char8 formatBlocID[4];              // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
-    u32 blockSize;                      // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
-    WaveFileAudioFormatTag audioFormat; // Audio format (1: PCM integer, 3: IIEE float)
-    u16 numberOfChannels;               // Number of channels
-    u32 freqHZ;                         // Sample rate (in hertz)
-    u32 bytePerSec;                     // Number of bytes to read per second (Frequence * BytePerBloc)
-    u16 bytePerBloc;                    // Number of bytes per block (NbrChannels * BitsPerSample / 8)
-    u16 bitsPerSample;                  // Number of bits per sample
+    char8 formatBlocID[4]; // Identifier [fmt ]  (0x66, 0x6D, 0x74, 0x20)
+    u32 blockSize; // Chunk size minus 8 bytes, which is 16 bytes here  (0x10)
+    WaveFileAudioFormatTag
+        audioFormat;      // Audio format (1: PCM integer, 3: IIEE float)
+    u16 numberOfChannels; // Number of channels
+    u32 freqHZ;           // Sample rate (in hertz)
+    u32 bytePerSec;       // Number of bytes to read per second (Frequence *
+                          // BytePerBloc)
+    u16 bytePerBloc; // Number of bytes per block (NbrChannels * BitsPerSample /
+                     // 8)
+    u16 bitsPerSample; // Number of bits per sample
 
     /* Chunk containing the sampled data */
     char8 dataBlocID[4]; // Identifier "data"  (0x64, 0x61, 0x74, 0x61)
@@ -67,13 +71,17 @@ typedef enum {
     WAVEASSET_LOAD_OK,                 // It's okey.
     WAVEASSET_LOAD_ERR,                // General error.
     WAVEASSET_LOAD_ERR_FILE_NOT_FOUND, // Path which you typed is not existing.
-    WAVEASSET_LOAD_ERR_FAILED_TO_OPEN, // IO error. Failed to open the asset file.
-    WAVEASSET_LOAD_ERR_FAILED_TO_READ, // IO error. Opened the file, but failed to read it.
+    WAVEASSET_LOAD_ERR_FAILED_TO_OPEN, // IO error. Failed to open the asset
+                                       // file.
+    WAVEASSET_LOAD_ERR_FAILED_TO_READ, // IO error. Opened the file, but failed
+                                       // to read it.
     WAVEASSET_LOAD_ERR_INVALID_MAGIC,  // Asset failed signature checks.
 } WaveAssetLoadResult;
 
-WaveAssetLoadResult WaveAssetLoadFromFile(ScratchAllocator *arena, cstring8 assetPath, WaveAsset *waveAssetOut);
-WaveAssetLoadResult WaveAssetLoadFromMemory(ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromFile(
+    ScratchAllocator *arena, cstring8 assetPath, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(
+    ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);
 

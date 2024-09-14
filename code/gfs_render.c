@@ -67,11 +67,12 @@ EndDrawing(Renderer *renderer) {
     renderer->commandCount = 0;
 }
 
-#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD)                                                                      \
-    do {                                                                                                               \
-        MemoryCopy((RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD)));                                    \
-        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD));                                                          \
-        (RENDERERPTR)->commandCount++;                                                                                 \
+#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD)                              \
+    do {                                                                       \
+        MemoryCopy(                                                            \
+            (RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD)));   \
+        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD));                  \
+        (RENDERERPTR)->commandCount++;                                         \
     } while (0)
 
 void
@@ -88,7 +89,8 @@ ClearBackground(Renderer *renderer) {
 }
 
 void
-DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4 color) {
+DrawRectangle(
+    Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4 color) {
     struct {
         RenderCommandType Type;
         u32 X;

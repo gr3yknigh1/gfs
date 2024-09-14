@@ -21,19 +21,24 @@
 #define PI32 3.14159265358979323846f
 
 static void
-GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u32 byteToLock, u32 bytesToWrite) {
+GameFillSoundBuffer(
+    PlatformSoundDevice *device, PlatformSoundOutput *output, u32 byteToLock,
+    u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
 
     void *region0, *region1;
     u32 region0Size, region1Size;
 
-    PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    PlatformSoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -44,7 +49,8 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
     u32 region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -52,23 +58,28 @@ GameFillSoundBuffer(PlatformSoundDevice *device, PlatformSoundOutput *output, u3
         ++output->runningSampleIndex;
     }
 
-    PlatformSoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
+    PlatformSoundDeviceUnlockBuffer(
+        device, region0, region0Size, region1, region1Size);
 }
 
 static void
 GameFillSoundBufferWaveAsset(
-    PlatformSoundDevice *device, PlatformSoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
+    PlatformSoundDevice *device, PlatformSoundOutput *output,
+    WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
     ASSERT_NONNULL(waveAsset);
 
-    //usize currentByteIndex = output->runningSampleIndex * output->bytesPerSample;
+    // usize currentByteIndex = output->runningSampleIndex *
+    // output->bytesPerSample;
 
     void *region0, *region1;
     u32 region0Size, region1Size;
     byte *sampleOut;
 
-    PlatformSoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    PlatformSoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     sampleOut = (byte *)region0;
@@ -76,7 +87,11 @@ GameFillSoundBufferWaveAsset(
         // if (currentByteIndex > waveAsset->header.dataSize / 2) {
         //     output->runningSampleIndex = 0;
         // }
-        MemoryCopy(sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample, output->bytesPerSample);
+        MemoryCopy(
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
+            output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
     }
@@ -87,12 +102,17 @@ GameFillSoundBufferWaveAsset(
         // if (currentByteIndex > waveAsset->header.dataSize / 2) {
         //     output->runningSampleIndex = 0;
         // }
-        MemoryCopy(sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample, output->bytesPerSample);
+        MemoryCopy(
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
+            output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
     }
 
-    PlatformSoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
+    PlatformSoundDeviceUnlockBuffer(
+        device, region0, region0Size, region1, region1Size);
 }
 
 void
@@ -101,30 +121,36 @@ GameMainloop(Renderer *renderer) {
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
     ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(10));
 
-    PlatformWindow *window = PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
+    PlatformWindow *window =
+        PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
     ASSERT_NONNULL(window);
 
 #if WIP_WAV_FILE_PLAYER
     WaveAsset musicAsset;
-    WaveAssetLoadResult musicLoadResult =
-        WaveAssetLoadFromFile(&assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
+    WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(
+        &assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
     ASSERT_ISOK(musicLoadResult);
 
-    PlatformSoundOutput soundOutput = PlatformSoundOutputMake(musicAsset.header.freqHZ);
+    PlatformSoundOutput soundOutput =
+        PlatformSoundOutputMake(musicAsset.header.freqHZ);
     soundOutput.bytesPerSample = musicAsset.header.bitsPerSample / 8;
 #else
     PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
 #endif
 
-    PlatformSoundDevice *soundDevice =
-        PlatformSoundDeviceOpen(&platformScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
+    PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(
+        &platformScratch, window, soundOutput.samplesPerSecond,
+        soundOutput.audioBufferSize);
 
 #if WIP_WAV_FILE_PLAYER
     GameFillSoundBufferWaveAsset(
         soundDevice, &soundOutput, &musicAsset, 0,
-        soundOutput.latencySampleCount * soundOutput.bytesPerSample /* output.audioBufferSize */);
+        soundOutput.latencySampleCount *
+            soundOutput.bytesPerSample /* output.audioBufferSize */);
 #else
-    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample);
+    GameFillSoundBuffer(
+        soundDevice, &soundOutput, 0,
+        soundOutput.latencySampleCount * soundOutput.bytesPerSample);
 #endif
 
     PlatformSoundDevicePlay(soundDevice);
@@ -157,10 +183,14 @@ GameMainloop(Renderer *renderer) {
         u32 playCursor = 0;
         u32 writeCursor = 0;
 
-        ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
-        u32 targetCursor =
-            (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) % soundOutput.audioBufferSize;
+        ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(
+            soundDevice, &playCursor, &writeCursor));
+        u32 byteToLock =
+            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
+            soundOutput.audioBufferSize;
+        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount *
+                                          soundOutput.bytesPerSample)) %
+                           soundOutput.audioBufferSize;
         u32 bytesToWrite = 0;
 
         if (byteToLock > targetCursor) {
@@ -174,7 +204,8 @@ GameMainloop(Renderer *renderer) {
 
 #if WIP_WAV_FILE_PLAYER
 #else
-            GameFillSoundBuffer(soundDevice, &soundOutput, byteToLock, bytesToWrite);
+            GameFillSoundBuffer(
+                soundDevice, &soundOutput, byteToLock, bytesToWrite);
 #endif
         }
 
@@ -191,13 +222,18 @@ GameMainloop(Renderer *renderer) {
             // TODO(ilya.a): Display counter [2024/11/08]
 
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
-            LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
-            u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-            u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
+            LONGLONG counterElapsed =
+                endCounter.QuadPart - lastCounter.QuadPart;
+            u64 msPerFrame =
+                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds =
+                performanceCounterFrequency.QuadPart / counterElapsed;
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
-            wsprintf(printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame, framesPerSeconds, megaCyclesPerFrame);
+            wsprintf(
+                printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame,
+                framesPerSeconds, megaCyclesPerFrame);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;

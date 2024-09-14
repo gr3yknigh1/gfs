@@ -50,7 +50,8 @@ typedef u8 PlatformPermissions;
 
 #define PLATFORM_PERMISSION_READ MKFLAG(1)
 #define PLATFORM_PERMISSION_WRITE MKFLAG(2)
-#define PLATFORM_PERMISSION_READ_WRITE (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
+#define PLATFORM_PERMISSION_READ_WRITE                                         \
+    (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
 
 typedef enum {
     PLATFORM_FILE_OPEN_OK,
@@ -65,22 +66,28 @@ typedef struct {
 // PlatformFileOpenResult PlatformFileOpen(cstring8 filePath);
 
 PlatformFileOpenResult PlatformFileOpenEx(
-    cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions);
+    cstring8 filePath, ScratchAllocator *allocator,
+    PlatformPermissions permissions);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
     PLATFORM_FILE_FAILED_TO_READ,
-} PlatformFileLoadResult;
+} PlatformFileLoadResultCode;
 
-PlatformFileLoadResult PlatformFileLoadToBuffer(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
-PlatformFileLoadResult PlatformFileLoadToBufferEx(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
+PlatformFileLoadResultCode PlatformFileLoadToBuffer(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded);
+PlatformFileLoadResultCode PlatformFileLoadToBufferEx(
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded, usize loadOffset);
+
+usize PlatformFileGetSize(PlatformFileHandle *handle);
 
 /*
  * @breaf Opens platforms window.
  * */
-PlatformWindow *PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title);
+PlatformWindow *PlatformWindowOpen(
+    ScratchAllocator *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
@@ -144,21 +151,24 @@ PlatformSoundOutput PlatformSoundOutputMake(i32 samplesPerSecond);
 void PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ);
 
 PlatformSoundDevice *PlatformSoundDeviceOpen(
-    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize);
+    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond,
+    usize audioBufferSize);
 
 typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } PlatformSoundDeviceGetCurrentPositionResult;
 
-PlatformSoundDeviceGetCurrentPositionResult PlatformSoundDeviceGetCurrentPosition(
+PlatformSoundDeviceGetCurrentPositionResult
+PlatformSoundDeviceGetCurrentPosition(
     PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
 void PlatformSoundDeviceLockBuffer(
-    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
-    u32 *region1Size);
+    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock,
+    void **region0, u32 *region0Size, void **region1, u32 *region1Size);
 void PlatformSoundDeviceUnlockBuffer(
-    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1,
+    u32 region1Size);
 void PlatformSoundDevicePlay(PlatformSoundDevice *device);
 
 void PlatformSoundDeviceClose(PlatformSoundDevice *device);
@@ -172,7 +182,8 @@ void PlatformSoundDeviceClose(PlatformSoundDevice *device);
 void PlatformPutString(cstring8 s);
 
 /*
- * @breaf Called in ASSERT macro in order to print last error of platform level code.
+ * @breaf Called in ASSERT macro in order to print last error of platform level
+ * code.
  */
 void PlatformPutLastError(void);
 

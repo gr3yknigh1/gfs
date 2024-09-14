@@ -27,10 +27,13 @@
 #include "gfs_render_opengl.h"
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
-#define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
+#define ASSERT_VCALL(S, M, ...)                                                \
+    ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
 // See https://gist.github.com/nickrolfe/1127313ed1dbf80254b614a721b3ee9c
-// See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_pixel_format.txt for all values
+// See
+// https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_pixel_format.txt
+// for all values
 #define WGL_DRAW_TO_WINDOW_ARB 0x2001
 #define WGL_ACCELERATION_ARB 0x2003
 #define WGL_SUPPORT_OPENGL_ARB 0x2010
@@ -43,7 +46,9 @@
 #define WGL_FULL_ACCELERATION_ARB 0x2027
 #define WGL_TYPE_RGBA_ARB 0x202B
 
-// See https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt for all values
+// See
+// https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
+// for all values
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
 #define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
@@ -55,8 +60,10 @@
 #define WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME "wglCreateContextAttribsARB"
 #define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
 
-typedef HGLRC WINAPI Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
-typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
+typedef HGLRC WINAPI
+Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
+typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(
+    HDC, const int *, const FLOAT *, UINT, int *, UINT *);
 
 static Win32_GL_CreateContextAttribARBType *Win32_GL_CreateContextAttribARBPtr;
 static Win32_GL_ChoosePixelFormatARBType *Win32_GL_ChoosePixelFormatARBPtr;
@@ -66,7 +73,8 @@ static Win32_GL_ChoosePixelFormatARBType *Win32_GL_ChoosePixelFormatARBPtr;
 #define WIN32_XINPUT_DLL XINPUT_DLL
 
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE *pState);
-typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
+typedef DWORD Win32_XInputSetStateType(
+    DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
 
 static Win32_XInputGetStateType *Win32_xInputGetStatePtr;
 static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
@@ -74,7 +82,8 @@ static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
 #define WIN32_DIRECTSOUNDCREATE_PROCNAME "DirectSoundCreate"
 #define WIN32_DIRECTSOUND_DLL "dsound.dll"
 
-typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
+typedef HRESULT Win32_DirectSoundCreateType(
+    LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
 static Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
@@ -118,7 +127,9 @@ PlatformFileHandleIsValid(PlatformFileHandle *handle) {
 }
 
 PlatformFileOpenResult
-PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermissions permissions) {
+PlatformFileOpenEx(
+    cstring8 filePath, ScratchAllocator *allocator,
+    PlatformPermissions permissions) {
     ASSERT_NONNULL(filePath);
     ASSERT(!CString8IsEmpty(filePath));
 
@@ -137,29 +148,34 @@ PlatformFileOpenEx(cstring8 filePath, ScratchAllocator *allocator, PlatformPermi
     // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
     DWORD shareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 
-    HANDLE win32Handle =
-        CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE win32Handle = CreateFileA(
+        filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (win32Handle == INVALID_HANDLE_VALUE) {
         result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
         result.handle = NULL;
     } else {
-        result.handle = ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
+        result.handle =
+            ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
         result.handle->win32Handle = win32Handle;
         result.code = PLATFORM_FILE_OPEN_OK;
     }
     return result;
 }
 
-PlatformFileLoadResult
+PlatformFileLoadResultCode
 PlatformFileLoadToBuffer(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded) {
-    return PlatformFileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded) {
+    return PlatformFileLoadToBufferEx(
+        handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
-PlatformFileLoadResult
+PlatformFileLoadResultCode
 PlatformFileLoadToBufferEx(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
+    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded, usize loadOffset) {
     ASSERT_NONNULL(handle);
     ASSERT(PlatformFileHandleIsValid(handle));
     ASSERT_NONNULL(buffer);
@@ -184,7 +200,9 @@ PlatformFileLoadToBufferEx(
     }
 
     DWORD numberOfBytesRead = 0;
-    BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);
+    BOOL readFileResult = ReadFile(
+        handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead,
+        NULL);
 
     if (readFileResult != TRUE) {
         return PLATFORM_FILE_FAILED_TO_READ;
@@ -195,6 +213,13 @@ PlatformFileLoadToBufferEx(
     }
 
     return PLATFORM_FILE_LOAD_OK;
+}
+
+usize
+PlatformFileGetSize(PlatformFileHandle *handle) {
+    DWORD highOrderSize = 0;
+    DWORD lowOrderSize = GetFileSize(handle->win32Handle, &highOrderSize);
+    return MAKELONG(lowOrderSize, highOrderSize);
 }
 
 void
@@ -218,7 +243,8 @@ PlatformPutLastError(void) {
 
     if (win32LastErrorCode != ERROR_SUCCESS) {
         char8 printBuffer[KILOBYTES(1)];
-        wsprintf(printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
+        wsprintf(
+            printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
         OutputDebugString(printBuffer);
     }
 
@@ -271,8 +297,9 @@ Win32_OpenGLContextExts_Init(void) {
     ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
 
     HWND dummyWindowHandle = CreateWindowExA(
-        0, dummyWindowClass.lpszClassName, "__dummy_window", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        CW_USEDEFAULT, 0, 0, dummyWindowClass.hInstance, 0);
+        0, dummyWindowClass.lpszClassName, "__dummy_window", 0, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+        dummyWindowClass.hInstance, 0);
     ASSERT_NONNULL(dummyWindowHandle);
 
     HDC dummyDeviceContext = GetDC(dummyWindowHandle);
@@ -281,7 +308,8 @@ Win32_OpenGLContextExts_Init(void) {
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
     pixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
     pixelFormatDescriptor.nVersion = 1;
-    pixelFormatDescriptor.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pixelFormatDescriptor.dwFlags =
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
     pixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
     pixelFormatDescriptor.cColorBits = 32;
     pixelFormatDescriptor.cRedBits = 0;
@@ -297,18 +325,22 @@ Win32_OpenGLContextExts_Init(void) {
     pixelFormatDescriptor.cAccumGreenBits = 0;
     pixelFormatDescriptor.cAccumBlueBits = 0;
     pixelFormatDescriptor.cAccumAlphaBits = 0;
-    pixelFormatDescriptor.cDepthBits = 24;  // Number of bits for the depthbuffer
-    pixelFormatDescriptor.cStencilBits = 8; // Number of bits for the stencilbuffer
-    pixelFormatDescriptor.cAuxBuffers = 0;  // Number of Aux buffers in the framebuffer.
+    pixelFormatDescriptor.cDepthBits = 24; // Number of bits for the depthbuffer
+    pixelFormatDescriptor.cStencilBits =
+        8; // Number of bits for the stencilbuffer
+    pixelFormatDescriptor.cAuxBuffers =
+        0; // Number of Aux buffers in the framebuffer.
     pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
     pixelFormatDescriptor.bReserved = 0;
     pixelFormatDescriptor.dwLayerMask = 0;
     pixelFormatDescriptor.dwVisibleMask = 0;
     pixelFormatDescriptor.dwDamageMask = 0;
 
-    int pixelFormatIndex = ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
+    int pixelFormatIndex =
+        ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
     ASSERT_NONZERO(pixelFormatIndex);
-    ASSERT_ISTRUE(SetPixelFormat(dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
+    ASSERT_ISTRUE(SetPixelFormat(
+        dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
 
     HGLRC dummyRenderContext = wglCreateContext(dummyDeviceContext);
     ASSERT_NONNULL(dummyRenderContext);
@@ -316,9 +348,11 @@ Win32_OpenGLContextExts_Init(void) {
     ASSERT_ISTRUE(wglMakeCurrent(dummyDeviceContext, dummyRenderContext));
 
     Win32_GL_CreateContextAttribARBPtr =
-        (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
+        (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
+            WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
     Win32_GL_ChoosePixelFormatARBPtr =
-        (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+        (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
+            WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
@@ -351,20 +385,30 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
 
     int pixelFormat;
     UINT numFormats;
-    ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
+    ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(
+        deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
     ASSERT_NONZERO(numFormats);
 
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
-    DescribePixelFormat(deviceContext, pixelFormat, sizeof(pixelFormatDescriptor), &pixelFormatDescriptor);
-    ASSERT_ISTRUE(SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
+    DescribePixelFormat(
+        deviceContext, pixelFormat, sizeof(pixelFormatDescriptor),
+        &pixelFormatDescriptor);
+    ASSERT_ISTRUE(
+        SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
 
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
-        WGL_CONTEXT_MAJOR_VERSION_ARB,    3, WGL_CONTEXT_MINOR_VERSION_ARB, 3, WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 0,
+        WGL_CONTEXT_MAJOR_VERSION_ARB,
+        3,
+        WGL_CONTEXT_MINOR_VERSION_ARB,
+        3,
+        WGL_CONTEXT_PROFILE_MASK_ARB,
+        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+        0,
     };
 
-    HGLRC renderContext = Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
+    HGLRC renderContext =
+        Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
     ASSERT_NONNULL(renderContext);
 
     ASSERT_ISTRUE(wglMakeCurrent(deviceContext, renderContext));
@@ -390,7 +434,9 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
 }
 
 int WINAPI
-WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
+WinMain(
+    _In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance,
+    _In_ LPSTR commandLine, _In_ int showMode) {
     UNUSED(instance);
     UNUSED(commandLine);
     UNUSED(showMode);
@@ -399,7 +445,10 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     GameMainloop(&gRenderer);
 }
 
-typedef enum { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR } Win32_LoadXInputResult;
+typedef enum {
+    WIN32_LOADXINPUT_OK,
+    WIN32_LOADXINPUT_ERR
+} Win32_LoadXInputResult;
 
 static Win32_LoadXInputResult
 Win32_LoadXInput(void) {
@@ -411,9 +460,11 @@ Win32_LoadXInput(void) {
         return WIN32_LOADXINPUT_ERR;
     }
 
-    Win32_xInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, WIN32_XINPUTGETSTATE_PROCNAME);
+    Win32_xInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
+        library, WIN32_XINPUTGETSTATE_PROCNAME);
 
-    Win32_xInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, WIN32_XINPUTSETSTATE_PROCNAME);
+    Win32_xInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
+        library, WIN32_XINPUTSETSTATE_PROCNAME);
 
     if (Win32_xInputSetStatePtr == NULL || Win32_xInputGetStatePtr == NULL) {
         return WIN32_LOADXINPUT_ERR;
@@ -423,7 +474,8 @@ Win32_LoadXInput(void) {
 }
 
 PlatformWindow *
-PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
+PlatformWindowOpen(
+    ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
@@ -431,7 +483,8 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
     char8 *copiedTitle = ScratchAllocatorAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
 
-    PlatformWindow *window = ScratchAllocatorAlloc(scratch, sizeof(PlatformWindow));
+    PlatformWindow *window =
+        ScratchAllocatorAlloc(scratch, sizeof(PlatformWindow));
     ASSERT_NONNULL(window);
 
     MemoryZero(window, sizeof(PlatformWindow));
@@ -447,7 +500,8 @@ PlatformWindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 ti
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
     window->windowHandle = CreateWindowExA(
-        0, window->windowClass.lpszClassName, copiedTitle, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        0, window->windowClass.lpszClassName, copiedTitle,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, // int x
         CW_USEDEFAULT, // int y
         width,         // int width
@@ -497,7 +551,8 @@ PlatformPoolEvents(PlatformWindow *window) {
         DispatchMessageA(&message);
     }
 
-    for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex) {
+    for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT;
+         ++xControllerIndex) {
         XINPUT_STATE xInputState = {0};
         DWORD result = Win32_xInputGetStatePtr(xControllerIndex, &xInputState);
 
@@ -519,12 +574,14 @@ PlatformPoolEvents(PlatformWindow *window) {
             i16 rightStickX = pad->sThumbRX;
             i16 rightStickY = pad->sThumbRY;
 
-            // TODO(ilya.a): Handle deadzone propery, using XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE and
+            // TODO(ilya.a): Handle deadzone propery, using
+            // XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE and
             // XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE [2024/08/11]
             // xOffset += leftStickX / 4096;
             // yOffset += leftStickY / 4096;
 
-            // Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f * ((f32)leftStickY / 30000.0f)) + 512);
+            // Win32_SoundOutputSetTone(&soundOutput, (i32)(256.0f *
+            // ((f32)leftStickY / 30000.0f)) + 512);
 
             XINPUT_VIBRATION vibrationState = {0};
 
@@ -541,9 +598,11 @@ PlatformPoolEvents(PlatformWindow *window) {
             Win32_xInputSetStatePtr(xControllerIndex, &vibrationState);
         } else if (result == ERROR_DEVICE_NOT_CONNECTED) {
             // NOTE(ilya.a): Do nothing. I thought to log that.
-            // But it will be too frequent log, cause we have no plans on multiple controllers.
+            // But it will be too frequent log, cause we have no plans on
+            // multiple controllers.
         } else {
-            OutputDebugString("E: Some of xInput's device are not connected!\n");
+            OutputDebugString(
+                "E: Some of xInput's device are not connected!\n");
             ASSERT(false);
         }
     }
@@ -570,11 +629,14 @@ PlatformGetPageSize(void) {
 
 void *
 PlatformMemoryAllocate(usize size) {
-    void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void *data =
+        VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
-    // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but accually `VirtualAlloc`
-    // will round up this number to next page. [2024/05/26]
-    // TODO(ilya.a): Do something about waste of unused memory in Arena. [2024/05/26]
+    // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but
+    // accually `VirtualAlloc` will round up this number to next page.
+    // [2024/05/26]
+    // TODO(ilya.a): Do something about waste of unused memory in Arena.
+    // [2024/05/26]
     return data;
 }
 
@@ -582,11 +644,10 @@ PlatformMemoryFreeResult
 PlatformMemoryFree(void *data) {
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
         //                   ^^^^^^^^^^^^
-        // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead for
-        // MEM_RELEASE. Because in that case it's will be keep buffer around, until
-        // we use it again.
-        // P.S. Also will be good to try protect buffer after deallocating or other
-        // stuff.
+        // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead
+        // for MEM_RELEASE. Because in that case it's will be keep buffer
+        // around, until we use it again. P.S. Also will be good to try protect
+        // buffer after deallocating or other stuff.
         //
         return PLATFORM_MEMORY_FREE_ERR;
     }
@@ -602,19 +663,22 @@ typedef enum {
 /*
  * Loads DirectrSound library and initializes it.
  *
- * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI. [2024/05/25]
+ * NOTE(ilya.a): They say, that DirectSound is superseeded by WASAPI.
+ * [2024/05/25]
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_DirectSoundInitResult
-Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
+Win32_DirectSoundInit(
+    HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond,
+    usize bufferSize) {
     HMODULE library = LoadLibrary(WIN32_DIRECTSOUND_DLL);
 
     if (library == NULL) {
         return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
     }
 
-    Win32_DirectSoundCreatePtr =
-        (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(
+        library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
     if (Win32_DirectSoundCreatePtr == NULL) {
         return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
@@ -625,23 +689,30 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
-    if (!SUCCEEDED(VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY))) {
+    if (!SUCCEEDED(
+            VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
     // NOTE(ilya.a): Primary buffer -- buffer which is only holds handle to
     // sound card. Windows has strange API. [2024/05/25]
     DSBUFFERDESC primaryBufferDesc;
-    MemoryZero(&primaryBufferDesc, sizeof(primaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
-                                                               // to zero buffer description. [2024/05/25]
+    MemoryZero(
+        &primaryBufferDesc,
+        sizeof(primaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
+                                    // to zero buffer description. [2024/05/25]
 
     primaryBufferDesc.dwSize = sizeof(primaryBufferDesc);
     primaryBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-    primaryBufferDesc.dwBufferBytes = 0;  // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
-    primaryBufferDesc.lpwfxFormat = NULL; // NOTE(ilya.a): Primary buffer wfx format should be NULL. [2024/05/25]
+    primaryBufferDesc.dwBufferBytes =
+        0; // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
+    primaryBufferDesc.lpwfxFormat = NULL; // NOTE(ilya.a): Primary buffer wfx
+                                          // format should be NULL. [2024/05/25]
 
     LPDIRECTSOUNDBUFFER primarySoundbuffer;
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primarySoundbuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(
+            directSound, CreateSoundBuffer, &primaryBufferDesc,
+            &primarySoundbuffer, NULL))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
@@ -650,24 +721,33 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
     waveFormat.nChannels = 2;
     waveFormat.nSamplesPerSec = samplesPerSecond;
     waveFormat.wBitsPerSample = 16;
-    waveFormat.nBlockAlign = (waveFormat.nChannels * waveFormat.wBitsPerSample) / BYTE_BITS;
-    waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
+    waveFormat.nBlockAlign =
+        (waveFormat.nChannels * waveFormat.wBitsPerSample) / BYTE_BITS;
+    waveFormat.nAvgBytesPerSec =
+        waveFormat.nSamplesPerSec *
+        waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
     waveFormat.cbSize = 0;
 
     if (!SUCCEEDED(VCALL(primarySoundbuffer, SetFormat, &waveFormat))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
-    // NOTE(ilya.a): Actual sound buffer in which we will write data. [2024/05/25]
+    // NOTE(ilya.a): Actual sound buffer in which we will write data.
+    // [2024/05/25]
     DSBUFFERDESC secondaryBufferDesc;
-    MemoryZero(&secondaryBufferDesc, sizeof(secondaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
-                                                                   // to zero buffer description. [2024/05/25]
+    MemoryZero(
+        &secondaryBufferDesc,
+        sizeof(
+            secondaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
+                                   // to zero buffer description. [2024/05/25]
     secondaryBufferDesc.dwSize = sizeof(secondaryBufferDesc);
     secondaryBufferDesc.dwFlags = 0;
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(
+            directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer,
+            NULL))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
@@ -692,8 +772,11 @@ PlatformSoundOutputMake(i32 samplesPerSecond) {
 }
 
 PlatformSoundDeviceGetCurrentPositionResult
-PlatformSoundDeviceGetCurrentPosition(PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
-    if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
+PlatformSoundDeviceGetCurrentPosition(
+    PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
+    if (!SUCCEEDED(VCALL(
+            device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor,
+            (DWORD *)writeCursor))) {
         return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
     }
     return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK;
@@ -707,18 +790,22 @@ PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ) {
 
 void
 PlatformSoundDeviceLockBuffer(
-    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
-    u32 *region1Size) {
-    // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but lock are failing [2024/07/28]
+    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock,
+    void **region0, u32 *region0Size, void **region1, u32 *region1Size) {
+    // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but
+    // lock are failing [2024/07/28]
     ASSERT_VCALL(
-        device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1,
-        (LPDWORD)region1Size, 0);
+        device->audioBuffer, Lock, offset, portionSizeToLock, region0,
+        (LPDWORD)region0Size, region1, (LPDWORD)region1Size, 0);
 }
 
 void
 PlatformSoundDeviceUnlockBuffer(
-    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size) {
-    ASSERT_VCALL(device->audioBuffer, Unlock, region0, region0Size, region1, region1Size);
+    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1,
+    u32 region1Size) {
+    ASSERT_VCALL(
+        device->audioBuffer, Unlock, region0, region0Size, region1,
+        region1Size);
 }
 
 void
@@ -728,16 +815,19 @@ PlatformSoundDevicePlay(PlatformSoundDevice *device) {
 
 PlatformSoundDevice *
 PlatformSoundDeviceOpen(
-    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond, usize audioBufferSize) {
+    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond,
+    usize audioBufferSize) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
 
-    PlatformSoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
+    PlatformSoundDevice *device =
+        ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
     ASSERT_NONNULL(device);
 
-    Win32_DirectSoundInitResult result =
-        Win32_DirectSoundInit(window->windowHandle, &device->audioBuffer, samplesPerSecond, audioBufferSize);
+    Win32_DirectSoundInitResult result = Win32_DirectSoundInit(
+        window->windowHandle, &device->audioBuffer, samplesPerSecond,
+        audioBufferSize);
     ASSERT_ISOK(result);
 
     return device;
