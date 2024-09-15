@@ -22,7 +22,7 @@
 
 static void
 GameFillSoundBuffer(
-    PlatformSoundDevice *device, PlatformSoundOutput *output, u32 byteToLock,
+    SoundDevice *device, SoundOutput *output, u32 byteToLock,
     u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
@@ -30,7 +30,7 @@ GameFillSoundBuffer(
     void *region0, *region1;
     u32 region0Size, region1Size;
 
-    PlatformSoundDeviceLockBuffer(
+    SoundDeviceLockBuffer(
         device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
         &region1Size);
 
@@ -58,14 +58,13 @@ GameFillSoundBuffer(
         ++output->runningSampleIndex;
     }
 
-    PlatformSoundDeviceUnlockBuffer(
-        device, region0, region0Size, region1, region1Size);
+    SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
 }
 
 static void
 GameFillSoundBufferWaveAsset(
-    PlatformSoundDevice *device, PlatformSoundOutput *output,
-    WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
+    u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
     ASSERT_NONNULL(waveAsset);
@@ -77,7 +76,7 @@ GameFillSoundBufferWaveAsset(
     u32 region0Size, region1Size;
     byte *sampleOut;
 
-    PlatformSoundDeviceLockBuffer(
+    SoundDeviceLockBuffer(
         device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
         &region1Size);
 
@@ -111,8 +110,7 @@ GameFillSoundBufferWaveAsset(
         output->runningSampleIndex++;
     }
 
-    PlatformSoundDeviceUnlockBuffer(
-        device, region0, region0Size, region1, region1Size);
+    SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
 }
 
 void
@@ -121,8 +119,7 @@ GameMainloop(Renderer *renderer) {
     ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
     ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(10));
 
-    PlatformWindow *window =
-        PlatformWindowOpen(&platformScratch, 900, 600, "Hello world!");
+    Window *window = WindowOpen(&platformScratch, 900, 600, "Hello world!");
     ASSERT_NONNULL(window);
 
 #if WIP_WAV_FILE_PLAYER
@@ -131,14 +128,13 @@ GameMainloop(Renderer *renderer) {
         &assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
     ASSERT_ISOK(musicLoadResult);
 
-    PlatformSoundOutput soundOutput =
-        PlatformSoundOutputMake(musicAsset.header.freqHZ);
+    SoundOutput soundOutput = SoundOutputMake(musicAsset.header.freqHZ);
     soundOutput.bytesPerSample = musicAsset.header.bitsPerSample / 8;
 #else
-    PlatformSoundOutput soundOutput = PlatformSoundOutputMake(48000);
+    SoundOutput soundOutput = SoundOutputMake(48000);
 #endif
 
-    PlatformSoundDevice *soundDevice = PlatformSoundDeviceOpen(
+    SoundDevice *soundDevice = SoundDeviceOpen(
         &platformScratch, window, soundOutput.samplesPerSecond,
         soundOutput.audioBufferSize);
 
@@ -153,7 +149,7 @@ GameMainloop(Renderer *renderer) {
         soundOutput.latencySampleCount * soundOutput.bytesPerSample);
 #endif
 
-    PlatformSoundDevicePlay(soundDevice);
+    SoundDevicePlay(soundDevice);
 
     u32 xOffset = 0;
     u32 yOffset = 0;
@@ -169,7 +165,7 @@ GameMainloop(Renderer *renderer) {
     u64 lastCycleCount = __rdtsc();
 
     while (!GameStateShouldStop()) {
-        PlatformPoolEvents(window);
+        PoolEvents(window);
 
         ///< Rendering
         BeginDrawing(renderer);
@@ -183,7 +179,7 @@ GameMainloop(Renderer *renderer) {
         u32 playCursor = 0;
         u32 writeCursor = 0;
 
-        ASSERT_ISOK(PlatformSoundDeviceGetCurrentPosition(
+        ASSERT_ISOK(SoundDeviceGetCurrentPosition(
             soundDevice, &playCursor, &writeCursor));
         u32 byteToLock =
             (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
@@ -240,8 +236,8 @@ GameMainloop(Renderer *renderer) {
         }
     }
 
-    PlatformWindowClose(window);
-    PlatformSoundDeviceClose(soundDevice);
+    WindowClose(window);
+    SoundDeviceClose(soundDevice);
     ScratchAllocatorFree(&platformScratch);
     ScratchAllocatorFree(&assetScratch);
 }

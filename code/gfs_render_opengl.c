@@ -18,24 +18,24 @@ GLShaderID
 GLCompileShaderFromFile(
     ScratchAllocator *allocator, cstring8 sourceFilePath,
     GLShaderType shaderType) {
-    ASSERT_ISTRUE(PlatformIsPathExists(sourceFilePath));
+    ASSERT_ISTRUE(IsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
 
-    PlatformFileOpenResult sourceFileOpenResult =
-        PlatformFileOpenEx(sourceFilePath, allocator, PLATFORM_PERMISSION_READ);
+    FileOpenResult sourceFileOpenResult =
+        FileOpenEx(sourceFilePath, allocator, PLATFORM_PERMISSION_READ);
     ASSERT_ISOK(sourceFileOpenResult.code);
 
-    PlatformFileHandle *sourceHandle = sourceFileOpenResult.handle;
-    ASSERT_ISTRUE(PlatformFileHandleIsValid(sourceHandle));
+    FileHandle *sourceHandle = sourceFileOpenResult.handle;
+    ASSERT_ISTRUE(FileHandleIsValid(sourceHandle));
 
-    usize sourceFileSize = PlatformFileGetSize(sourceHandle);
+    usize sourceFileSize = FileGetSize(sourceHandle);
     ASSERT_NONZERO(sourceFileSize);
 
     void *sourceBuffer = ScratchAllocatorAllocZero(allocator, sourceFileSize);
     ASSERT_NONNULL(sourceBuffer);
 
-    PlatformFileLoadResultCode sourceLoadResult = PlatformFileLoadToBuffer(
-        sourceHandle, sourceBuffer, sourceFileSize, NULL);
+    FileLoadResultCode sourceLoadResult =
+        FileLoadToBuffer(sourceHandle, sourceBuffer, sourceFileSize, NULL);
     ASSERT_ISOK(sourceLoadResult);
 
     return GLCompileShader(sourceBuffer, shaderType);

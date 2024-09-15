@@ -14,12 +14,12 @@
 /*
  * @breaf Actual platform-depended window represantation.
  */
-typedef struct PlatformWindow PlatformWindow;
+typedef struct Window Window;
 
 /*
  * @breaf Actual platform-dependend sound output device.
  */
-typedef struct PlatformSoundDevice PlatformSoundDevice;
+typedef struct SoundDevice SoundDevice;
 
 /*
  * @breaf Sound output metadata.
@@ -34,19 +34,19 @@ typedef struct {
     usize audioBufferSize;
 
     i32 latencySampleCount;
-} PlatformSoundOutput;
+} SoundOutput;
 
 /*
  * @breaf Actual platform-dependend file handle represantation.
  */
-typedef struct PlatformFileHandle PlatformFileHandle;
+typedef struct FileHandle FileHandle;
 
 /*
  * @breaf Checks if platform file handle is valid.
  */
-bool PlatformFileHandleIsValid(PlatformFileHandle *handle);
+bool FileHandleIsValid(FileHandle *handle);
 
-typedef u8 PlatformPermissions;
+typedef u8 Permissions;
 
 #define PLATFORM_PERMISSION_READ MKFLAG(1)
 #define PLATFORM_PERMISSION_WRITE MKFLAG(2)
@@ -56,122 +56,120 @@ typedef u8 PlatformPermissions;
 typedef enum {
     PLATFORM_FILE_OPEN_OK,
     PLATFORM_FILE_OPEN_FAILED_TO_OPEN,
-} PlatformFileOpenResultCode;
+} FileOpenResultCode;
 
 typedef struct {
-    PlatformFileHandle *handle;
-    PlatformFileOpenResultCode code;
-} PlatformFileOpenResult;
+    FileHandle *handle;
+    FileOpenResultCode code;
+} FileOpenResult;
 
-// PlatformFileOpenResult PlatformFileOpen(cstring8 filePath);
+// FileOpenResult FileOpen(cstring8 filePath);
 
-PlatformFileOpenResult PlatformFileOpenEx(
-    cstring8 filePath, ScratchAllocator *allocator,
-    PlatformPermissions permissions);
+FileOpenResult FileOpenEx(
+    cstring8 filePath, ScratchAllocator *allocator, Permissions permissions);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
     PLATFORM_FILE_FAILED_TO_READ,
-} PlatformFileLoadResultCode;
+} FileLoadResultCode;
 
-PlatformFileLoadResultCode PlatformFileLoadToBuffer(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+FileLoadResultCode FileLoadToBuffer(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
     usize *numberOfBytesLoaded);
-PlatformFileLoadResultCode PlatformFileLoadToBufferEx(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+FileLoadResultCode FileLoadToBufferEx(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
     usize *numberOfBytesLoaded, usize loadOffset);
 
-usize PlatformFileGetSize(PlatformFileHandle *handle);
+usize FileGetSize(FileHandle *handle);
 
 /*
  * @breaf Opens platforms window.
  * */
-PlatformWindow *PlatformWindowOpen(
+Window *WindowOpen(
     ScratchAllocator *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
  * */
-void PlatformWindowClose(PlatformWindow *window);
+void WindowClose(Window *window);
 
 /*
  * @breaf Updates window.
  */
-void PlatformWindowUpdate(PlatformWindow *window);
+void WindowUpdate(Window *window);
 
 /*
  * @breaf Resizes render buffer.
  */
-void PlatformWindowResize(PlatformWindow *window, i32 width, i32 height);
+void WindowResize(Window *window, i32 width, i32 height);
 
 /*
  * @breaf Returns rectangle of platform's window.
  *
  * TODO(ilya.a): Check X and Y values [2024/08/31]
  */
-RectangleI32 PlatformWindowGetRectangle(PlatformWindow *window);
+RectangleI32 WindowGetRectangle(Window *window);
 
 /*
  * @breaf Processes platform's events.
  * */
-void PlatformPoolEvents(PlatformWindow *window);
+void PoolEvents(Window *window);
 
 /*
  * @breaf Returns platform's pagesize.
  * */
-usize PlatformGetPageSize();
+usize GetPageSize();
 
 /*
  * @breaf Allocates memory aligned to platform's default pagesize.
  * */
-void *PlatformMemoryAllocate(usize size);
+void *MemoryAllocate(usize size);
 
 typedef enum {
     PLATFORM_MEMORY_FREE_OK,
     PLATFORM_MEMORY_FREE_ERR,
-} PlatformMemoryFreeResult;
+} MemoryFreeResult;
 
 /*
  * @breaf Unmaps memory page.
  * */
-PlatformMemoryFreeResult PlatformMemoryFree(void *data);
+MemoryFreeResult MemoryFree(void *data);
 
 /*
  * @breaf Checks if path exists in filesystem.
  */
-bool PlatformIsPathExists(cstring8 path);
+bool IsPathExists(cstring8 path);
 
 /*
- * @breaf Initializes `PlatformSoundOutput` struct with default values.
+ * @breaf Initializes `SoundOutput` struct with default values.
  *
  * TODO(ilya.a): Expose move parameters to the arguments [2024/08/31]
  */
-PlatformSoundOutput PlatformSoundOutputMake(i32 samplesPerSecond);
+SoundOutput SoundOutputMake(i32 samplesPerSecond);
 
-void PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ);
+void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 
-PlatformSoundDevice *PlatformSoundDeviceOpen(
-    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond,
+SoundDevice *SoundDeviceOpen(
+    ScratchAllocator *scratch, Window *window, i32 samplesPerSecond,
     usize audioBufferSize);
 
 typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
-} PlatformSoundDeviceGetCurrentPositionResult;
+} SoundDeviceGetCurrentPositionResult;
 
-PlatformSoundDeviceGetCurrentPositionResult
-PlatformSoundDeviceGetCurrentPosition(
-    PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor);
+SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
+    SoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
-void PlatformSoundDeviceLockBuffer(
-    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock,
-    void **region0, u32 *region0Size, void **region1, u32 *region1Size);
-void PlatformSoundDeviceUnlockBuffer(
-    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1,
+void SoundDeviceLockBuffer(
+    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0,
+    u32 *region0Size, void **region1, u32 *region1Size);
+void SoundDeviceUnlockBuffer(
+    SoundDevice *device, void *region0, u32 region0Size, void *region1,
     u32 region1Size);
-void PlatformSoundDevicePlay(PlatformSoundDevice *device);
+void SoundDevicePlay(SoundDevice *device);
 
-void PlatformSoundDeviceClose(PlatformSoundDevice *device);
+void SoundDeviceClose(SoundDevice *device);
 
 /*
  * @breaf Puts whole null terminated string to stdout.
@@ -179,22 +177,22 @@ void PlatformSoundDeviceClose(PlatformSoundDevice *device);
  * NOTE: Currently calls `OutputDebugString` for win32 platform.
  * TODO: Propertly implement IO on platform layer.
  */
-void PlatformPutString(cstring8 s);
+void PutString(cstring8 s);
 
 /*
  * @breaf Called in ASSERT macro in order to print last error of platform level
  * code.
  */
-void PlatformPutLastError(void);
+void PutLastError(void);
 
 /*
  * @breaf Calls platform specific break function.
  */
-void PlatformDebugBreak(void);
+void ThrowDebugBreak(void);
 
 /*
  * @breaf Exits the process with specified code.
  */
-void PlatformExitProcess(u32 code);
+void ProcessExit(u32 code);
 
 #endif // GFS_PLATFORM_H_INCLUDED

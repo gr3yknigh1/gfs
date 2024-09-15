@@ -89,22 +89,22 @@ static Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
 static Renderer gRenderer;
 
-typedef struct PlatformWindow {
+typedef struct Window {
     HWND windowHandle;
     WNDCLASS windowClass;
     HDC deviceContext;
     BITMAPINFO bitMapInfo;
     HGLRC renderContext;
-} PlatformWindow;
+} Window;
 
-typedef struct PlatformFileHandle {
+typedef struct FileHandle {
     HANDLE win32Handle;
-} PlatformFileHandle;
+} FileHandle;
 
-typedef struct PlatformSoundDevice {
+typedef struct SoundDevice {
     // Win32_SoundOutput soundOutput;
     LPDIRECTSOUNDBUFFER audioBuffer;
-} PlatformSoundDevice;
+} SoundDevice;
 
 static inline void
 Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
@@ -122,18 +122,17 @@ Win32_ConvertRECTToRect32(RECT rect) {
 }
 
 bool
-PlatformFileHandleIsValid(PlatformFileHandle *handle) {
+FileHandleIsValid(FileHandle *handle) {
     return handle->win32Handle != INVALID_HANDLE_VALUE;
 }
 
-PlatformFileOpenResult
-PlatformFileOpenEx(
-    cstring8 filePath, ScratchAllocator *allocator,
-    PlatformPermissions permissions) {
+FileOpenResult
+FileOpenEx(
+    cstring8 filePath, ScratchAllocator *allocator, Permissions permissions) {
     ASSERT_NONNULL(filePath);
     ASSERT(!CString8IsEmpty(filePath));
 
-    PlatformFileOpenResult result;
+    FileOpenResult result;
     DWORD desiredAccess = 0;
 
     if (HASANYBIT(permissions, PLATFORM_PERMISSION_READ)) {
@@ -156,28 +155,27 @@ PlatformFileOpenEx(
         result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
         result.handle = NULL;
     } else {
-        result.handle =
-            ScratchAllocatorAlloc(allocator, sizeof(PlatformFileHandle));
+        result.handle = ScratchAllocatorAlloc(allocator, sizeof(FileHandle));
         result.handle->win32Handle = win32Handle;
         result.code = PLATFORM_FILE_OPEN_OK;
     }
     return result;
 }
 
-PlatformFileLoadResultCode
-PlatformFileLoadToBuffer(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+FileLoadResultCode
+FileLoadToBuffer(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
     usize *numberOfBytesLoaded) {
-    return PlatformFileLoadToBufferEx(
+    return FileLoadToBufferEx(
         handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
-PlatformFileLoadResultCode
-PlatformFileLoadToBufferEx(
-    PlatformFileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+FileLoadResultCode
+FileLoadToBufferEx(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
     usize *numberOfBytesLoaded, usize loadOffset) {
     ASSERT_NONNULL(handle);
-    ASSERT(PlatformFileHandleIsValid(handle));
+    ASSERT(FileHandleIsValid(handle));
     ASSERT_NONNULL(buffer);
     ASSERT_NONZERO(numberOfBytesToLoad);
 
@@ -216,29 +214,29 @@ PlatformFileLoadToBufferEx(
 }
 
 usize
-PlatformFileGetSize(PlatformFileHandle *handle) {
+FileGetSize(FileHandle *handle) {
     DWORD highOrderSize = 0;
     DWORD lowOrderSize = GetFileSize(handle->win32Handle, &highOrderSize);
     return MAKELONG(lowOrderSize, highOrderSize);
 }
 
 void
-PlatformExitProcess(u32 code) {
+ProcessExit(u32 code) {
     ExitProcess(code);
 }
 
 void
-PlatformPutString(cstring8 s) {
+PutString(cstring8 s) {
     OutputDebugString(s);
 }
 
 void
-PlatformDebugBreak(void) {
+ThrowDebugBreak(void) {
     DebugBreak();
 }
 
 void
-PlatformPutLastError(void) {
+PutLastError(void) {
     DWORD win32LastErrorCode = GetLastError();
 
     if (win32LastErrorCode != ERROR_SUCCESS) {
@@ -258,12 +256,12 @@ PlatformPutLastError(void) {
 }
 
 bool
-PlatformIsPathExists(cstring8 path) {
+IsPathExists(cstring8 path) {
     return PathFileExistsA(path);
 }
 
 RectangleI32
-PlatformWindowGetRectangle(PlatformWindow *window) {
+WindowGetRectangle(Window *window) {
     RECT win32WindowRect;
     ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
     RectangleI32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
@@ -271,12 +269,12 @@ PlatformWindowGetRectangle(PlatformWindow *window) {
 }
 
 void
-PlatformWindowUpdate(PlatformWindow *window) {
+WindowUpdate(Window *window) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
 }
 
 void
-PlatformWindowResize(PlatformWindow *window, i32 width, i32 height) {
+WindowResize(Window *window, i32 width, i32 height) {
     Renderer *renderer = &gRenderer;
 
     UNUSED(renderer);
@@ -473,9 +471,8 @@ Win32_LoadXInput(void) {
     return WIN32_LOADXINPUT_OK;
 }
 
-PlatformWindow *
-PlatformWindowOpen(
-    ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
+Window *
+WindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
@@ -483,11 +480,10 @@ PlatformWindowOpen(
     char8 *copiedTitle = ScratchAllocatorAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
 
-    PlatformWindow *window =
-        ScratchAllocatorAlloc(scratch, sizeof(PlatformWindow));
+    Window *window = ScratchAllocatorAlloc(scratch, sizeof(Window));
     ASSERT_NONNULL(window);
 
-    MemoryZero(window, sizeof(PlatformWindow));
+    MemoryZero(window, sizeof(Window));
 
     HINSTANCE instance = GetModuleHandle(NULL);
 
@@ -529,7 +525,7 @@ PlatformWindowOpen(
 
     ShowWindow(window->windowHandle, SW_SHOW);
     gRenderer = RendererMake(window, COLOR_WHITE);
-    PlatformWindowResize(window, width, height);
+    WindowResize(window, width, height);
 
     ASSERT_EQ(Win32_LoadXInput(), WIN32_LOADXINPUT_OK);
 
@@ -537,7 +533,7 @@ PlatformWindowOpen(
 }
 
 void
-PlatformPoolEvents(PlatformWindow *window) {
+PoolEvents(Window *window) {
     UNUSED(window);
 
     MSG message = {};
@@ -609,14 +605,14 @@ PlatformPoolEvents(PlatformWindow *window) {
 }
 
 void
-PlatformWindowClose(PlatformWindow *window) {
+WindowClose(Window *window) {
     RendererDestroy(&gRenderer);
     ReleaseDC(window->windowHandle, window->deviceContext);
     CloseWindow(window->windowHandle);
 }
 
 usize
-PlatformGetPageSize(void) {
+GetPageSize(void) {
     usize pageSize;
 
     SYSTEM_INFO systemInfo = {0};
@@ -628,7 +624,7 @@ PlatformGetPageSize(void) {
 }
 
 void *
-PlatformMemoryAllocate(usize size) {
+MemoryAllocate(usize size) {
     void *data =
         VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
@@ -640,8 +636,8 @@ PlatformMemoryAllocate(usize size) {
     return data;
 }
 
-PlatformMemoryFreeResult
-PlatformMemoryFree(void *data) {
+MemoryFreeResult
+MemoryFree(void *data) {
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
         //                   ^^^^^^^^^^^^
         // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead
@@ -754,9 +750,9 @@ Win32_DirectSoundInit(
     return WIN32_DIRECTSOUND_INIT_OK;
 }
 
-PlatformSoundOutput
-PlatformSoundOutputMake(i32 samplesPerSecond) {
-    PlatformSoundOutput ret;
+SoundOutput
+SoundOutputMake(i32 samplesPerSecond) {
+    SoundOutput ret;
 
     ret.samplesPerSecond = samplesPerSecond;
     ret.runningSampleIndex = 0;
@@ -771,9 +767,9 @@ PlatformSoundOutputMake(i32 samplesPerSecond) {
     return ret;
 }
 
-PlatformSoundDeviceGetCurrentPositionResult
-PlatformSoundDeviceGetCurrentPosition(
-    PlatformSoundDevice *device, u32 *playCursor, u32 *writeCursor) {
+SoundDeviceGetCurrentPositionResult
+SoundDeviceGetCurrentPosition(
+    SoundDevice *device, u32 *playCursor, u32 *writeCursor) {
     if (!SUCCEEDED(VCALL(
             device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor,
             (DWORD *)writeCursor))) {
@@ -783,15 +779,15 @@ PlatformSoundDeviceGetCurrentPosition(
 }
 
 void
-PlatformSoundOutputSetTone(PlatformSoundOutput *output, i32 toneHZ) {
+SoundOutputSetTone(SoundOutput *output, i32 toneHZ) {
     output->toneHZ = toneHZ;
     output->wavePeriod = output->samplesPerSecond / output->toneHZ;
 }
 
 void
-PlatformSoundDeviceLockBuffer(
-    PlatformSoundDevice *device, u32 offset, u32 portionSizeToLock,
-    void **region0, u32 *region0Size, void **region1, u32 *region1Size) {
+SoundDeviceLockBuffer(
+    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0,
+    u32 *region0Size, void **region1, u32 *region1Size) {
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but
     // lock are failing [2024/07/28]
     ASSERT_VCALL(
@@ -800,8 +796,8 @@ PlatformSoundDeviceLockBuffer(
 }
 
 void
-PlatformSoundDeviceUnlockBuffer(
-    PlatformSoundDevice *device, void *region0, u32 region0Size, void *region1,
+SoundDeviceUnlockBuffer(
+    SoundDevice *device, void *region0, u32 region0Size, void *region1,
     u32 region1Size) {
     ASSERT_VCALL(
         device->audioBuffer, Unlock, region0, region0Size, region1,
@@ -809,20 +805,19 @@ PlatformSoundDeviceUnlockBuffer(
 }
 
 void
-PlatformSoundDevicePlay(PlatformSoundDevice *device) {
+SoundDevicePlay(SoundDevice *device) {
     ASSERT_VCALL(device->audioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 }
 
-PlatformSoundDevice *
-PlatformSoundDeviceOpen(
-    ScratchAllocator *scratch, PlatformWindow *window, i32 samplesPerSecond,
+SoundDevice *
+SoundDeviceOpen(
+    ScratchAllocator *scratch, Window *window, i32 samplesPerSecond,
     usize audioBufferSize) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
 
-    PlatformSoundDevice *device =
-        ScratchAllocatorAlloc(scratch, sizeof(PlatformSoundDevice));
+    SoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(SoundDevice));
     ASSERT_NONNULL(device);
 
     Win32_DirectSoundInitResult result = Win32_DirectSoundInit(
@@ -834,6 +829,6 @@ PlatformSoundDeviceOpen(
 }
 
 void
-PlatformSoundDeviceClose(PlatformSoundDevice *device) {
+SoundDeviceClose(SoundDevice *device) {
     UNUSED(device);
 }

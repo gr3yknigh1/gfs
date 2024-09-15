@@ -44,7 +44,7 @@ typedef struct {
     } commandQueue;
     u64 commandCount;
 
-    PlatformWindow *window;
+    Window *window;
 } Renderer;
 
 typedef enum {
@@ -54,7 +54,7 @@ typedef enum {
     BMR_RENDER_COMMAND_TYPE_GRADIENT = 20,
 } RenderCommandType;
 
-Renderer RendererMake(PlatformWindow *window, Color4 clearColor);
+Renderer RendererMake(Window *window, Color4 clearColor);
 void RendererDestroy(Renderer *renderer);
 
 void BeginDrawing(Renderer *renderer);

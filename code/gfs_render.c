@@ -6,7 +6,6 @@
 
 #include "gfs_render.h"
 
-#include <Windows.h>
 #include <glad/glad.h>
 
 #include "gfs_types.h"
@@ -30,11 +29,11 @@ Color4Add(Color4 a, Color4 b) {
 }
 
 Renderer
-RendererMake(PlatformWindow *window, Color4 clearColor) {
+RendererMake(Window *window, Color4 clearColor) {
     Renderer r;
 
     r.clearColor = clearColor;
-    r.commandQueue.begin = PlatformMemoryAllocate(RENDER_COMMAND_CAPACITY);
+    r.commandQueue.begin = MemoryAllocate(RENDER_COMMAND_CAPACITY);
     r.commandQueue.end = r.commandQueue.begin;
     r.commandCount = 0;
 
@@ -45,7 +44,7 @@ RendererMake(PlatformWindow *window, Color4 clearColor) {
 void
 RendererDestroy(Renderer *renderer) {
     if (renderer->commandQueue.begin != NULL) {
-        ASSERT_ISZERO(PlatformMemoryFree(renderer->commandQueue.begin));
+        ASSERT_ISZERO(MemoryFree(renderer->commandQueue.begin));
     }
     renderer->commandQueue.begin = NULL;
     renderer->commandQueue.end = NULL;
@@ -61,7 +60,7 @@ BeginDrawing(Renderer *renderer) {
 
 void
 EndDrawing(Renderer *renderer) {
-    PlatformWindowUpdate(renderer->window);
+    WindowUpdate(renderer->window);
 
     renderer->commandQueue.end = renderer->commandQueue.begin;
     renderer->commandCount = 0;

@@ -12,13 +12,13 @@
 
 usize
 Align2PageSize(usize size) {
-    usize pageSize = PlatformGetPageSize();
+    usize pageSize = GetPageSize();
     return size + (pageSize - size % pageSize);
 }
 
 ScratchAllocator
 ScratchAllocatorMake(usize size) {
-    void *data = PlatformMemoryAllocate(size);
+    void *data = MemoryAllocate(size);
     return (ScratchAllocator){
         .data = data,
         .capacity = size,
@@ -48,7 +48,7 @@ ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(scratchAllocator->data);
 
-    PlatformMemoryFree(scratchAllocator->data);
+    MemoryFree(scratchAllocator->data);
 
     scratchAllocator->data = NULL;
     scratchAllocator->capacity = 0;
@@ -90,7 +90,7 @@ MemoryZero(void *data, usize size) {
 Block *
 BlockMake(usize size) {
     usize bytesAllocated = Align2PageSize(size + sizeof(Block));
-    void *allocatedData = PlatformMemoryAllocate(bytesAllocated);
+    void *allocatedData = MemoryAllocate(bytesAllocated);
 
     if (allocatedData == NULL) {
         return NULL;
@@ -168,7 +168,7 @@ BlockAllocatorFree(BlockAllocator *allocator) {
         previousBlock = currentBlock;
         currentBlock = currentBlock->next;
 
-        PlatformMemoryFree(previousBlock);
+        MemoryFree(previousBlock);
     }
 
     allocator->head = NULL;

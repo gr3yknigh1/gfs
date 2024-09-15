@@ -11,10 +11,10 @@
 #define ASSERT(COND)                                                           \
     do {                                                                       \
         if (!(COND)) {                                                         \
-            PlatformPutString("E: Assertion error: '" #COND "'.\n");           \
-            PlatformPutLastError();                                            \
-            PlatformDebugBreak();                                              \
-            PlatformExitProcess(1);                                            \
+            PutString("E: Assertion error: '" #COND "'.\n");                   \
+            PutLastError();                                                    \
+            ThrowDebugBreak();                                                 \
+            ProcessExit(1);                                                    \
         }                                                                      \
     } while (0)
 
@@ -29,10 +29,10 @@
 
 #define THROW(MESSAGE)                                                         \
     do {                                                                       \
-        PlatformPutString((MESSAGE));                                          \
-        PlatformPutLastError();                                                \
-        PlatformDebugBreak();                                                  \
-        PlatformExitProcess(1);                                                \
+        PutString((MESSAGE));                                                  \
+        PutLastError();                                                        \
+        ThrowDebugBreak();                                                     \
+        ProcessExit(1);                                                        \
     } while (0)
 
 #endif // GFS_ASSERT_H_INCLUDED
