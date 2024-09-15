@@ -21,7 +21,7 @@ typedef enum {
 } GLShaderType;
 
 GLShaderID GLCompileShaderFromFile(
-    ScratchAllocator *allocator, cstring8 shaderFilePath,
+    Scratch *allocator, cstring8 shaderFilePath,
     GLShaderType shaderType);
 
 GLShaderID GLCompileShader(

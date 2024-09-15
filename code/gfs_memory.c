@@ -16,10 +16,10 @@ Align2PageSize(usize size) {
     return size + (pageSize - size % pageSize);
 }
 
-ScratchAllocator
-ScratchAllocatorMake(usize size) {
+Scratch
+ScratchMake(usize size) {
     void *data = MemoryAllocate(size);
-    return (ScratchAllocator){
+    return (Scratch){
         .data = data,
         .capacity = size,
         .occupied = 0,
@@ -27,7 +27,7 @@ ScratchAllocatorMake(usize size) {
 }
 
 void *
-ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
+ScratchAlloc(Scratch *scratchAllocator, usize size) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(scratchAllocator->data);
 
@@ -41,10 +41,18 @@ ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size) {
 }
 
 void *
-ScratchAllocatorAllocZero(ScratchAllocator *scratchAllocator, usize size) {}
+ScratchAllocZero(Scratch *allocator, usize size) {
+    void *data = ScratchAlloc(allocator, size);
+
+    if (data != NULL) {
+        MemoryZero(data, size);
+    }
+
+    return data;
+}
 
 void
-ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
+ScratchDestroy(Scratch *scratchAllocator) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(scratchAllocator->data);
 
@@ -53,6 +61,11 @@ ScratchAllocatorFree(ScratchAllocator *scratchAllocator) {
     scratchAllocator->data = NULL;
     scratchAllocator->capacity = 0;
     scratchAllocator->occupied = 0;
+}
+
+bool
+ScratchHasSpaceFor(const Scratch *scratch, usize extraSize) {
+    return scratch->occupied + extraSize <= scratch->capacity;
 }
 
 // TODO(ilya.a): Use SIMD [2024/05/19]
@@ -130,12 +143,12 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
     Block *currentBlock = allocator->head;
 
     while (currentBlock != NULL) {
-        if (!SCRATCH_ALLOCATOR_HAS_SPACE(&currentBlock->arena, size)) {
+        if (!ScratchHasSpaceFor(&currentBlock->arena, size)) {
             previousBlock = currentBlock;
             currentBlock = currentBlock->next;
             continue;
         }
-        return ScratchAllocatorAlloc(&currentBlock->arena, size);
+        return ScratchAlloc(&currentBlock->arena, size);
     }
 
     Block *newBlock = BlockMake(size);
@@ -146,7 +159,7 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
         previousBlock->next = newBlock;
     }
 
-    return ScratchAllocatorAlloc(&newBlock->arena, size);
+    return ScratchAlloc(&newBlock->arena, size);
 }
 
 void *

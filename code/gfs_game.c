@@ -115,9 +115,8 @@ GameFillSoundBufferWaveAsset(
 
 void
 GameMainloop(Renderer *renderer) {
-
-    ScratchAllocator platformScratch = ScratchAllocatorMake(KILOBYTES(1));
-    ScratchAllocator assetScratch = ScratchAllocatorMake(MEGABYTES(10));
+    Scratch platformScratch = ScratchMake(KILOBYTES(1));
+    Scratch assetScratch = ScratchMake(MEGABYTES(10));
 
     Window *window = WindowOpen(&platformScratch, 900, 600, "Hello world!");
     ASSERT_NONNULL(window);
@@ -238,6 +237,6 @@ GameMainloop(Renderer *renderer) {
 
     WindowClose(window);
     SoundDeviceClose(soundDevice);
-    ScratchAllocatorFree(&platformScratch);
-    ScratchAllocatorFree(&assetScratch);
+    ScratchDestroy(&platformScratch);
+    ScratchDestroy(&assetScratch);
 }

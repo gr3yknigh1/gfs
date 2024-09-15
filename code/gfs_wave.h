@@ -79,9 +79,9 @@ typedef enum {
 } WaveAssetLoadResult;
 
 WaveAssetLoadResult WaveAssetLoadFromFile(
-    ScratchAllocator *arena, cstring8 assetPath, WaveAsset *waveAssetOut);
+    Scratch *arena, cstring8 assetPath, WaveAsset *waveAssetOut);
 WaveAssetLoadResult WaveAssetLoadFromMemory(
-    ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
+    Scratch *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);
 

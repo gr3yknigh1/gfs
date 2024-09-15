@@ -127,8 +127,7 @@ FileHandleIsValid(FileHandle *handle) {
 }
 
 FileOpenResult
-FileOpenEx(
-    cstring8 filePath, ScratchAllocator *allocator, Permissions permissions) {
+FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
     ASSERT_NONNULL(filePath);
     ASSERT(!CString8IsEmpty(filePath));
 
@@ -155,7 +154,7 @@ FileOpenEx(
         result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
         result.handle = NULL;
     } else {
-        result.handle = ScratchAllocatorAlloc(allocator, sizeof(FileHandle));
+        result.handle = ScratchAlloc(allocator, sizeof(FileHandle));
         result.handle->win32Handle = win32Handle;
         result.code = PLATFORM_FILE_OPEN_OK;
     }
@@ -472,15 +471,15 @@ Win32_LoadXInput(void) {
 }
 
 Window *
-WindowOpen(ScratchAllocator *scratch, i32 width, i32 height, cstring8 title) {
+WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
     usize titleLength = CString8GetLength(title);
-    char8 *copiedTitle = ScratchAllocatorAlloc(scratch, titleLength + 1);
+    char8 *copiedTitle = ScratchAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
 
-    Window *window = ScratchAllocatorAlloc(scratch, sizeof(Window));
+    Window *window = ScratchAlloc(scratch, sizeof(Window));
     ASSERT_NONNULL(window);
 
     MemoryZero(window, sizeof(Window));
@@ -636,7 +635,7 @@ MemoryAllocate(usize size) {
     return data;
 }
 
-MemoryFreeResult
+MemoryFreeResultCode
 MemoryFree(void *data) {
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
         //                   ^^^^^^^^^^^^
@@ -811,13 +810,13 @@ SoundDevicePlay(SoundDevice *device) {
 
 SoundDevice *
 SoundDeviceOpen(
-    ScratchAllocator *scratch, Window *window, i32 samplesPerSecond,
+    Scratch *scratch, Window *window, i32 samplesPerSecond,
     usize audioBufferSize) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
 
-    SoundDevice *device = ScratchAllocatorAlloc(scratch, sizeof(SoundDevice));
+    SoundDevice *device = ScratchAlloc(scratch, sizeof(SoundDevice));
     ASSERT_NONNULL(device);
 
     Win32_DirectSoundInitResult result = Win32_DirectSoundInit(

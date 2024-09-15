@@ -13,7 +13,7 @@
 
 WaveAssetLoadResult
 WaveAssetLoadFromFile(
-    ScratchAllocator *scratchAllocator, cstring8 assetPath,
+    Scratch *scratchAllocator, cstring8 assetPath,
     WaveAsset *waveAssetOut) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(assetPath);
@@ -51,7 +51,7 @@ WaveAssetLoadFromFile(
     // }
 
     ///< Loading body of the asset.
-    void *data = ScratchAllocatorAlloc(scratchAllocator, header.dataSize);
+    void *data = ScratchAlloc(scratchAllocator, header.dataSize);
     ASSERT_NONNULL(data);
     FileLoadResultCode assertDataLoadResult = FileLoadToBufferEx(
         assetFileHandle, data, header.dataSize, NULL, sizeof(header));
@@ -65,6 +65,6 @@ WaveAssetLoadFromFile(
 }
 
 WaveAssetLoadResult WaveAssetLoadFromMemory(
-    ScratchAllocator *arena, const void *buffer, WaveAsset *waveAssetOut);
+    Scratch *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);

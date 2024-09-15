@@ -16,6 +16,20 @@
 
 usize Align2PageSize(usize size);
 
+void MemoryCopy(void *dest, const void *source, usize size);
+void MemorySet(void *data, byte value, usize size);
+void MemoryZero(void *data, usize size);
+
+/*
+ * @breaf Stack allocator
+ * */
+typedef struct {
+    void *data;
+    usize capacity;
+    usize occupied;
+} StackAllocator;
+
+
 /*
  * @breaf Scratch Allocator.
  */
@@ -23,23 +37,25 @@ typedef struct {
     void *data;
     usize capacity;
     usize occupied;
-} ScratchAllocator;
+} Scratch;
 
 #define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE)                        \
     ((ALLOCATORPTR)->occupied + (SIZE) <= (ALLOCATORPTR)->capacity)
 
-ScratchAllocator ScratchAllocatorMake(usize size);
+Scratch ScratchMake(usize size);
 
-void *ScratchAllocatorAlloc(ScratchAllocator *scratchAllocator, usize size);
-void *ScratchAllocatorAllocZero(ScratchAllocator *scratchAllocator, usize size);
-void ScratchAllocatorFree(ScratchAllocator *scratchAllocator);
+void *ScratchAlloc(Scratch *scratchscratchscratch, usize size);
+void *ScratchAllocZero(Scratch *scratch, usize size);
+void ScratchDestroy(Scratch *scratch);
 
-void MemoryCopy(void *dest, const void *source, usize size);
-void MemorySet(void *data, byte value, usize size);
-void MemoryZero(void *data, usize size);
+bool ScratchHasSpaceFor(const Scratch *scratch, usize extraSize);
 
+/*
+ * @breaf Block for block-allocator. Contains arena and pointer to
+ * next block in allocator.
+ * */
 typedef struct Block {
-    ScratchAllocator arena;
+    Scratch arena;
     struct Block *next;
 } Block;
 

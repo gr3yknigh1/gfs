@@ -16,7 +16,7 @@
 
 GLShaderID
 GLCompileShaderFromFile(
-    ScratchAllocator *allocator, cstring8 sourceFilePath,
+    Scratch *allocator, cstring8 sourceFilePath,
     GLShaderType shaderType) {
     ASSERT_ISTRUE(IsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
@@ -31,7 +31,7 @@ GLCompileShaderFromFile(
     usize sourceFileSize = FileGetSize(sourceHandle);
     ASSERT_NONZERO(sourceFileSize);
 
-    void *sourceBuffer = ScratchAllocatorAllocZero(allocator, sourceFileSize);
+    void *sourceBuffer = ScratchAllocZero(allocator, sourceFileSize);
     ASSERT_NONNULL(sourceBuffer);
 
     FileLoadResultCode sourceLoadResult =

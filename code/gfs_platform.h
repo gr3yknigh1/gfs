@@ -66,7 +66,7 @@ typedef struct {
 // FileOpenResult FileOpen(cstring8 filePath);
 
 FileOpenResult FileOpenEx(
-    cstring8 filePath, ScratchAllocator *allocator, Permissions permissions);
+    cstring8 filePath, Scratch *allocator, Permissions permissions);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
@@ -86,7 +86,7 @@ usize FileGetSize(FileHandle *handle);
  * @breaf Opens platforms window.
  * */
 Window *WindowOpen(
-    ScratchAllocator *scratch, i32 width, i32 height, cstring8 title);
+    Scratch *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
@@ -128,12 +128,12 @@ void *MemoryAllocate(usize size);
 typedef enum {
     PLATFORM_MEMORY_FREE_OK,
     PLATFORM_MEMORY_FREE_ERR,
-} MemoryFreeResult;
+} MemoryFreeResultCode;
 
 /*
  * @breaf Unmaps memory page.
  * */
-MemoryFreeResult MemoryFree(void *data);
+MemoryFreeResultCode MemoryFree(void *data);
 
 /*
  * @breaf Checks if path exists in filesystem.
@@ -150,7 +150,7 @@ SoundOutput SoundOutputMake(i32 samplesPerSecond);
 void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 
 SoundDevice *SoundDeviceOpen(
-    ScratchAllocator *scratch, Window *window, i32 samplesPerSecond,
+    Scratch *scratch, Window *window, i32 samplesPerSecond,
     usize audioBufferSize);
 
 typedef enum {
