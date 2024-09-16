@@ -20,19 +20,29 @@ typedef enum {
     GL_SHADER_TYPE_COUNT,
 } GLShaderType;
 
+/*
+ * @breaf Compiles OpenGL shader from source file.
+ *
+ * @return Shader ID
+ * */
 GLShaderID GLCompileShaderFromFile(
-    Scratch *allocator, cstring8 shaderFilePath,
-    GLShaderType shaderType);
+    Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
 
+/*
+ * @breaf Compiles OpenGL shader.
+ *
+ * @return Shader ID
+ * */
 GLShaderID GLCompileShader(
-    cstring8 shaderSourceString, GLShaderType shaderType);
+    Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
 
 typedef struct {
     GLShaderID vertexShader;
-    GLShaderID fragShader;
+    GLShaderID fragmentShader;
 } GLShaderProgramLinkData;
 
-GLShaderProgramID GLLinkShaderProgram(const GLShaderProgramLinkData *data);
+GLShaderProgramID GLLinkShaderProgram(
+    Scratch *scratch, const GLShaderProgramLinkData *data);
 
 cstring8 GLGetErrorString(i32 errorCode);
 

@@ -17,6 +17,7 @@
 #include "gfs_assert.h"
 #include "gfs_render.h"
 #include "gfs_wave.h"
+#include "gfs_render_opengl.h"
 
 #define PI32 3.14159265358979323846f
 
@@ -115,43 +116,21 @@ GameFillSoundBufferWaveAsset(
 
 void
 GameMainloop(Renderer *renderer) {
-    Scratch platformScratch = ScratchMake(KILOBYTES(1));
-    Scratch assetScratch = ScratchMake(MEGABYTES(10));
+    Scratch runtimeScratch = ScratchMake(KILOBYTES(1));
 
-    Window *window = WindowOpen(&platformScratch, 900, 600, "Hello world!");
+    Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
     ASSERT_NONNULL(window);
 
-#if WIP_WAV_FILE_PLAYER
-    WaveAsset musicAsset;
-    WaveAssetLoadResult musicLoadResult = WaveAssetLoadFromFile(
-        &assetScratch, ".\\Assets\\test_music_01.wav", &musicAsset);
-    ASSERT_ISOK(musicLoadResult);
-
-    SoundOutput soundOutput = SoundOutputMake(musicAsset.header.freqHZ);
-    soundOutput.bytesPerSample = musicAsset.header.bitsPerSample / 8;
-#else
     SoundOutput soundOutput = SoundOutputMake(48000);
-#endif
-
     SoundDevice *soundDevice = SoundDeviceOpen(
-        &platformScratch, window, soundOutput.samplesPerSecond,
+        &runtimeScratch, window, soundOutput.samplesPerSecond,
         soundOutput.audioBufferSize);
 
-#if WIP_WAV_FILE_PLAYER
-    GameFillSoundBufferWaveAsset(
-        soundDevice, &soundOutput, &musicAsset, 0,
-        soundOutput.latencySampleCount *
-            soundOutput.bytesPerSample /* output.audioBufferSize */);
-#else
     GameFillSoundBuffer(
         soundDevice, &soundOutput, 0,
         soundOutput.latencySampleCount * soundOutput.bytesPerSample);
-#endif
 
     SoundDevicePlay(soundDevice);
-
-    u32 xOffset = 0;
-    u32 yOffset = 0;
 
     renderer->clearColor = COLOR_WHITE;
 
@@ -160,6 +139,16 @@ GameMainloop(Renderer *renderer) {
 
     LARGE_INTEGER lastCounter = {0};
     ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
+
+    // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
+    GLShaderProgramLinkData programData = {0};
+    programData.vertexShader = GLCompileShaderFromFile(
+        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_VERT);
+    programData.fragmentShader = GLCompileShaderFromFile(
+        &runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+    GLShaderProgramID shaderProgram =
+        GLLinkShaderProgram(&runtimeScratch, &programData);
+    ASSERT_NONZERO(shaderProgram);
 
     u64 lastCycleCount = __rdtsc();
 
@@ -170,7 +159,6 @@ GameMainloop(Renderer *renderer) {
         BeginDrawing(renderer);
 
         ClearBackground(renderer);
-        DrawGradient(renderer, xOffset, yOffset);
 
         EndDrawing(renderer);
 
@@ -196,16 +184,9 @@ GameMainloop(Renderer *renderer) {
         }
 
         if (bytesToWrite > 0) {
-
-#if WIP_WAV_FILE_PLAYER
-#else
             GameFillSoundBuffer(
                 soundDevice, &soundOutput, byteToLock, bytesToWrite);
-#endif
         }
-
-        xOffset++;
-        yOffset++;
 
         ///< Perfomance
         {
@@ -237,6 +218,5 @@ GameMainloop(Renderer *renderer) {
 
     WindowClose(window);
     SoundDeviceClose(soundDevice);
-    ScratchDestroy(&platformScratch);
-    ScratchDestroy(&assetScratch);
+    ScratchDestroy(&runtimeScratch);
 }

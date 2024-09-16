@@ -16,58 +16,6 @@ Align2PageSize(usize size) {
     return size + (pageSize - size % pageSize);
 }
 
-Scratch
-ScratchMake(usize size) {
-    void *data = MemoryAllocate(size);
-    return (Scratch){
-        .data = data,
-        .capacity = size,
-        .occupied = 0,
-    };
-}
-
-void *
-ScratchAlloc(Scratch *scratchAllocator, usize size) {
-    ASSERT_NONNULL(scratchAllocator);
-    ASSERT_NONNULL(scratchAllocator->data);
-
-    if (scratchAllocator->occupied + size > scratchAllocator->capacity) {
-        return NULL;
-    }
-
-    void *data = ((byte *)scratchAllocator->data) + scratchAllocator->occupied;
-    scratchAllocator->occupied += size;
-    return data;
-}
-
-void *
-ScratchAllocZero(Scratch *allocator, usize size) {
-    void *data = ScratchAlloc(allocator, size);
-
-    if (data != NULL) {
-        MemoryZero(data, size);
-    }
-
-    return data;
-}
-
-void
-ScratchDestroy(Scratch *scratchAllocator) {
-    ASSERT_NONNULL(scratchAllocator);
-    ASSERT_NONNULL(scratchAllocator->data);
-
-    MemoryFree(scratchAllocator->data);
-
-    scratchAllocator->data = NULL;
-    scratchAllocator->capacity = 0;
-    scratchAllocator->occupied = 0;
-}
-
-bool
-ScratchHasSpaceFor(const Scratch *scratch, usize extraSize) {
-    return scratch->occupied + extraSize <= scratch->capacity;
-}
-
 // TODO(ilya.a): Use SIMD [2024/05/19]
 
 void
@@ -98,6 +46,111 @@ MemoryZero(void *data, usize size) {
     for (usize i = 0; i < size; ++i) {
         ((byte *)data)[i] = 0;
     }
+}
+
+typedef struct {
+    usize size;
+} AllocationInfo;
+
+EXPECT_TYPE_SIZE(AllocationInfo, 8);
+
+StackAllocator
+StackAllocatorMake(usize size) {
+    StackAllocator allocator = {0};
+
+    allocator.data = MemoryAllocate(size);
+    allocator.capacity = size;
+    allocator.occupied = 0;
+
+    return allocator;
+}
+
+void *
+StackAllocatorAlloc(StackAllocator *allocator, usize size) {
+    ASSERT_NONNULL(allocator);
+    ASSERT_NONNULL(allocator->data);
+
+    usize needsToBeAllocated = sizeof(AllocationInfo) + size;
+
+    if (allocator->occupied + needsToBeAllocated > allocator->capacity) {
+        return NULL;
+    }
+
+    byte *data = ((byte *)allocator->data) + allocator->occupied;
+    allocator->occupied += needsToBeAllocated;
+
+    /*
+     * Writes `AllocationInfo` AFTER client's code data. Because of
+     * strategy in `StackAllocatorPop`: we searching for metadata
+     * at the end of allocation block
+     * */
+    AllocationInfo *info = (AllocationInfo *)(data + size);
+    info->size = size;
+    data += sizeof(AllocationInfo);
+
+    return data;
+}
+
+void
+StackAllocatorPop(StackAllocator *allocator) {
+    ASSERT_NONNULL(allocator);
+    ASSERT_NONNULL(allocator->data);
+
+    void *data = ((byte *)allocator->data) + allocator->occupied;
+    UNUSED(data);
+}
+
+Scratch
+ScratchMake(usize size) {
+    Scratch ret = {0};
+
+    ret.data = MemoryAllocate(size);
+    ret.capacity = size;
+    ret.occupied = 0;
+
+    return ret;
+}
+
+void *
+ScratchAlloc(Scratch *scratch, usize size) {
+    ASSERT_NONNULL(scratch);
+    ASSERT_NONNULL(scratch->data);
+
+    if (scratch->occupied + size > scratch->capacity) {
+        return NULL;
+    }
+
+    void *data = ((byte *)scratch->data) + scratch->occupied;
+    scratch->occupied += size;
+    return data;
+}
+
+void *
+ScratchAllocZero(Scratch *scratch, usize size) {
+    void *data = ScratchAlloc(scratch, size);
+
+    if (data != NULL) {
+        MemoryZero(data, size);
+    }
+
+    return data;
+}
+
+void
+ScratchDestroy(Scratch *scratch) {
+    ASSERT_NONNULL(scratch);
+    ASSERT_NONNULL(scratch->data);
+
+    MemoryFree(scratch->data);
+
+    scratch->data = NULL;
+    scratch->capacity = 0;
+    scratch->occupied = 0;
+}
+
+bool
+ScratchHasSpaceFor(const Scratch *scratch, usize extraSize) {
+    return scratch->occupied + extraSize <= scratch->capacity;
 }
 
 Block *

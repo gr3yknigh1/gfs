@@ -13,8 +13,7 @@
 
 WaveAssetLoadResult
 WaveAssetLoadFromFile(
-    Scratch *scratchAllocator, cstring8 assetPath,
-    WaveAsset *waveAssetOut) {
+    Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(assetPath);
     ASSERT(!CString8IsEmpty(assetPath));

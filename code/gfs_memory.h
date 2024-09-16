@@ -29,6 +29,17 @@ typedef struct {
     usize occupied;
 } StackAllocator;
 
+/*
+ * @breaf Initializes default stack allocator with pre-allocated size.
+ *
+ * @param size Allocation size.
+ * @return New stack allocator.
+ * */
+StackAllocator StackAllocatorMake(usize size);
+
+void *StackAllocatorAlloc(StackAllocator *allocator, usize size);
+
+void StackAllocatorPop(StackAllocator *allocator);
 
 /*
  * @breaf Scratch Allocator.
@@ -39,13 +50,35 @@ typedef struct {
     usize occupied;
 } Scratch;
 
-#define SCRATCH_ALLOCATOR_HAS_SPACE(ALLOCATORPTR, SIZE)                        \
-    ((ALLOCATORPTR)->occupied + (SIZE) <= (ALLOCATORPTR)->capacity)
-
+/*
+ * @breaf Initializes scratch allocator.
+ * */
 Scratch ScratchMake(usize size);
 
-void *ScratchAlloc(Scratch *scratchscratchscratch, usize size);
+/*
+ * @breaf Bumps internal counter of allocated memory and returns pointer to
+ * free chunk.
+ *
+ * @return Pointer to chuck of memory which user can write on. Overflow of this
+ * chuck if UB. Returns `NULL` if capacity can't hold enough.
+ * */
+void *ScratchAlloc(Scratch *scratch, usize size);
+
+/*
+ * @breaf Same as `ScratchAlloc`, but calls `MemoryZero` on allocated block.
+ *
+ * @return Pointer to chuck of memory which user can write on. Overflow of this
+ * chuck if UB. Returns `NULL` if capacity can't hold enough.
+ *
+ * @see ScratchAlloc
+ *
+ * */
 void *ScratchAllocZero(Scratch *scratch, usize size);
+
+/*
+ * @breaf Destroys scratch allocator. Deallocates whole block of memory, which
+ * was allocated on `ScratchMake`.
+ * */
 void ScratchDestroy(Scratch *scratch);
 
 bool ScratchHasSpaceFor(const Scratch *scratch, usize extraSize);
