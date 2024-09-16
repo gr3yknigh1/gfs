@@ -143,7 +143,7 @@ GameMainloop(Renderer *renderer) {
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
     GLShaderProgramLinkData programData = {0};
     programData.vertexShader = GLCompileShaderFromFile(
-        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_VERT);
+        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
     programData.fragmentShader = GLCompileShaderFromFile(
         &runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
     GLShaderProgramID shaderProgram =
