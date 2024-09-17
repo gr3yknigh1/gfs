@@ -17,6 +17,8 @@ add_executable(gfs
   ${PROJECT_SOURCE_DIR}/code/gfs_string.c
   ${PROJECT_SOURCE_DIR}/code/gfs_wave.h
   ${PROJECT_SOURCE_DIR}/code/gfs_wave.c
+  ${PROJECT_SOURCE_DIR}/code/gfs_bmp.h
+  ${PROJECT_SOURCE_DIR}/code/gfs_bmp.c
   ${PROJECT_SOURCE_DIR}/code/gfs_static_assert.h
   ${PROJECT_SOURCE_DIR}/code/gfs_assert.h
   ${PROJECT_SOURCE_DIR}/code/gfs_types.h

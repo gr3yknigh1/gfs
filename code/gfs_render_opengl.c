@@ -132,6 +132,37 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
     return programID;
 }
 
+void
+GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value) {
+    GL_CALL(glUseProgram(shader));
+
+    // TODO(gr3yknigh1: Error handle);
+    u32 uniformLocation = 0;
+    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
+    GL_CALL(glUniform1f(uniformLocation, value));
+}
+
+void
+GLShaderSetUniformV3F32(
+    GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z) {
+    GL_CALL(glUseProgram(shader));
+
+    // TODO(gr3yknigh1: Error handle);
+    u32 uniformLocation = 0;
+    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
+    GL_CALL(glUniform3f(uniformLocation, x, y, z));
+}
+
+void
+GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value) {
+    GL_CALL(glUseProgram(shader));
+
+    // TODO(gr3yknigh1: Error handle);
+    u32 uniformLocation = 0;
+    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
+    GL_CALL(glUniform1i(uniformLocation, value));
+}
+
 cstring8
 GLGetErrorString(i32 errorCode) {
     switch (errorCode) {

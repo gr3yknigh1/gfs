@@ -161,6 +161,18 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
     return result;
 }
 
+FileCloseResultCode
+FileClose(FileHandle *handle) {
+    ASSERT_NONNULL(handle);
+    ASSERT_ISTRUE(FileHandleIsValid(handle));
+
+    if (CloseHandle(handle->win32Handle) == 0) {
+        return FILE_CLOSE_ERR;
+    }
+
+    return FILE_CLOSE_OK;
+}
+
 FileLoadResultCode
 FileLoadToBuffer(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
@@ -212,6 +224,7 @@ FileLoadToBufferEx(
     return PLATFORM_FILE_LOAD_OK;
 }
 
+// XXX: BROKEN!!!!
 usize
 FileGetSize(FileHandle *handle) {
     DWORD highOrderSize = 0;

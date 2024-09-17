@@ -69,6 +69,13 @@ FileOpenResult FileOpenEx(
     cstring8 filePath, Scratch *allocator, Permissions permissions);
 
 typedef enum {
+    FILE_CLOSE_OK,
+    FILE_CLOSE_ERR,
+} FileCloseResultCode;
+
+FileCloseResultCode FileClose(FileHandle *handle);
+
+typedef enum {
     PLATFORM_FILE_LOAD_OK,
     PLATFORM_FILE_FAILED_TO_READ,
 } FileLoadResultCode;
@@ -85,8 +92,7 @@ usize FileGetSize(FileHandle *handle);
 /*
  * @breaf Opens platforms window.
  * */
-Window *WindowOpen(
-    Scratch *scratch, i32 width, i32 height, cstring8 title);
+Window *WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
