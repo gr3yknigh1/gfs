@@ -12,7 +12,7 @@ uniform vec3 u_VertexOffset = vec3(0, 0, 0);
 
 void main()
 {
-    gl_Position = vec4(l_Position * u_VertexModifier + u_VertexOffset, 1.0);
+    gl_Position = vec4(l_Position, 1.0); // vec4(l_Position * u_VertexModifier + u_VertexOffset, 1.0);
 
     f_Color = vec4(l_Color, 1);
     f_TexCoord = l_TexCoord;

@@ -289,6 +289,8 @@ void
 WindowResize(Window *window, i32 width, i32 height) {
     Renderer *renderer = &gRenderer;
 
+    GL_CALL(glViewport(0, 0, width, height));
+
     UNUSED(renderer);
     UNUSED(window);
     UNUSED(width);

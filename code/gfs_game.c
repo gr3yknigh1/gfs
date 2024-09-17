@@ -159,7 +159,37 @@ GameMainloop(Renderer *renderer) {
         -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
     };
 
-    u32 indices[] = {0, 1, 2, 0, 2, 3};
+    u32 indices[] = {0, 1, 3, 0, 2, 3};
+
+    u32 vbo = 0, vao = 0, ebo = 0;
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glGenBuffers(1, &vbo));
+    GL_CALL(glGenBuffers(1, &ebo));
+
+    GL_CALL(glBindVertexArray(vao));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+
+    GL_CALL(glBufferData(
+        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+    GL_CALL(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
+
+    // Position attribute
+    GL_CALL(
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), 0));
+    GL_CALL(glEnableVertexAttribArray(0));
+
+    // Color attribute
+    GL_CALL(glVertexAttribPointer(
+        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void *)(3 * sizeof(f32))));
+    GL_CALL(glEnableVertexAttribArray(1));
+
+    // Texture coords
+    GL_CALL(glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void *)(6 * sizeof(f32))));
+    GL_CALL(glEnableVertexAttribArray(2));
 
     BMPicture picture;
     ASSERT_ISOK(
@@ -168,50 +198,22 @@ GameMainloop(Renderer *renderer) {
     u32 textureId;
     GL_CALL(glGenTextures(1, &textureId));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, textureId));
+
+    GL_CALL(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CALL(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
     GL_CALL(glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGB, picture.dibHeader.width,
-        picture.dibHeader.height, 0, GL_RGB, GL_UNSIGNED_BYTE, picture.data));
+        picture.dibHeader.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, picture.data));
     GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 
     // TODO(gr3yknigh1): Free image
     //
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
-
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-    u32 vbo = 0, vao = 0, ebo = 0;
-    GL_CALL(glGenVertexArrays(1, &vao));
-    GL_CALL(glBindVertexArray(vao));
-
-    GL_CALL(glGenBuffers(1, &vbo));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CALL(glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-
-    GL_CALL(glGenBuffers(1, &ebo));
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
-
-    // position attribute
-    GL_CALL(
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0));
-    GL_CALL(glEnableVertexAttribArray(0));
-
-    // color attribute
-    GL_CALL(glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(3 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(1));
-
-    GL_CALL(glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(6 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(2));
 
     GLShaderSetUniformF32(shaderProgram, "u_VertexModifier", 1.0f);
     GLShaderSetUniformV3F32(shaderProgram, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
@@ -223,6 +225,8 @@ GameMainloop(Renderer *renderer) {
 
     while (!GameStateShouldStop()) {
 
+        PoolEvents(window);
+
         ///< Rendering
         BeginDrawing(renderer);
 
@@ -232,13 +236,13 @@ GameMainloop(Renderer *renderer) {
         GL_CALL(glBindTexture(GL_TEXTURE_2D, textureId));
         GL_CALL(glUseProgram(shaderProgram));
 
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, textureId));
         GL_CALL(glBindVertexArray(vao));
-        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+        GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+        // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        GL_CALL(glDrawArrays(GL_ARRAY_BUFFER, 0, sizeof(vertices) / sizeof(f32)));
 
         EndDrawing(renderer);
-
-        PoolEvents(window);
 
         ///< Playing sound
         u32 playCursor = 0;
