@@ -151,73 +151,21 @@ GameMainloop(Renderer *renderer) {
         GLLinkShaderProgram(&runtimeScratch, &programData);
     ASSERT_NONZERO(shaderProgram);
 
-    f32 vertices[] = {
-        // positions        // colors         // texture coords
-        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+    GLuint vao;
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glBindVertexArray(vao));
+
+    static const f32 vertexBufferData[] = {
+        -1.0f, -1.0f, 0.0f, //
+        1.0f,  -1.0f, 0.0f, //
+        0.0f,  1.0f,  0.0f, //
     };
 
-    u32 indices[] = {0, 1, 3, 0, 2, 3};
-
-    u32 vbo = 0, vao = 0, ebo = 0;
-    GL_CALL(glGenVertexArrays(1, &vao));
+    GLuint vbo;
     GL_CALL(glGenBuffers(1, &vbo));
-    GL_CALL(glGenBuffers(1, &ebo));
-
-    GL_CALL(glBindVertexArray(vao));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-
     GL_CALL(glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
-
-    // Position attribute
-    GL_CALL(
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), 0));
-    GL_CALL(glEnableVertexAttribArray(0));
-
-    // Color attribute
-    GL_CALL(glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void *)(3 * sizeof(f32))));
-    GL_CALL(glEnableVertexAttribArray(1));
-
-    // Texture coords
-    GL_CALL(glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void *)(6 * sizeof(f32))));
-    GL_CALL(glEnableVertexAttribArray(2));
-
-    BMPicture picture;
-    ASSERT_ISOK(
-        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
-
-    u32 textureId;
-    GL_CALL(glGenTextures(1, &textureId));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, textureId));
-
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-    GL_CALL(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB, picture.dibHeader.width,
-        picture.dibHeader.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, picture.data));
-    GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
-
-    // TODO(gr3yknigh1): Free image
-    //
-
-    GLShaderSetUniformF32(shaderProgram, "u_VertexModifier", 1.0f);
-    GLShaderSetUniformV3F32(shaderProgram, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
-    GLShaderSetUniformI32(shaderProgram, "u_Texture", 0);
+        vbo, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW));
 
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
@@ -230,18 +178,25 @@ GameMainloop(Renderer *renderer) {
         ///< Rendering
         BeginDrawing(renderer);
 
-        ClearBackground(renderer);
-
-        GL_CALL(glActiveTexture(GL_TEXTURE0));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, textureId));
         GL_CALL(glUseProgram(shaderProgram));
-
-        GL_CALL(glBindVertexArray(vao));
+        GL_CALL(glEnableVertexAttribArray(0));
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-        GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-        // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-        GL_CALL(glDrawArrays(GL_ARRAY_BUFFER, 0, sizeof(vertices) / sizeof(f32)));
+        GL_CALL(glVertexAttribPointer(
+            0, // attribute 0. No particular reason for 0, but must match the
+               // layout in the shader.
+            3, // size
+            GL_FLOAT, // type
+            GL_FALSE, // normalized?
+            0,        // stride
+            (void *)0 // array buffer offset
+            ));
 
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // Starting from vertex 0; 3 vertices total -> 1 triangle
+        //GL_CALL(glDisableVertexAttribArray(0));
+
+        ClearBackground(renderer);
         EndDrawing(renderer);
 
         ///< Playing sound
