@@ -139,8 +139,6 @@ GameMainloop(Renderer *renderer) {
 
     SoundDevicePlay(soundDevice);
 
-    renderer->clearColor = COLOR_WHITE;
-
     LARGE_INTEGER performanceCounterFrequency = {0};
     ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
 
@@ -175,8 +173,8 @@ GameMainloop(Renderer *renderer) {
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
     GL_CALL(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA, picture.dibHeader.width,
-        picture.dibHeader.height, 0, GL_RGB, GL_UNSIGNED_BYTE, picture.data));
+        GL_TEXTURE_2D, 0, GL_RGB, picture.dibHeader.width,
+        picture.dibHeader.height, 0, GL_BGR, GL_UNSIGNED_BYTE, picture.data));
     GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 
     GL_CALL(

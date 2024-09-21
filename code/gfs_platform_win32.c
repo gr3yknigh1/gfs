@@ -516,7 +516,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     // ASSERT_NONZERO(gladLoadGL());
 
     ShowWindow(window->windowHandle, SW_SHOW);
-    gRenderer = RendererMake(window, COLOR_WHITE);
+    gRenderer = RendererMake(window, (Color4BGRA) {0, 0, 0, 1});
     UpdateWindow(window->windowHandle);
 
     WindowResize(window, width, height);

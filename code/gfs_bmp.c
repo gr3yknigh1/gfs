@@ -7,6 +7,7 @@
 #include "gfs_bmp.h"
 #include "gfs_platform.h"
 #include "gfs_assert.h"
+#include "gfs_render.h"
 
 BMPictureLoadFromFileRC
 BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {

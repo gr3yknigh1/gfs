@@ -18,18 +18,8 @@
 
 #define RENDER_COMMAND_CAPACITY 1024
 
-Color4
-Color4Add(Color4 a, Color4 b) {
-    return (Color4){
-        .b = a.b + b.b,
-        .g = a.g + b.g,
-        .r = a.r + b.r,
-        .a = a.a + b.a,
-    };
-}
-
 Renderer
-RendererMake(Window *window, Color4 clearColor) {
+RendererMake(Window *window, Color4BGRA clearColor) {
     Renderer r;
 
     r.clearColor = clearColor;
@@ -54,7 +44,7 @@ void
 BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
 
-    GL_CALL(glClearColor(0.0f, 0.0f, 1.0f, 1.0f));
+    GL_CALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }
 
@@ -78,7 +68,7 @@ void
 ClearBackground(Renderer *renderer) {
     struct {
         RenderCommandType Type;
-        Color4 Color;
+        Color4BGRA Color;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_CLEAR;
@@ -89,14 +79,14 @@ ClearBackground(Renderer *renderer) {
 
 void
 DrawRectangle(
-    Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4 color) {
+    Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4BGRA color) {
     struct {
         RenderCommandType Type;
         u32 X;
         u32 Y;
         u32 Width;
         u32 Height;
-        Color4 Color;
+        Color4BGRA Color;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_RECT;
@@ -110,11 +100,11 @@ DrawRectangle(
 }
 
 void
-DrawRectangleRec(Renderer *renderer, RectangleU16 rect, Color4 color) {
+DrawRectangleRec(Renderer *renderer, RectangleU16 rect, Color4BGRA color) {
     struct {
         RenderCommandType Type;
         RectangleU16 Rect;
-        Color4 Color;
+        Color4BGRA Color;
     } payload;
 
     payload.Type = BMR_RENDER_COMMAND_TYPE_RECT;

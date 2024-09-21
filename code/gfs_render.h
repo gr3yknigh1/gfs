@@ -17,26 +17,20 @@ typedef struct {
     u8 g;
     u8 r;
     u8 a;
-} Color4;
+} Color4BGRA;
 
-Color4 Color4Add(Color4 a, Color4 b);
-
-#define COLOR_WHITE                                                            \
-    (Color4) { 255, 255, 255, 255 }
-#define COLOR_RED                                                              \
-    (Color4) { 255, 0, 0, 0 }
-#define COLOR_GREEN                                                            \
-    (Color4) { 0, 255, 0, 0 }
-#define COLOR_BLUE                                                             \
-    (Color4) { 0, 0, 255, 0 }
-#define COLOR_BLACK                                                            \
-    (Color4) { 0, 0, 0, 0 }
+typedef struct {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+} Color4RGBA;
 
 /*
  * @breaf Actual BitMap Renderer Renderer.
  */
 typedef struct {
-    Color4 clearColor;
+    Color4BGRA clearColor;
 
     struct {
         u8 *begin;
@@ -54,7 +48,7 @@ typedef enum {
     BMR_RENDER_COMMAND_TYPE_GRADIENT = 20,
 } RenderCommandType;
 
-Renderer RendererMake(Window *window, Color4 clearColor);
+Renderer RendererMake(Window *window, Color4BGRA clearColor);
 void RendererDestroy(Renderer *renderer);
 
 void BeginDrawing(Renderer *renderer);
@@ -62,8 +56,8 @@ void EndDrawing(Renderer *renderer);
 
 void ClearBackground(Renderer *renderer);
 
-void DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 w, u32 h, Color4 c);
-void DrawRectangleRec(Renderer *renderer, RectangleU16 r, Color4 c);
+void DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 w, u32 h, Color4BGRA c);
+void DrawRectangleRec(Renderer *renderer, RectangleU16 r, Color4BGRA c);
 
 void DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset);
 
