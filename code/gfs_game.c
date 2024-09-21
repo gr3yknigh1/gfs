@@ -124,8 +124,8 @@ GameMainloop(Renderer *renderer) {
 
     GL_CALL(glViewport(0, 0, 900, 600));
     GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    GL_CALL(glEnable(GL_DEPTH_TEST));
+    // GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
+    // GL_CALL(glEnable(GL_DEPTH_TEST)); // XXX
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     SoundOutput soundOutput = SoundOutputMake(48000);
@@ -170,9 +170,9 @@ GameMainloop(Renderer *renderer) {
         GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData,
         GL_STATIC_DRAW));
 
-    // GLuint vao;
-    // GL_CALL(glGenVertexArrays(1, &vao));
-    // GL_CALL(glBindVertexArray(vao));
+    GLuint vao;
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glBindVertexArray(vao));
 
     GL_CALL(glEnableVertexAttribArray(0));
     GL_CALL(glVertexAttribPointer(
@@ -187,14 +187,21 @@ GameMainloop(Renderer *renderer) {
 
     u64 lastCycleCount = __rdtsc();
 
+    const byte *glVendor = glGetString(GL_VENDOR);
+    const byte *glRenderer = glGetString(GL_RENDERER);
+    const byte *glVersion = glGetString(GL_VERSION);
+    const byte *glExtensions = glGetString(GL_EXTENSIONS);
+    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
+
     while (!GameStateShouldStop()) {
 
         ///< Rendering
         BeginDrawing(renderer);
 
         GL_CALL(glUseProgram(shaderProgram));
-        // GL_CALL(glBindVertexArray(vao));
+        GL_CALL(glBindVertexArray(vao));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 3));
+
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // Starting from vertex 0; 3 vertices total -> 1 triangle
         // GL_CALL(glDisableVertexAttribArray(0));

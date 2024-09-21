@@ -13,6 +13,7 @@
 #include <xaudio2.h>
 
 #include <glad/glad.h>
+#include <glad/wgl.h>
 
 #include "gfs_assert.h"
 #include "gfs_physics.h"
@@ -63,14 +64,17 @@
 
 #define WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME "wglCreateContextAttribsARB"
 #define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
+#define WIN32_GL_SWAPINTERVALEXT_PROCNAME "wglSwapIntervalEXT"
 
 typedef HGLRC WINAPI
 Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
 typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(
     HDC, const int *, const FLOAT *, UINT, int *, UINT *);
+typedef BOOL WINAPI Win32_GL_SwapIntervalExtType(int);
 
 static Win32_GL_CreateContextAttribARBType *Win32_GL_CreateContextAttribARBPtr;
 static Win32_GL_ChoosePixelFormatARBType *Win32_GL_ChoosePixelFormatARBPtr;
+static Win32_GL_SwapIntervalExtType *Win32_GL_SwapIntervalExtPtr;
 
 #define WIN32_XINPUTGETSTATE_PROCNAME "XInputGetState"
 #define WIN32_XINPUTSETSTATE_PROCNAME "XInputSetState"
@@ -331,6 +335,8 @@ Win32_OpenGLContextExts_Init(void) {
 
     ASSERT_ISTRUE(wglMakeCurrent(dummyDeviceContext, dummyRenderContext));
 
+    ASSERT_NONZERO(gladLoadWGL(dummyDeviceContext));
+
     Win32_GL_CreateContextAttribARBPtr =
         (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
             WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
@@ -341,10 +347,14 @@ Win32_OpenGLContextExts_Init(void) {
             WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
     ASSERT_NONNULL(Win32_GL_ChoosePixelFormatARBPtr);
 
+    Win32_GL_SwapIntervalExtPtr =
+        (Win32_GL_SwapIntervalExtType *)wglGetProcAddress(
+            WIN32_GL_SWAPINTERVALEXT_PROCNAME);
+
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
-    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
-    DestroyWindow(dummyWindowHandle);
+    // ReleaseDC(dummyWindowHandle, dummyDeviceContext);
+    // DestroyWindow(dummyWindowHandle);
 }
 
 static HGLRC
@@ -352,22 +362,14 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     Win32_OpenGLContextExts_Init();
 
     int pixelFormatAttribs[] = {
-        WGL_DRAW_TO_WINDOW_ARB,
-        GL_TRUE,
-        WGL_SUPPORT_OPENGL_ARB,
-        GL_TRUE,
-        WGL_DOUBLE_BUFFER_ARB,
-        GL_TRUE,
-        WGL_ACCELERATION_ARB,
-        WGL_FULL_ACCELERATION_ARB,
-        WGL_PIXEL_TYPE_ARB,
-        WGL_TYPE_RGBA_ARB,
-        WGL_COLOR_BITS_ARB,
-        32,
-        WGL_DEPTH_BITS_ARB,
-        24,
-        WGL_STENCIL_BITS_ARB,
-        8,
+        WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+        WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+        WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+        WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+        WGL_COLOR_BITS_ARB, 32,
+        WGL_DEPTH_BITS_ARB, 24,
+        WGL_STENCIL_BITS_ARB, 8,
         0};
 
     int pixelFormat;
@@ -385,6 +387,10 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
 
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
+#ifdef _DEBUG
+		WGL_CONTEXT_FLAGS_ARB,
+		WGL_CONTEXT_DEBUG_BIT_ARB,
+#endif
         WGL_CONTEXT_MAJOR_VERSION_ARB,
         3,
         WGL_CONTEXT_MINOR_VERSION_ARB,
@@ -395,10 +401,12 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     };
 
     HGLRC renderContext =
-        Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
+        Win32_GL_CreateContextAttribARBPtr(deviceContext, NULL, glAttribs);
     ASSERT_NONNULL(renderContext);
 
     ASSERT_ISTRUE(wglMakeCurrent(deviceContext, renderContext));
+
+    ASSERT_ISTRUE(Win32_GL_SwapIntervalExtPtr(1));
 
     return renderContext;
 }
@@ -503,8 +511,9 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     window->renderContext = Win32_OpenGLContext_Init(window->deviceContext);
     ASSERT_NONNULL(window->renderContext);
 
-    int version = gladLoadGL();
-    ASSERT_NONZERO(version);
+    ASSERT_NONZERO(gladLoadGL());
+    // gladLoadGLLoader((GLADloadproc)wglGetProcAddress);
+    // ASSERT_NONZERO(gladLoadGL());
 
     ShowWindow(window->windowHandle, SW_SHOW);
     gRenderer = RendererMake(window, COLOR_WHITE);

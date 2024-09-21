@@ -55,7 +55,7 @@ BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
 
     GL_CALL(glClearColor(0.0f, 0.0f, 1.0f, 1.0f));
-    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }
 
 void
