@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
+cmake_policy(SET CMP0091 NEW)
+
 project(gfs
   VERSION 0.0.1
   LANGUAGES C
@@ -35,6 +37,11 @@ add_executable(gfs
   ${PROJECT_SOURCE_DIR}/code/gfs_game_state.h
 )
 
+set_target_properties(gfs
+  PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+
 target_compile_features(gfs
   PRIVATE
     c_std_17
@@ -54,7 +61,7 @@ target_compile_options(gfs
 target_link_libraries(gfs
   PRIVATE
     shlwapi.lib
-    Opengl32.lib
+    opengl32.lib
 )
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/external/glad)

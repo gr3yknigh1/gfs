@@ -55,7 +55,7 @@ BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
 
     GL_CALL(glClearColor(0.0f, 0.0f, 1.0f, 1.0f));
-    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 void
@@ -84,7 +84,7 @@ ClearBackground(Renderer *renderer) {
     payload.Type = BMR_RENDER_COMMAND_TYPE_CLEAR;
     payload.Color = renderer->clearColor;
 
-    PUSH_RENDER_COMMAND(renderer, payload);
+    //PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
@@ -106,7 +106,7 @@ DrawRectangle(
     payload.Height = height;
     payload.Color = color;
 
-    PUSH_RENDER_COMMAND(renderer, payload);
+    //PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
@@ -121,7 +121,7 @@ DrawRectangleRec(Renderer *renderer, RectangleU16 rect, Color4 color) {
     payload.Rect = rect;
     payload.Color = color;
 
-    PUSH_RENDER_COMMAND(renderer, payload);
+    //PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
@@ -136,5 +136,5 @@ DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset) {
     payload.XOffset = xOffset;
     payload.YOffset = yOffset;
 
-    PUSH_RENDER_COMMAND(renderer, payload);
+    //PUSH_RENDER_COMMAND(renderer, payload);
 }

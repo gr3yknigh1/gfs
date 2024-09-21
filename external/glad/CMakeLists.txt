@@ -13,3 +13,8 @@ target_include_directories(glad
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
+
+set_target_properties(glad
+  PROPERTIES
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)

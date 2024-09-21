@@ -38,7 +38,7 @@ GLCompileShaderFromFile(
         FileLoadToBuffer(sourceHandle, sourceBuffer, sourceFileSize, NULL);
     ASSERT_ISOK(sourceLoadResult);
 
-    // TODO(gr3yknigh1): Close file.
+    ASSERT_ISOK(FileClose(sourceHandle));
 
     return GLCompileShader(scratch, sourceBuffer, shaderType);
 }

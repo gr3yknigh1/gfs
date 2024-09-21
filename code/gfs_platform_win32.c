@@ -40,8 +40,12 @@
 #define WGL_DOUBLE_BUFFER_ARB 0x2011
 #define WGL_PIXEL_TYPE_ARB 0x2013
 #define WGL_COLOR_BITS_ARB 0x2014
+#define WGL_ALPHA_BITS_ARB 0x201B
 #define WGL_DEPTH_BITS_ARB 0x2022
 #define WGL_STENCIL_BITS_ARB 0x2023
+
+#define WGL_SAMPLE_BUFFERS_ARB 0x2041
+#define WGL_SAMPLES_ARB 0x2042
 
 #define WGL_FULL_ACCELERATION_ARB 0x2027
 #define WGL_TYPE_RGBA_ARB 0x202B
@@ -257,14 +261,6 @@ PutLastError(void) {
             printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
         OutputDebugString(printBuffer);
     }
-
-    GLenum glErrorCode = glGetError();
-
-    if (glErrorCode != GL_NO_ERROR) {
-        char8 printBuffer[KILOBYTES(1)];
-        wsprintf(printBuffer, "E: OpenGL glGetError()=%i\n", glErrorCode);
-        OutputDebugString(printBuffer);
-    }
 }
 
 bool
@@ -293,66 +289,42 @@ WindowResize(Window *window, i32 width, i32 height) {
 
     UNUSED(renderer);
     UNUSED(window);
-    UNUSED(width);
-    UNUSED(height);
 }
 
 static void
 Win32_OpenGLContextExts_Init(void) {
 
-    WNDCLASSA dummyWindowClass = {
-        .style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
-        .lpfnWndProc = DefWindowProcA,
-        .hInstance = GetModuleHandle(0),
-        .lpszClassName = "__dummy_window_class",
-    };
+    WNDCLASSA dummyWindowClass = {0};
+    dummyWindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    dummyWindowClass.lpfnWndProc = DefWindowProcA;
+    dummyWindowClass.hInstance = GetModuleHandle(NULL);
+    dummyWindowClass.lpszClassName = "__dummy_window_class";
     ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
 
     HWND dummyWindowHandle = CreateWindowExA(
-        0, dummyWindowClass.lpszClassName, "__dummy_window", 0, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-        dummyWindowClass.hInstance, 0);
+        0, dummyWindowClass.lpszClassName, "__dummy_window",
+        WS_CLIPSIBLINGS | WS_CLIPSIBLINGS, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, dummyWindowClass.hInstance,
+        NULL);
     ASSERT_NONNULL(dummyWindowHandle);
 
     HDC dummyDeviceContext = GetDC(dummyWindowHandle);
 
     // NOTE(ilya.a): The worst struct I ever met [2024/09/07]
-    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
-    pixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pixelFormatDescriptor.nVersion = 1;
-    pixelFormatDescriptor.dwFlags =
-        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
-    pixelFormatDescriptor.cColorBits = 32;
-    pixelFormatDescriptor.cRedBits = 0;
-    pixelFormatDescriptor.cRedShift = 0;
-    pixelFormatDescriptor.cGreenBits = 0;
-    pixelFormatDescriptor.cGreenShift = 0;
-    pixelFormatDescriptor.cBlueBits = 0;
-    pixelFormatDescriptor.cBlueShift = 0;
-    pixelFormatDescriptor.cAlphaBits = 8; // Should be zero?
-    pixelFormatDescriptor.cAlphaShift = 0;
-    pixelFormatDescriptor.cAccumBits = 0;
-    pixelFormatDescriptor.cAccumRedBits = 0;
-    pixelFormatDescriptor.cAccumGreenBits = 0;
-    pixelFormatDescriptor.cAccumBlueBits = 0;
-    pixelFormatDescriptor.cAccumAlphaBits = 0;
-    pixelFormatDescriptor.cDepthBits = 24; // Number of bits for the depthbuffer
-    pixelFormatDescriptor.cStencilBits =
-        8; // Number of bits for the stencilbuffer
-    pixelFormatDescriptor.cAuxBuffers =
-        0; // Number of Aux buffers in the framebuffer.
-    pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
-    pixelFormatDescriptor.bReserved = 0;
-    pixelFormatDescriptor.dwLayerMask = 0;
-    pixelFormatDescriptor.dwVisibleMask = 0;
-    pixelFormatDescriptor.dwDamageMask = 0;
+    PIXELFORMATDESCRIPTOR pfd;
+    MemoryZero(&pfd, sizeof(pfd));
+    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pfd.nVersion = 1;
+    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+    pfd.iPixelType = PFD_TYPE_RGBA;
+    pfd.cColorBits = 32;
+    pfd.cAlphaBits = 8;  // Should be zero?
+    pfd.cDepthBits = 24; // Number of bits for the depthbuffer
+    pfd.cStencilBits = 8;
 
-    int pixelFormatIndex =
-        ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
-    ASSERT_NONZERO(pixelFormatIndex);
-    ASSERT_ISTRUE(SetPixelFormat(
-        dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
+    int pfIndex = ChoosePixelFormat(dummyDeviceContext, &pfd);
+    ASSERT_NONZERO(pfIndex);
+    ASSERT_ISTRUE(SetPixelFormat(dummyDeviceContext, pfIndex, &pfd));
 
     HGLRC dummyRenderContext = wglCreateContext(dummyDeviceContext);
     ASSERT_NONNULL(dummyRenderContext);
@@ -362,9 +334,12 @@ Win32_OpenGLContextExts_Init(void) {
     Win32_GL_CreateContextAttribARBPtr =
         (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
             WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
+    ASSERT_NONNULL(Win32_GL_CreateContextAttribARBPtr);
+
     Win32_GL_ChoosePixelFormatARBPtr =
         (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
             WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+    ASSERT_NONNULL(Win32_GL_ChoosePixelFormatARBPtr);
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
@@ -402,9 +377,9 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     ASSERT_NONZERO(numFormats);
 
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
-    DescribePixelFormat(
+    ASSERT_NONZERO(DescribePixelFormat(
         deviceContext, pixelFormat, sizeof(pixelFormatDescriptor),
-        &pixelFormatDescriptor);
+        &pixelFormatDescriptor));
     ASSERT_ISTRUE(
         SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
 
@@ -433,8 +408,6 @@ Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result = 0;
 
     switch (message) {
-    case WM_ACTIVATEAPP: {
-    } break;
     case WM_CLOSE: {
         GameStateStop();
     } break;
@@ -508,6 +481,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
 
     window->windowClass.lpfnWndProc = Win32_MainWindowProc;
     window->windowClass.hInstance = instance;
+    window->windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
     window->windowClass.lpszClassName = copiedTitle;
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
@@ -520,7 +494,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
         height,        // int height
         NULL,          // windowParent
         NULL,          // menu
-        instance, NULL);
+        instance, (LPVOID)window);
     ASSERT_NONNULL(window->windowHandle);
 
     window->deviceContext = GetDC(window->windowHandle);
@@ -529,18 +503,13 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     window->renderContext = Win32_OpenGLContext_Init(window->deviceContext);
     ASSERT_NONNULL(window->renderContext);
 
-    //< Glad initialization
     int version = gladLoadGL();
     ASSERT_NONZERO(version);
 
-    GL_CALL(glViewport(0, 0, width, height));
-    GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    GL_CALL(glEnable(GL_DEPTH_TEST));
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-
     ShowWindow(window->windowHandle, SW_SHOW);
     gRenderer = RendererMake(window, COLOR_WHITE);
+    UpdateWindow(window->windowHandle);
+
     WindowResize(window, width, height);
 
     ASSERT_EQ(Win32_LoadXInput(), WIN32_LOADXINPUT_OK);

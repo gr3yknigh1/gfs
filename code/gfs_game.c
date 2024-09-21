@@ -122,6 +122,12 @@ GameMainloop(Renderer *renderer) {
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
     ASSERT_NONNULL(window);
 
+    GL_CALL(glViewport(0, 0, 900, 600));
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
     SoundOutput soundOutput = SoundOutputMake(48000);
     SoundDevice *soundDevice = SoundDeviceOpen(
         &runtimeScratch, window, soundOutput.samplesPerSecond,
@@ -151,53 +157,52 @@ GameMainloop(Renderer *renderer) {
         GLLinkShaderProgram(&runtimeScratch, &programData);
     ASSERT_NONZERO(shaderProgram);
 
-    GLuint vao;
-    GL_CALL(glGenVertexArrays(1, &vao));
-    GL_CALL(glBindVertexArray(vao));
-
     static const f32 vertexBufferData[] = {
-        -1.0f, -1.0f, 0.0f, //
-        1.0f,  -1.0f, 0.0f, //
-        0.0f,  1.0f,  0.0f, //
+        -0.6f, -0.4f, 0.0f, //
+        0.6f,  -0.4f, 0.0f, //
+        0.0f,  0.6f,  0.0f, //
     };
 
     GLuint vbo;
     GL_CALL(glGenBuffers(1, &vbo));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     GL_CALL(glBufferData(
-        vbo, sizeof(vertexBufferData), vertexBufferData, GL_STATIC_DRAW));
+        GL_ARRAY_BUFFER, sizeof(vertexBufferData), vertexBufferData,
+        GL_STATIC_DRAW));
 
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    // GLuint vao;
+    // GL_CALL(glGenVertexArrays(1, &vao));
+    // GL_CALL(glBindVertexArray(vao));
+
+    GL_CALL(glEnableVertexAttribArray(0));
+    GL_CALL(glVertexAttribPointer(
+        0,        // attribute 0. No particular reason for 0, but must match the
+                  // layout in the shader.
+        3,        // size
+        GL_FLOAT, // type
+        GL_FALSE, // normalized?
+        0,        // stride
+        (void *)0 // array buffer offset
+        ));
 
     u64 lastCycleCount = __rdtsc();
 
     while (!GameStateShouldStop()) {
 
-        PoolEvents(window);
-
         ///< Rendering
         BeginDrawing(renderer);
 
         GL_CALL(glUseProgram(shaderProgram));
-        GL_CALL(glEnableVertexAttribArray(0));
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-        GL_CALL(glVertexAttribPointer(
-            0, // attribute 0. No particular reason for 0, but must match the
-               // layout in the shader.
-            3, // size
-            GL_FLOAT, // type
-            GL_FALSE, // normalized?
-            0,        // stride
-            (void *)0 // array buffer offset
-            ));
-
+        // GL_CALL(glBindVertexArray(vao));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 3));
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // Starting from vertex 0; 3 vertices total -> 1 triangle
-        //GL_CALL(glDisableVertexAttribArray(0));
+        // GL_CALL(glDisableVertexAttribArray(0));
 
         ClearBackground(renderer);
         EndDrawing(renderer);
+
+        PoolEvents(window);
 
         ///< Playing sound
         u32 playCursor = 0;

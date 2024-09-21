@@ -38,6 +38,11 @@ if exist %configuration_path%\ (
 
 cmake --build %configuration_path% --config Debug
 
+if exist %configuration_path%\compile_commands.json (
+  echo I: Copying compilation database...
+  copy %configuration_path%\compile_commands.json %project_path%\compile_commands.json
+)
+
 popd
 
 :: set /p DUMMY=Hit ENTER to continue...
