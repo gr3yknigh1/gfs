@@ -300,50 +300,81 @@ WindowResize(Window *window, i32 width, i32 height) {
 static void
 Win32_OpenGLContextExts_Init(void) {
 
-    wglMakeCurrent(dummyDeviceContext, 0);
-    wglDeleteContext(dummyRenderContext);
-    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
-    DestroyWindow(dummyWindowHandle);
-}
+    WNDCLASSA dummyWindowClass = {
+        .style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
+        .lpfnWndProc = DefWindowProcA,
+        .hInstance = GetModuleHandle(0),
+        .lpszClassName = "__dummy_window_class",
+    };
+    ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
 
-static void
-Win32_OpenGLContext_Init(Window *window) {
+    HWND dummyWindowHandle = CreateWindowExA(
+        0, dummyWindowClass.lpszClassName, "__dummy_window", 0, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+        dummyWindowClass.hInstance, 0);
+    ASSERT_NONNULL(dummyWindowHandle);
 
-    PIXELFORMATDESCRIPTOR desiredPixelFormatDescriptor;
-    desiredPixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    desiredPixelFormatDescriptor.nVersion = 1;
-    desiredPixelFormatDescriptor.dwFlags =
+    HDC dummyDeviceContext = GetDC(dummyWindowHandle);
+
+    // NOTE(ilya.a): The worst struct I ever met [2024/09/07]
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+    pixelFormatDescriptor.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pixelFormatDescriptor.nVersion = 1;
+    pixelFormatDescriptor.dwFlags =
         PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    desiredPixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
-    desiredPixelFormatDescriptor.cColorBits = 32;
-    desiredPixelFormatDescriptor.cAlphaBits = 8;
-    desiredPixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
+    pixelFormatDescriptor.iPixelType = PFD_TYPE_RGBA;
+    pixelFormatDescriptor.cColorBits = 32;
+    pixelFormatDescriptor.cRedBits = 0;
+    pixelFormatDescriptor.cRedShift = 0;
+    pixelFormatDescriptor.cGreenBits = 0;
+    pixelFormatDescriptor.cGreenShift = 0;
+    pixelFormatDescriptor.cBlueBits = 0;
+    pixelFormatDescriptor.cBlueShift = 0;
+    pixelFormatDescriptor.cAlphaBits = 8; // Should be zero?
+    pixelFormatDescriptor.cAlphaShift = 0;
+    pixelFormatDescriptor.cAccumBits = 0;
+    pixelFormatDescriptor.cAccumRedBits = 0;
+    pixelFormatDescriptor.cAccumGreenBits = 0;
+    pixelFormatDescriptor.cAccumBlueBits = 0;
+    pixelFormatDescriptor.cAccumAlphaBits = 0;
+    pixelFormatDescriptor.cDepthBits = 24; // Number of bits for the depthbuffer
+    pixelFormatDescriptor.cStencilBits =
+        8; // Number of bits for the stencilbuffer
+    pixelFormatDescriptor.cAuxBuffers =
+        0; // Number of Aux buffers in the framebuffer.
+    pixelFormatDescriptor.iLayerType = PFD_MAIN_PLANE;
+    pixelFormatDescriptor.bReserved = 0;
+    pixelFormatDescriptor.dwLayerMask = 0;
+    pixelFormatDescriptor.dwVisibleMask = 0;
+    pixelFormatDescriptor.dwDamageMask = 0;
 
-    int suggestedPixelFormatIndex =
-        ChoosePixelFormat(window->deviceContext, &desiredPixelFormatDescriptor);
-    ASSERT_NONZERO(suggestedPixelFormatIndex);
-
-    PIXELFORMATDESCRIPTOR suggestedPixelFormatDescriptor;
-    DescribePixelFormat(
-        window->deviceContext, suggestedPixelFormatIndex,
-        sizeof(suggestedPixelFormatDescriptor),
-        &suggestedPixelFormatDescriptor);
+    int pixelFormatIndex =
+        ChoosePixelFormat(dummyDeviceContext, &pixelFormatDescriptor);
+    ASSERT_NONZERO(pixelFormatIndex);
     ASSERT_ISTRUE(SetPixelFormat(
-        window->deviceContext, suggestedPixelFormatIndex,
-        &suggestedPixelFormatDescriptor));
+        dummyDeviceContext, pixelFormatIndex, &pixelFormatDescriptor));
 
-    window->renderContext = wglCreateContext(window->deviceContext);
-    ASSERT_NONNULL(window->renderContext);
+    HGLRC dummyRenderContext = wglCreateContext(dummyDeviceContext);
+    ASSERT_NONNULL(dummyRenderContext);
 
-    ASSERT_ISTRUE(wglMakeCurrent(window->deviceContext, window->renderContext));
+    ASSERT_ISTRUE(wglMakeCurrent(dummyDeviceContext, dummyRenderContext));
 
-#if 0
     Win32_GL_CreateContextAttribARBPtr =
         (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
             WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
     Win32_GL_ChoosePixelFormatARBPtr =
         (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
             WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+
+    wglMakeCurrent(dummyDeviceContext, 0);
+    wglDeleteContext(dummyRenderContext);
+    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
+    DestroyWindow(dummyWindowHandle);
+}
+
+static HGLRC
+Win32_OpenGLContext_Init(HDC deviceContext) {
+    Win32_OpenGLContextExts_Init();
 
     int pixelFormatAttribs[] = {
         WGL_DRAW_TO_WINDOW_ARB,
@@ -367,8 +398,15 @@ Win32_OpenGLContext_Init(Window *window) {
     int pixelFormat;
     UINT numFormats;
     ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(
-        window->deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
+        deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
     ASSERT_NONZERO(numFormats);
+
+    PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
+    DescribePixelFormat(
+        deviceContext, pixelFormat, sizeof(pixelFormatDescriptor),
+        &pixelFormatDescriptor);
+    ASSERT_ISTRUE(
+        SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
 
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
@@ -382,11 +420,12 @@ Win32_OpenGLContext_Init(Window *window) {
     };
 
     HGLRC renderContext =
-        Win32_GL_CreateContextAttribARBPtr(window->deviceContext, 0, glAttribs);
+        Win32_GL_CreateContextAttribARBPtr(deviceContext, 0, glAttribs);
     ASSERT_NONNULL(renderContext);
 
     ASSERT_ISTRUE(wglMakeCurrent(deviceContext, renderContext));
-#endif
+
+    return renderContext;
 }
 
 static LRESULT CALLBACK
@@ -487,7 +526,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     window->deviceContext = GetDC(window->windowHandle);
     ASSERT_NONNULL(window->deviceContext);
 
-    Win32_OpenGLContext_Init(window);
+    window->renderContext = Win32_OpenGLContext_Init(window->deviceContext);
     ASSERT_NONNULL(window->renderContext);
 
     //< Glad initialization
