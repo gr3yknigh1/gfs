@@ -132,6 +132,28 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
     return programID;
 }
 
+GLTexture
+GLTextureMakeFromBMPicture(const BMPicture *picture) {
+
+    GLuint texture;
+    GL_CALL(glGenTextures(1, &texture));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    GL_CALL(glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGB, picture->dibHeader.width,
+        picture->dibHeader.height, 0, GL_BGR, GL_UNSIGNED_BYTE, picture->data));
+    GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
+
+    GL_CALL(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
+    GL_CALL(
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
+
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    return (GLTexture)texture;
+}
+
 void
 GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value) {
     GL_CALL(glUseProgram(shader));

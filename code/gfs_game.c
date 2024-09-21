@@ -22,6 +22,195 @@
 
 #define PI32 3.14159265358979323846f
 
+static void GameFillSoundBuffer(
+    SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
+
+static void GameFillSoundBufferWaveAsset(
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
+    u32 byteToLock, u32 bytesToWrite);
+
+void
+GameMainloop(Renderer *renderer) {
+    Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
+
+    Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
+    ASSERT_NONNULL(window);
+
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
+    // GL_CALL(glEnable(GL_DEPTH_TEST)); // XXX
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
+    SoundOutput soundOutput = SoundOutputMake(48000);
+    SoundDevice *soundDevice = SoundDeviceOpen(
+        &runtimeScratch, window, soundOutput.samplesPerSecond,
+        soundOutput.audioBufferSize);
+
+    GameFillSoundBuffer(
+        soundDevice, &soundOutput, 0,
+        soundOutput.latencySampleCount * soundOutput.bytesPerSample);
+
+    SoundDevicePlay(soundDevice);
+
+    LARGE_INTEGER performanceCounterFrequency = {0};
+    ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
+
+    LARGE_INTEGER lastCounter = {0};
+    ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
+
+    // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
+    GLShaderProgramLinkData programData = {0};
+    programData.vertexShader = GLCompileShaderFromFile(
+        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+    programData.fragmentShader = GLCompileShaderFromFile(
+        &runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+    GLShaderProgramID shader =
+        GLLinkShaderProgram(&runtimeScratch, &programData);
+    ASSERT_NONZERO(shader);
+
+    static const f32 vertices[] = {
+        // positions        // colors         // texture coords
+        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+    };
+
+    unsigned int indices[] = {0, 1, 2, 0, 2, 3};
+
+    BMPicture picture = {0};
+    ASSERT_ISOK(
+        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
+
+    GLTexture texture = GLTextureMakeFromBMPicture(&picture);
+
+    GLuint vao, vbo, ebo;
+
+    // NOTE: it must be before `glVertexAttribPointer` call
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glBindVertexArray(vao));
+
+    GL_CALL(glGenBuffers(1, &vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferData(
+        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+
+    GL_CALL(glGenBuffers(1, &ebo));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+    GL_CALL(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
+
+    // position attribute
+    GL_CALL(
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0));
+    GL_CALL(glEnableVertexAttribArray(0));
+
+    // color attribute
+    GL_CALL(glVertexAttribPointer(
+        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+        (void *)(3 * sizeof(float))));
+    GL_CALL(glEnableVertexAttribArray(1));
+
+    GL_CALL(glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+        (void *)(6 * sizeof(float))));
+    GL_CALL(glEnableVertexAttribArray(2));
+
+    GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
+    GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
+    GLShaderSetUniformI32(shader, "u_Texture", 0);
+
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
+    u64 lastCycleCount = __rdtsc();
+
+    const byte *glVendor = glGetString(GL_VENDOR);
+    const byte *glRenderer = glGetString(GL_RENDERER);
+    const byte *glVersion = glGetString(GL_VERSION);
+    const byte *glExtensions = glGetString(GL_EXTENSIONS);
+    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+    UNUSED(glVendor);
+    UNUSED(glRenderer);
+    UNUSED(glVersion);
+    UNUSED(glExtensions);
+    UNUSED(glShaderLanguage);
+
+    while (!GameStateShouldStop()) {
+
+        ///< Rendering
+        BeginDrawing(renderer);
+
+        GL_CALL(glUseProgram(shader));
+        GL_CALL(glActiveTexture(GL_TEXTURE0));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+        GL_CALL(glBindVertexArray(vao));
+        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+
+        ClearBackground(renderer);
+        EndDrawing(renderer);
+
+        PoolEvents(window);
+
+        ///< Playing sound
+        u32 playCursor = 0;
+        u32 writeCursor = 0;
+
+        ASSERT_ISOK(SoundDeviceGetCurrentPosition(
+            soundDevice, &playCursor, &writeCursor));
+        u32 byteToLock =
+            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
+            soundOutput.audioBufferSize;
+        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount *
+                                          soundOutput.bytesPerSample)) %
+                           soundOutput.audioBufferSize;
+        u32 bytesToWrite = 0;
+
+        if (byteToLock > targetCursor) {
+            bytesToWrite = soundOutput.audioBufferSize - byteToLock;
+            bytesToWrite += targetCursor;
+        } else {
+            bytesToWrite = targetCursor - byteToLock;
+        }
+
+        if (bytesToWrite > 0) {
+            GameFillSoundBuffer(
+                soundDevice, &soundOutput, byteToLock, bytesToWrite);
+        }
+
+        ///< Perfomance
+        {
+            u64 endCycleCount = __rdtsc();
+
+            LARGE_INTEGER endCounter;
+            ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
+
+            // TODO(ilya.a): Display counter [2024/11/08]
+
+            u64 cyclesElapsed = endCycleCount - lastCycleCount;
+            LONGLONG counterElapsed =
+                endCounter.QuadPart - lastCounter.QuadPart;
+            u64 msPerFrame =
+                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds =
+                performanceCounterFrequency.QuadPart / counterElapsed;
+            u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
+
+            char8 printBuffer[KILOBYTES(1)];
+            wsprintf(
+                printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame,
+                framesPerSeconds, megaCyclesPerFrame);
+            OutputDebugString(printBuffer);
+            lastCounter = endCounter;
+            lastCycleCount = endCycleCount;
+        }
+    }
+
+    WindowClose(window);
+    SoundDeviceClose(soundDevice);
+    ScratchDestroy(&runtimeScratch);
+}
+
 static void
 GameFillSoundBuffer(
     SoundDevice *device, SoundOutput *output, u32 byteToLock,
@@ -113,203 +302,4 @@ GameFillSoundBufferWaveAsset(
     }
 
     SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
-}
-
-void
-GameMainloop(Renderer *renderer) {
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
-
-    Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
-    ASSERT_NONNULL(window);
-
-    GL_CALL(glViewport(0, 0, 900, 600));
-    GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
-    // GL_CALL(glEnable(GL_DEPTH_TEST)); // XXX
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-
-    SoundOutput soundOutput = SoundOutputMake(48000);
-    SoundDevice *soundDevice = SoundDeviceOpen(
-        &runtimeScratch, window, soundOutput.samplesPerSecond,
-        soundOutput.audioBufferSize);
-
-    GameFillSoundBuffer(
-        soundDevice, &soundOutput, 0,
-        soundOutput.latencySampleCount * soundOutput.bytesPerSample);
-
-    SoundDevicePlay(soundDevice);
-
-    LARGE_INTEGER performanceCounterFrequency = {0};
-    ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
-
-    LARGE_INTEGER lastCounter = {0};
-    ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
-
-    // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
-    GLShaderProgramLinkData programData = {0};
-    programData.vertexShader = GLCompileShaderFromFile(
-        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
-    programData.fragmentShader = GLCompileShaderFromFile(
-        &runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
-    GLShaderProgramID shader =
-        GLLinkShaderProgram(&runtimeScratch, &programData);
-    ASSERT_NONZERO(shader);
-
-    static const f32 vertices[] = {
-        // positions        // colors         // texture coords
-        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
-    };
-
-    unsigned int indices[] = {0, 1, 2, 0, 2, 3};
-
-    BMPicture picture = {0};
-    ASSERT_ISOK(
-        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
-
-    GLuint texture;
-    GL_CALL(glGenTextures(1, &texture));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-    GL_CALL(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB, picture.dibHeader.width,
-        picture.dibHeader.height, 0, GL_BGR, GL_UNSIGNED_BYTE, picture.data));
-    GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
-
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
-
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-    GLuint vao, vbo, ebo;
-
-    // NOTE: it must be before `glVertexAttribPointer` call
-    GL_CALL(glGenVertexArrays(1, &vao));
-    GL_CALL(glBindVertexArray(vao));
-
-    GL_CALL(glGenBuffers(1, &vbo));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CALL(glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-
-    GL_CALL(glGenBuffers(1, &ebo));
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
-
-    // position attribute
-    GL_CALL(
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0));
-    GL_CALL(glEnableVertexAttribArray(0));
-
-    // color attribute
-    GL_CALL(glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(3 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(1));
-
-    GL_CALL(glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(6 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(2));
-
-
-    GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
-    GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
-    GLShaderSetUniformI32(shader, "u_Texture", 0);
-
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-
-    u64 lastCycleCount = __rdtsc();
-
-    const byte *glVendor = glGetString(GL_VENDOR);
-    const byte *glRenderer = glGetString(GL_RENDERER);
-    const byte *glVersion = glGetString(GL_VERSION);
-    const byte *glExtensions = glGetString(GL_EXTENSIONS);
-    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-    UNUSED(glVendor);
-    UNUSED(glRenderer);
-    UNUSED(glVersion);
-    UNUSED(glExtensions);
-    UNUSED(glShaderLanguage);
-
-    while (!GameStateShouldStop()) {
-
-        ///< Rendering
-        BeginDrawing(renderer);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        GL_CALL(glUseProgram(shader));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-        GL_CALL(glBindVertexArray(vao));
-        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-
-        ClearBackground(renderer);
-        EndDrawing(renderer);
-
-        PoolEvents(window);
-
-        ///< Playing sound
-        u32 playCursor = 0;
-        u32 writeCursor = 0;
-
-        ASSERT_ISOK(SoundDeviceGetCurrentPosition(
-            soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock =
-            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
-            soundOutput.audioBufferSize;
-        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount *
-                                          soundOutput.bytesPerSample)) %
-                           soundOutput.audioBufferSize;
-        u32 bytesToWrite = 0;
-
-        if (byteToLock > targetCursor) {
-            bytesToWrite = soundOutput.audioBufferSize - byteToLock;
-            bytesToWrite += targetCursor;
-        } else {
-            bytesToWrite = targetCursor - byteToLock;
-        }
-
-        if (bytesToWrite > 0) {
-            GameFillSoundBuffer(
-                soundDevice, &soundOutput, byteToLock, bytesToWrite);
-        }
-
-        ///< Perfomance
-        {
-            u64 endCycleCount = __rdtsc();
-
-            LARGE_INTEGER endCounter;
-            ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
-
-            // TODO(ilya.a): Display counter [2024/11/08]
-
-            u64 cyclesElapsed = endCycleCount - lastCycleCount;
-            LONGLONG counterElapsed =
-                endCounter.QuadPart - lastCounter.QuadPart;
-            u64 msPerFrame =
-                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-            u64 framesPerSeconds =
-                performanceCounterFrequency.QuadPart / counterElapsed;
-            u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
-
-            char8 printBuffer[KILOBYTES(1)];
-            wsprintf(
-                printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame,
-                framesPerSeconds, megaCyclesPerFrame);
-            OutputDebugString(printBuffer);
-            lastCounter = endCounter;
-            lastCycleCount = endCycleCount;
-        }
-    }
-
-    WindowClose(window);
-    SoundDeviceClose(soundDevice);
-    ScratchDestroy(&runtimeScratch);
 }

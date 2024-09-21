@@ -9,9 +9,11 @@
 #include "gfs_types.h"
 #include "gfs_macros.h"
 #include "gfs_memory.h"
+#include "gfs_bmp.h"
 
 typedef u32 GLShaderID;
 typedef u32 GLShaderProgramID;
+typedef u32 GLTexture;
 
 typedef enum {
     GL_SHADER_TYPE_NONE,
@@ -43,6 +45,8 @@ typedef struct {
 
 GLShaderProgramID GLLinkShaderProgram(
     Scratch *scratch, const GLShaderProgramLinkData *data);
+
+GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture);
 
 void GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value);
 void GLShaderSetUniformV3F32(

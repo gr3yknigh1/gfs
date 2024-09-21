@@ -11,10 +11,6 @@
 
 BMPictureLoadFromFileRC
 BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {
-    UNUSED(picture);
-    UNUSED(scratch);
-    UNUSED(filePath);
-
     FileOpenResult result =
         FileOpenEx(filePath, scratch, PLATFORM_PERMISSION_READ);
     ASSERT_ISOK(result.code);
