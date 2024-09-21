@@ -416,6 +416,8 @@ WinMain(
     UNUSED(prevInstance);
 
     GameMainloop(&gRenderer);
+
+    return 0;
 }
 
 typedef enum {
