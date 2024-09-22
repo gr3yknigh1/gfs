@@ -114,6 +114,25 @@ typedef struct SoundDevice {
     LPDIRECTSOUNDBUFFER audioBuffer;
 } SoundDevice;
 
+static void
+Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
+    UNUSED(windowHandle);
+
+    if (glad_glViewport != NULL) {
+        GL_CALL(glViewport(0, 0, width, height));
+    }
+}
+
+typedef i32 KeyStateMask;
+KeyStateMask gKeysStateTable[KEY_COUNT] = {0};
+
+bool
+IsKeyDown(Key key) {
+    ASSERT_ISTRUE(key > KEY_NONE && key < KEY_COUNT);
+    KeyStateMask state = gKeysStateTable[key];
+    return state == KEY_STATE_DOWN;
+}
+
 static inline void
 Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
     *width = r->right - r->left;
@@ -285,16 +304,6 @@ WindowUpdate(Window *window) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
 }
 
-void
-WindowResize(Window *window, i32 width, i32 height) {
-    Renderer *renderer = &gRenderer;
-
-    GL_CALL(glViewport(0, 0, width, height));
-
-    UNUSED(renderer);
-    UNUSED(window);
-}
-
 static void
 Win32_OpenGLContextExts_Init(void) {
 
@@ -362,14 +371,22 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     Win32_OpenGLContextExts_Init();
 
     int pixelFormatAttribs[] = {
-        WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-        WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-        WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-        WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-        WGL_COLOR_BITS_ARB, 32,
-        WGL_DEPTH_BITS_ARB, 24,
-        WGL_STENCIL_BITS_ARB, 8,
+        WGL_DRAW_TO_WINDOW_ARB,
+        GL_TRUE,
+        WGL_SUPPORT_OPENGL_ARB,
+        GL_TRUE,
+        WGL_DOUBLE_BUFFER_ARB,
+        GL_TRUE,
+        WGL_ACCELERATION_ARB,
+        WGL_FULL_ACCELERATION_ARB,
+        WGL_PIXEL_TYPE_ARB,
+        WGL_TYPE_RGBA_ARB,
+        WGL_COLOR_BITS_ARB,
+        32,
+        WGL_DEPTH_BITS_ARB,
+        24,
+        WGL_STENCIL_BITS_ARB,
+        8,
         0};
 
     int pixelFormat;
@@ -388,8 +405,8 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
 #ifdef _DEBUG
-		WGL_CONTEXT_FLAGS_ARB,
-		WGL_CONTEXT_DEBUG_BIT_ARB,
+        WGL_CONTEXT_FLAGS_ARB,
+        WGL_CONTEXT_DEBUG_BIT_ARB,
 #endif
         WGL_CONTEXT_MAJOR_VERSION_ARB,
         3,
@@ -411,17 +428,71 @@ Win32_OpenGLContext_Init(HDC deviceContext) {
     return renderContext;
 }
 
+typedef enum {
+    WIN32_VK_NONE = 0x00,
+
+    WIN32_VK_A = 0x41,
+    WIN32_VK_S = 0x53,
+    WIN32_VK_W = 0x57,
+    WIN32_VK_D = 0x44,
+
+    WIN32_VK_COUNT,
+} Win32_VirtualKey;
+
+static Key
+Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk) {
+    Key key = KEY_NONE;
+
+    switch (win32Vk) {
+    case WIN32_VK_A:
+        key = KEY_A;
+        break;
+    case WIN32_VK_S:
+        key = KEY_S;
+        break;
+    case WIN32_VK_W:
+        key = KEY_W;
+        break;
+    case WIN32_VK_D:
+        key = KEY_D;
+        break;
+
+    case WIN32_VK_NONE:
+    case WIN32_VK_COUNT:
+    default:
+        break;
+    }
+
+    return key;
+}
+
 static LRESULT CALLBACK
-Win32_MainWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
+Win32_MainWindowProc(
+    HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result = 0;
 
     switch (message) {
-    case WM_CLOSE: {
+    case WM_SIZE: {
+        UINT width = LOWORD(lParam);
+        UINT height = HIWORD(lParam);
+        Win32_OnWindowResize(windowHandle, width, height);
+    } break;
+    case WM_KEYDOWN: {
+        Win32_VirtualKey vk = (Win32_VirtualKey)wParam;
+        Key key = Win32_TranslateVirtualKey(vk);
+        gKeysStateTable[key] = KEY_STATE_DOWN;
+    } break;
+    case WM_KEYUP: {
+        Win32_VirtualKey vk = (Win32_VirtualKey)wParam;
+        Key key = Win32_TranslateVirtualKey(vk);
+        gKeysStateTable[key] = KEY_STATE_UP;
+    } break;
+    case WM_CLOSE:
         GameStateStop();
-    } break;
-    default: {
-        result = DefWindowProc(window, message, wParam, lParam);
-    } break;
+        break;
+    default:
+        result = DefWindowProc(windowHandle, message, wParam, lParam);
+        break;
     }
     return result;
 }
@@ -514,10 +585,10 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONZERO(gladLoadGL());
 
     ShowWindow(window->windowHandle, SW_SHOW);
-    gRenderer = RendererMake(window, (Color4BGRA) {0, 0, 0, 1});
+    gRenderer = RendererMake(window, (Color4BGRA){0, 0, 0, 1});
     UpdateWindow(window->windowHandle);
 
-    WindowResize(window, width, height);
+    // WindowResize(window, width, height);
 
     ASSERT_EQ(Win32_LoadXInput(), WIN32_LOADXINPUT_OK);
 

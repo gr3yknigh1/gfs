@@ -44,11 +44,9 @@ GameMainloop(Renderer *renderer) {
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
     ASSERT_NONNULL(window);
 
-    RectangleI32 windowRect = WindowGetRectangle(window);
-
     GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
-    GL_CALL(glEnable(GL_DEPTH_TEST));                           // XXX
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     SoundOutput soundOutput = SoundOutputMake(48000);
@@ -156,44 +154,97 @@ GameMainloop(Renderer *renderer) {
     GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
     GLShaderSetUniformI32(shader, "u_Texture", 0);
 
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    vec3 cameraPosition = {0, 0, 3.0f};
+    vec3 cameraFront = {0, 0, -1.0f};
+    vec3 cameraUp = {0, 1.0, 0};
+
+    // vec3 cameraTarget = {0, 0, 0};
+    // vec3 cameraDirection = {0};
+    // glm_vec3_sub(cameraPosition, cameraTarget, cameraDirection);
+    // glm_vec3_normalize(cameraDirection);
+
+    // vec3 upDirection = {0, 1, 0};
+    // vec3 cameraRight = {0};
+    // glm_vec3_cross(upDirection, cameraDirection, cameraRight);
 
     u64 lastCycleCount = __rdtsc();
 
     f32 dt = 0.0f;
+    f32 cameraSpeed = 0.05f;
+
     while (!GameStateShouldStop()) {
+        PoolEvents(window);
+
+        {
+            if (IsKeyDown(KEY_W)) {
+                vec3 v = {0};
+                glm_vec3_fill(v, cameraSpeed);
+
+                glm_vec3_mul(v, cameraFront, v);
+                glm_vec3_add(cameraPosition, v, cameraPosition);
+            }
+
+            if (IsKeyDown(KEY_S)) {
+                vec3 v = {0};
+                glm_vec3_fill(v, cameraSpeed);
+
+                glm_vec3_mul(v, cameraFront, v);
+                glm_vec3_sub(cameraPosition, v, cameraPosition);
+            }
+
+            if (IsKeyDown(KEY_A)) {
+                vec3 v = {0};
+                glm_vec3_fill(v, cameraSpeed);
+
+                vec3 cameraDirection = {0};
+                glm_vec3_cross(cameraFront, cameraUp, cameraDirection);
+                glm_vec3_normalize(cameraDirection);
+                glm_vec3_mul(cameraDirection, v, cameraDirection);
+
+                glm_vec3_sub(cameraPosition, cameraDirection, cameraPosition);
+            }
+
+            if (IsKeyDown(KEY_D)) {
+                vec3 v = {0};
+                glm_vec3_fill(v, cameraSpeed);
+
+                vec3 cameraDirection = {0};
+                glm_vec3_cross(cameraFront, cameraUp, cameraDirection);
+                glm_vec3_normalize(cameraDirection);
+                glm_vec3_mul(cameraDirection, v, cameraDirection);
+
+                glm_vec3_add(cameraPosition, cameraDirection, cameraPosition);
+            }
+        }
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
 
         mat4 model = {0};
         {
-            vec3 xAxisVec = {0};
-            xAxisVec[0] = 1.0f;
-
+            vec3 xAxisVec = {1.0f, 0, 0};
             glm_mat4_make(GLM_MAT4_IDENTITY, model);
             glm_rotate(model, glm_rad(0.01f * dt), xAxisVec);
         }
 
         mat4 view = {0};
         {
-            vec3 viewTranslation = {0};
-            viewTranslation[2] = -5.0f;
-
-            glm_mat4_make(GLM_MAT4_IDENTITY, view);
-            glm_translate(view, viewTranslation);
+            vec3 cameraCenter = {0};
+            glm_vec3_add(cameraPosition, cameraFront, cameraCenter);
+            glm_lookat(cameraPosition, cameraCenter, cameraUp, view);
         }
 
         mat4 projection = {0};
         {
             f32 fov = 45.0f;
 
+            RectangleI32 windowRect = WindowGetRectangle(window);
+
             glm_perspective(
                 fov, (f32)windowRect.width / (f32)windowRect.height, 0.1f,
-                100.0f,
                 //   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                 // NOTE(gr3yknigh1): Viewport width and height (not the window).
                 // [2024/09/22]
-                projection);
+                100.0f, projection);
         }
 
         GLShaderSetUniformM4F32(shader, "u_Model", (f32 *)model);
@@ -203,7 +254,6 @@ GameMainloop(Renderer *renderer) {
         GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
 
         WindowUpdate(window);
-        PoolEvents(window);
 
         ///< Playing sound
         u32 playCursor = 0;
@@ -260,6 +310,14 @@ GameMainloop(Renderer *renderer) {
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
+        }
+
+        {
+            char8 printBuffer[KILOBYTES(1)];
+            wsprintf(
+                printBuffer, "camera: x=%f y=%f z=%f\n", cameraPosition[0],
+                cameraPosition[1], cameraPosition[2]);
+            OutputDebugString(printBuffer);
         }
     }
 

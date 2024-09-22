@@ -36,6 +36,20 @@ typedef struct {
     i32 latencySampleCount;
 } SoundOutput;
 
+typedef enum {
+    KEY_NONE,
+    KEY_W,
+    KEY_A,
+    KEY_S,
+    KEY_D,
+    KEY_COUNT,
+} Key;
+
+#define KEY_STATE_UP MKFLAG(0)
+#define KEY_STATE_DOWN MKFLAG(1)
+
+bool IsKeyDown(Key key);
+
 /*
  * @breaf Actual platform-dependend file handle represantation.
  */
@@ -106,6 +120,8 @@ void WindowUpdate(Window *window);
 
 /*
  * @breaf Resizes render buffer.
+ *
+ * @warn No implementation
  */
 void WindowResize(Window *window, i32 width, i32 height);
 
