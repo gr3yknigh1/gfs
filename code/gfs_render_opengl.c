@@ -24,23 +24,20 @@ GLVertexArrayMake(void) {
 }
 
 void
-GLVertexArrayAddBuffer(
-    GLVertexArray va, const GLVertexBuffer *vb,
-    const GLVertexBufferLayout *layout) {
+GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout) {
 
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb->id));
 
     u64 offset = 0;
 
-    for (u64 attributeIndex = 0; attributeIndex < layout->attributesCount;
-         ++attributeIndex) {
+    for (u64 attributeIndex = 0; attributeIndex < layout->attributesCount; ++attributeIndex) {
         GLAttribute *attribute = layout->attributes + attributeIndex;
 
         GL_CALL(glEnableVertexAttribArray(attributeIndex));
         GL_CALL(glVertexAttribPointer(
-            attributeIndex, attribute->count, attribute->type,
-            attribute->isNormalized, layout->stride, (void *)offset));
+            attributeIndex, attribute->count, attribute->type, attribute->isNormalized, layout->stride,
+            (void *)offset));
 
         offset += attribute->size * attribute->count;
     }
@@ -56,8 +53,7 @@ GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
 
     GL_CALL(glGenBuffers(1, &buffer.id));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, buffer.id));
-    GL_CALL(glBufferData(
-        GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_STATIC_DRAW));
 
     return buffer;
 }
@@ -68,8 +64,7 @@ GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
 
     GL_CALL(glGenBuffers(1, &ebo));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, indexBuffer, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, indexBuffer, GL_STATIC_DRAW));
 
     return (GLIndexBuffer)ebo;
 }
@@ -79,9 +74,8 @@ GLVertexBufferLayoutMake(Scratch *scratch) {
     GLVertexBufferLayout layout = {0};
 
     layout.scratch = scratch;
-    layout.attributes = ScratchAllocZero(
-        scratch,
-        KILOBYTES(1)); // TODO(gr3yknigh1): replace with generic allocator
+    layout.attributes = ScratchAllocZero(scratch,
+                                         KILOBYTES(1)); // TODO(gr3yknigh1): replace with generic allocator
     layout.attributesCount = 0;
     layout.stride = 0;
 
@@ -116,14 +110,13 @@ GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
 
 void
 GLDrawTriangles(
-    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout,
-    GLVertexArray va, GLShaderProgramID shader, GLTexture texture) {
+    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va, GLShaderProgramID shader,
+    GLTexture texture) {
 
     GL_CALL(glUseProgram(shader));
 
-    GL_CALL(
-        glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
-                                       // texture support. [2024/09/22]
+    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                           // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
@@ -142,13 +135,11 @@ GLDrawTriangles(
 }
 
 GLShaderID
-GLCompileShaderFromFile(
-    Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {
+GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {
     ASSERT_ISTRUE(IsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
 
-    FileOpenResult sourceFileOpenResult =
-        FileOpenEx(sourceFilePath, scratch, PLATFORM_PERMISSION_READ);
+    FileOpenResult sourceFileOpenResult = FileOpenEx(sourceFilePath, scratch, PLATFORM_PERMISSION_READ);
     ASSERT_ISOK(sourceFileOpenResult.code);
 
     FileHandle *sourceHandle = sourceFileOpenResult.handle;
@@ -160,8 +151,7 @@ GLCompileShaderFromFile(
     void *sourceBuffer = ScratchAllocZero(scratch, sourceFileSize);
     ASSERT_NONNULL(sourceBuffer);
 
-    FileLoadResultCode sourceLoadResult =
-        FileLoadToBuffer(sourceHandle, sourceBuffer, sourceFileSize, NULL);
+    FileLoadResultCode sourceLoadResult = FileLoadToBuffer(sourceHandle, sourceBuffer, sourceFileSize, NULL);
     ASSERT_ISOK(sourceLoadResult);
 
     ASSERT_ISOK(FileClose(sourceHandle));
@@ -183,8 +173,7 @@ OpenGL_ConvertShaderTypeToGLEnum(GLShaderType type) {
 }
 
 GLShaderID
-GLCompileShader(
-    Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType) {
+GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType) {
     ASSERT_NONNULL(shaderSource);
     ASSERT_ISFALSE(CString8IsEmpty(shaderSource));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
@@ -202,14 +191,11 @@ GLCompileShader(
 
     if (compilationStatus == GL_FALSE) {
         GLint compilationLogLength = 0;
-        GL_CALL(
-            glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &compilationLogLength));
+        GL_CALL(glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &compilationLogLength));
 
         if (compilationLogLength > 0) {
-            char8 *compilationInfoLog =
-                ScratchAlloc(scratch, compilationLogLength);
-            GL_CALL(glGetShaderInfoLog(
-                shaderId, GL_INFO_LOG_LENGTH, NULL, compilationInfoLog));
+            char8 *compilationInfoLog = ScratchAlloc(scratch, compilationLogLength);
+            GL_CALL(glGetShaderInfoLog(shaderId, GL_INFO_LOG_LENGTH, NULL, compilationInfoLog));
 
             PutString(compilationInfoLog);
         }
@@ -245,8 +231,7 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
 
         if (linkLogLength > 0) {
             char8 *linkInfoLog = ScratchAlloc(scratch, linkLogLength);
-            GL_CALL(glGetProgramInfoLog(
-                programID, GL_INFO_LOG_LENGTH, NULL, linkInfoLog));
+            GL_CALL(glGetProgramInfoLog(programID, GL_INFO_LOG_LENGTH, NULL, linkInfoLog));
 
             PutString(linkInfoLog);
         }
@@ -265,14 +250,12 @@ GLTextureMakeFromBMPicture(const BMPicture *picture) {
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
     GL_CALL(glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGB, picture->dibHeader.width,
-        picture->dibHeader.height, 0, GL_BGR, GL_UNSIGNED_BYTE, picture->data));
+        GL_TEXTURE_2D, 0, GL_RGB, picture->dibHeader.width, picture->dibHeader.height, 0, GL_BGR, GL_UNSIGNED_BYTE,
+        picture->data));
     GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
-    GL_CALL(
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT));
 
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
@@ -291,8 +274,7 @@ GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value) {
 }
 
 void
-GLShaderSetUniformV3F32(
-    GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z) {
+GLShaderSetUniformV3F32(GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z) {
     GL_CALL(glUseProgram(shader));
 
     // TODO(gr3yknigh1: Error handle);
@@ -357,9 +339,8 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
     while ((errorCode = glGetError()) != GL_NO_ERROR) {
         char8 printBuffer[KILOBYTES(1)];
         wsprintf(
-            printBuffer, "E: [GL] Error code=%s[%i] - '%s' at %s:%lu\n",
-            GLGetErrorString(errorCode), errorCode, expression, sourceFile,
-            sourceLine);
+            printBuffer, "E: [GL] Error code=%s[%i] - '%s' at %s:%lu\n", GLGetErrorString(errorCode), errorCode,
+            expression, sourceFile, sourceLine);
         THROW(printBuffer);
     }
 }

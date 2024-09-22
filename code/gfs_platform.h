@@ -64,8 +64,7 @@ typedef u8 Permissions;
 
 #define PLATFORM_PERMISSION_READ MKFLAG(1)
 #define PLATFORM_PERMISSION_WRITE MKFLAG(2)
-#define PLATFORM_PERMISSION_READ_WRITE                                         \
-    (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
+#define PLATFORM_PERMISSION_READ_WRITE (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
 
 typedef enum {
     PLATFORM_FILE_OPEN_OK,
@@ -79,8 +78,7 @@ typedef struct {
 
 // FileOpenResult FileOpen(cstring8 filePath);
 
-FileOpenResult FileOpenEx(
-    cstring8 filePath, Scratch *allocator, Permissions permissions);
+FileOpenResult FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions);
 
 typedef enum {
     FILE_CLOSE_OK,
@@ -95,11 +93,9 @@ typedef enum {
 } FileLoadResultCode;
 
 FileLoadResultCode FileLoadToBuffer(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
-    usize *numberOfBytesLoaded);
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
 FileLoadResultCode FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
-    usize *numberOfBytesLoaded, usize loadOffset);
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
 
 usize FileGetSize(FileHandle *handle);
 
@@ -171,9 +167,7 @@ SoundOutput SoundOutputMake(i32 samplesPerSecond);
 
 void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 
-SoundDevice *SoundDeviceOpen(
-    Scratch *scratch, Window *window, i32 samplesPerSecond,
-    usize audioBufferSize);
+SoundDevice *SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize);
 
 typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
@@ -184,11 +178,9 @@ SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
     SoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
 void SoundDeviceLockBuffer(
-    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0,
-    u32 *region0Size, void **region1, u32 *region1Size);
-void SoundDeviceUnlockBuffer(
-    SoundDevice *device, void *region0, u32 region0Size, void *region1,
-    u32 region1Size);
+    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
+    u32 *region1Size);
+void SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
 void SoundDevicePlay(SoundDevice *device);
 
 void SoundDeviceClose(SoundDevice *device);

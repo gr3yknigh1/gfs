@@ -28,12 +28,10 @@
 
 #define PI32 3.14159265358979323846f
 
-static void GameFillSoundBuffer(
-    SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
+static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
 
 static void GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
-    u32 byteToLock, u32 bytesToWrite);
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite);
 
 void
 GameMainloop(Renderer *renderer) {
@@ -50,13 +48,10 @@ GameMainloop(Renderer *renderer) {
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     SoundOutput soundOutput = SoundOutputMake(48000);
-    SoundDevice *soundDevice = SoundDeviceOpen(
-        &runtimeScratch, window, soundOutput.samplesPerSecond,
-        soundOutput.audioBufferSize);
+    SoundDevice *soundDevice =
+        SoundDeviceOpen(&runtimeScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
 
-    GameFillSoundBuffer(
-        soundDevice, &soundOutput, 0,
-        soundOutput.latencySampleCount * soundOutput.bytesPerSample);
+    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample);
 
     SoundDevicePlay(soundDevice);
 
@@ -68,12 +63,10 @@ GameMainloop(Renderer *renderer) {
 
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
     GLShaderProgramLinkData programData = {0};
-    programData.vertexShader = GLCompileShaderFromFile(
-        &runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
-    programData.fragmentShader = GLCompileShaderFromFile(
-        &runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
-    GLShaderProgramID shader =
-        GLLinkShaderProgram(&runtimeScratch, &programData);
+    programData.vertexShader = GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+    programData.fragmentShader =
+        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+    GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &programData);
     ASSERT_NONZERO(shader);
 
 #if 0
@@ -132,8 +125,7 @@ GameMainloop(Renderer *renderer) {
 #endif
 
     BMPicture picture = {0};
-    ASSERT_ISOK(
-        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\dirt.bmp"));
+    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\dirt.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
@@ -259,14 +251,10 @@ GameMainloop(Renderer *renderer) {
         u32 playCursor = 0;
         u32 writeCursor = 0;
 
-        ASSERT_ISOK(SoundDeviceGetCurrentPosition(
-            soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock =
-            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
-            soundOutput.audioBufferSize;
-        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount *
-                                          soundOutput.bytesPerSample)) %
-                           soundOutput.audioBufferSize;
+        ASSERT_ISOK(SoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
+        u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
+        u32 targetCursor =
+            (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) % soundOutput.audioBufferSize;
         u32 bytesToWrite = 0;
 
         if (byteToLock > targetCursor) {
@@ -277,8 +265,7 @@ GameMainloop(Renderer *renderer) {
         }
 
         if (bytesToWrite > 0) {
-            GameFillSoundBuffer(
-                soundDevice, &soundOutput, byteToLock, bytesToWrite);
+            GameFillSoundBuffer(soundDevice, &soundOutput, byteToLock, bytesToWrite);
         }
 
         ///< Perfomance
@@ -291,22 +278,16 @@ GameMainloop(Renderer *renderer) {
             // TODO(ilya.a): Display counter [2025/11/08]
 
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
-            LONGLONG counterElapsed =
-                endCounter.QuadPart - lastCounter.QuadPart;
+            LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
 
-            dt = (f32)(1000LL * endCounter.QuadPart) /
-                 performanceCounterFrequency.QuadPart;
+            dt = (f32)(1000LL * endCounter.QuadPart) / performanceCounterFrequency.QuadPart;
 
-            u64 msPerFrame =
-                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-            u64 framesPerSeconds =
-                performanceCounterFrequency.QuadPart / counterElapsed;
+            u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
-            wsprintf(
-                printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame,
-                framesPerSeconds, megaCyclesPerFrame);
+            wsprintf(printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame, framesPerSeconds, megaCyclesPerFrame);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
@@ -319,24 +300,19 @@ GameMainloop(Renderer *renderer) {
 }
 
 static void
-GameFillSoundBuffer(
-    SoundDevice *device, SoundOutput *output, u32 byteToLock,
-    u32 bytesToWrite) {
+GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
 
     void *region0, *region1;
     u32 region0Size, region1Size;
 
-    SoundDeviceLockBuffer(
-        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
-        &region1Size);
+    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
-                           (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -347,8 +323,7 @@ GameFillSoundBuffer(
     u32 region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
-                           (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -361,8 +336,7 @@ GameFillSoundBuffer(
 
 static void
 GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
-    u32 byteToLock, u32 bytesToWrite) {
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
     ASSERT_NONNULL(waveAsset);
@@ -374,9 +348,7 @@ GameFillSoundBufferWaveAsset(
     u32 region0Size, region1Size;
     byte *sampleOut;
 
-    SoundDeviceLockBuffer(
-        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
-        &region1Size);
+    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     sampleOut = (byte *)region0;
@@ -385,9 +357,7 @@ GameFillSoundBufferWaveAsset(
         //     output->runningSampleIndex = 0;
         // }
         MemoryCopy(
-            sampleOut,
-            (byte *)waveAsset->data +
-                output->runningSampleIndex * output->bytesPerSample,
+            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
@@ -400,9 +370,7 @@ GameFillSoundBufferWaveAsset(
         //     output->runningSampleIndex = 0;
         // }
         MemoryCopy(
-            sampleOut,
-            (byte *)waveAsset->data +
-                output->runningSampleIndex * output->bytesPerSample,
+            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;

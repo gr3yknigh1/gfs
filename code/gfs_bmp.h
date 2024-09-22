@@ -73,7 +73,6 @@ typedef enum {
     BMP_LOAD_FROM_FILE_ERR,
 } BMPictureLoadFromFileRC;
 
-BMPictureLoadFromFileRC BMPictureLoadFromFile(
-    BMPicture *image, Scratch *scratch, cstring8 filePath);
+BMPictureLoadFromFileRC BMPictureLoadFromFile(BMPicture *image, Scratch *scratch, cstring8 filePath);
 
 #endif // GFS_BMP_H_INCLUDED

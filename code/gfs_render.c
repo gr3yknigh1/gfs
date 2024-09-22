@@ -52,12 +52,11 @@ EndDrawing(Renderer *renderer) {
     renderer->commandCount = 0;
 }
 
-#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD)                              \
-    do {                                                                       \
-        MemoryCopy(                                                            \
-            (RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD)));   \
-        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD));                  \
-        (RENDERERPTR)->commandCount++;                                         \
+#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD)                                                                      \
+    do {                                                                                                               \
+        MemoryCopy((RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD)));                                    \
+        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD));                                                          \
+        (RENDERERPTR)->commandCount++;                                                                                 \
     } while (0)
 
 void
@@ -70,12 +69,11 @@ ClearBackground(Renderer *renderer) {
     payload.Type = BMR_RENDER_COMMAND_TYPE_CLEAR;
     payload.Color = renderer->clearColor;
 
-    //PUSH_RENDER_COMMAND(renderer, payload);
+    // PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
-DrawRectangle(
-    Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4BGRA color) {
+DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 width, u32 height, Color4BGRA color) {
     struct {
         RenderCommandType Type;
         u32 X;
@@ -92,7 +90,7 @@ DrawRectangle(
     payload.Height = height;
     payload.Color = color;
 
-    //PUSH_RENDER_COMMAND(renderer, payload);
+    // PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
@@ -107,7 +105,7 @@ DrawRectangleRec(Renderer *renderer, RectangleU16 rect, Color4BGRA color) {
     payload.Rect = rect;
     payload.Color = color;
 
-    //PUSH_RENDER_COMMAND(renderer, payload);
+    // PUSH_RENDER_COMMAND(renderer, payload);
 }
 
 void
@@ -122,5 +120,5 @@ DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset) {
     payload.XOffset = xOffset;
     payload.YOffset = yOffset;
 
-    //PUSH_RENDER_COMMAND(renderer, payload);
+    // PUSH_RENDER_COMMAND(renderer, payload);
 }
