@@ -4,7 +4,7 @@
 
 @echo off
 
-
+:: Detect vcvarsall for x64 build...
 set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
 set vc2019_bootstrap="C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Auxiliary\Build\vcvarsall.bat"
 
@@ -20,23 +20,15 @@ if exist %vc2022_bootstrap% (
   )
 )
 
-:: NOTE(gr3yknigh1) We are not using `vcpkg`.
-:: set vcpkg_toolchain=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake
-
+:: Compiling project...
 set project_path=%~dp0
 pushd %project_path%
 
 set configuration_path=%project_path%\build
 
-if exist %configuration_path%\ (
-  echo I: Debug configuration already exists!
-) else (
-  echo I: Debug configuration not found. Generating new one!
-  mkdir %configuration_path%
-  cmake -G "Ninja Multi-Config" -B %configuration_path% -S %project_path% -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
-)
-
-cmake --build %configuration_path% --config Debug
+conan install . --output-folder %configuration_path% --build=missing --settings build_type=Debug --settings compiler.cstd=17 --settings compiler.runtime=static --settings compiler.runtime_type=Debug
+cmake --preset conan-default -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build --preset conan-debug
 
 if exist %configuration_path%\compile_commands.json (
   echo I: Copying compilation database...

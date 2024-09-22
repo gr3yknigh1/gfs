@@ -33,6 +33,9 @@ out/
 *.exe
 [Bb]uild/
 
+## CMake
+CMake*Presets.json
+
 # Documentation
 
 ## Doxygen

@@ -1,7 +1,8 @@
 from conan import ConanFile
 
-from conan.tools.meson import Meson
-from conan.tools.meson import MesonToolchain
+from conan.tools.cmake import CMake
+from conan.tools.cmake import CMakeDeps
+from conan.tools.cmake import CMakeToolchain
 
 
 class GFSRecipe(ConanFile):
@@ -11,12 +12,17 @@ class GFSRecipe(ConanFile):
 
     settings = "os", "arch", "compiler", "build_type"
 
+    requires = "cglm/0.9.1"
+
     def generate(self):
-        tc = MesonToolchain(self)
+        deps = CMakeDeps(self)
+        deps.generate()
+
+        tc = CMakeToolchain(self)
         tc.generate()
 
     def build(self):
-        meson = Meson(self)
-        meson.configure()
-        meson.build()
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
 
