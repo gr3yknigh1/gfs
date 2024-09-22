@@ -88,43 +88,43 @@ GameMainloop(Renderer *renderer) {
     static const u32 indices[] = {0, 1, 2, 0, 2, 3};
 #else
     static const f32 vertices[] = {
-        // l_Position        // l_TexCoord
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,   //
-        0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,   //
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,   //
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,   //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,   //
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,   //
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,   //
-        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,   //
-        -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
-        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,   //
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
-        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, //
-        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f  //
+        // l_Position        // l_Color        // l_TexCoord
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
+        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f  //
     };
 
     static const u32 indices[] = {0, 1, 2, 0, 2, 3};
@@ -144,7 +144,7 @@ GameMainloop(Renderer *renderer) {
 
     GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    // GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
 
     GLVertexArrayAddBuffer(va, vb, &vbLayout);
@@ -219,7 +219,6 @@ GameMainloop(Renderer *renderer) {
         //     this
         // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
-        // GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
         // TODO(gr3yknigh1): Fix this
         // GL_CALL(glDrawElements(
