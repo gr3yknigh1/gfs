@@ -25,10 +25,11 @@ GLVertexArrayMake(void) {
 
 void
 GLVertexArrayAddBuffer(
-    GLVertexArray va, GLVertexBuffer vb, const GLVertexBufferLayout *layout) {
+    GLVertexArray va, const GLVertexBuffer *vb,
+    const GLVertexBufferLayout *layout) {
 
     GL_CALL(glBindVertexArray(va));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb->id));
 
     u64 offset = 0;
 
@@ -45,16 +46,20 @@ GLVertexArrayAddBuffer(
     }
 }
 
-GLVertexArray
+GLVertexBuffer
 GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
-    GLuint vbo = 0;
+    GLVertexBuffer buffer = {0};
 
-    GL_CALL(glGenBuffers(1, &vbo));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    buffer.id = 0;
+    buffer.data = dataBuffer;
+    buffer.size = dataBufferSize;
+
+    GL_CALL(glGenBuffers(1, &buffer.id));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, buffer.id));
     GL_CALL(glBufferData(
         GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_STATIC_DRAW));
 
-    return (GLVertexArray)vbo;
+    return buffer;
 }
 
 GLIndexBuffer
@@ -95,6 +100,45 @@ GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count) {
 
     layout->attributesCount += 1;
     layout->stride += attributeSize * count;
+}
+
+void
+GLClear(f32 r, f32 g, f32 b, f32 a) {
+    GL_CALL(glClearColor(r, g, b, a));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+}
+
+void
+GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
+    GL_CALL(glClearColor(r, g, b, a));
+    GL_CALL(glClear(clearMask));
+}
+
+void
+GLDrawTriangles(
+    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout,
+    GLVertexArray va, GLShaderProgramID shader, GLTexture texture) {
+
+    GL_CALL(glUseProgram(shader));
+
+    GL_CALL(
+        glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                       // texture support. [2024/09/22]
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    GL_CALL(glBindVertexArray(va));
+
+    // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+    // GL_CALL(
+    //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without
+    //     this
+    GL_CALL(glDrawArrays(GL_TRIANGLES, 0, vb->size / layout->stride));
+
+    // TODO(gr3yknigh1): Fix this
+    // GL_CALL(glDrawElements(
+    //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
+    //     GL_UNSIGNED_INT, 0));
 }
 
 GLShaderID
@@ -319,3 +363,18 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
         THROW(printBuffer);
     }
 }
+
+// TODO(gr3yknigh1): Implement printing debug information [2024/09/22]
+#if 0
+    const byte *glVendor = glGetString(GL_VENDOR);
+    const byte *glRenderer = glGetString(GL_RENDERER);
+    const byte *glVersion = glGetString(GL_VERSION);
+    const byte *glExtensions = glGetString(GL_EXTENSIONS);
+    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+    UNUSED(glVendor);
+    UNUSED(glRenderer);
+    UNUSED(glVersion);
+    UNUSED(glExtensions);
+    UNUSED(glShaderLanguage);
+#endif

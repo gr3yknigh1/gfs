@@ -37,6 +37,8 @@ static void GameFillSoundBufferWaveAsset(
 
 void
 GameMainloop(Renderer *renderer) {
+    UNUSED(renderer);
+
     Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
@@ -46,7 +48,7 @@ GameMainloop(Renderer *renderer) {
 
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
-    // GL_CALL(glEnable(GL_DEPTH_TEST)); // XXX
+    GL_CALL(glEnable(GL_DEPTH_TEST));                           // XXX
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     SoundOutput soundOutput = SoundOutputMake(48000);
@@ -89,24 +91,24 @@ GameMainloop(Renderer *renderer) {
 #else
     static const f32 vertices[] = {
         // l_Position        // l_Color        // l_TexCoord
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
-        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,   //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
         0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
         0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
         0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
@@ -139,15 +141,16 @@ GameMainloop(Renderer *renderer) {
 
     GLVertexArray va = GLVertexArrayMake();
     GLVertexBuffer vb = GLVertexBufferMake(vertices, sizeof(vertices));
+
     GLIndexBuffer ib = GLIndexBufferMake(indices, sizeof(indices));
-    UNUSED(vb);
+    UNUSED(ib);
 
     GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
 
-    GLVertexArrayAddBuffer(va, vb, &vbLayout);
+    GLVertexArrayAddBuffer(va, &vb, &vbLayout);
 
     GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
     GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
@@ -157,77 +160,49 @@ GameMainloop(Renderer *renderer) {
 
     u64 lastCycleCount = __rdtsc();
 
-    const byte *glVendor = glGetString(GL_VENDOR);
-    const byte *glRenderer = glGetString(GL_RENDERER);
-    const byte *glVersion = glGetString(GL_VERSION);
-    const byte *glExtensions = glGetString(GL_EXTENSIONS);
-    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-    mat4 model = {0};
-    {
-        vec3 xAxisVec = {0};
-        xAxisVec[0] = 1.0f;
-
-        glm_mat4_make(GLM_MAT4_IDENTITY, model);
-        glm_rotate(model, glm_rad(-55.0f), xAxisVec);
-    }
-
-    mat4 view = {0};
-    {
-        vec3 viewTranslation = {0};
-        viewTranslation[2] = -3.0f;
-
-        glm_mat4_make(GLM_MAT4_IDENTITY, view);
-        glm_translate(view, viewTranslation);
-    }
-
-    mat4 projection = {0};
-    {
-        f32 fov = 45.0f;
-
-        glm_perspective(
-            fov, (f32)windowRect.width / (f32)windowRect.height, 0.1f, 100.0f,
-            projection);
-    }
-
-    mat4 transformation = {0};
-    {
-        mat4 temp;
-        glm_mat4_mul(projection, view, temp);
-        glm_mat4_mul(temp, model, transformation);
-    }
-
-    GLShaderSetUniformM4F32(shader, "u_Transform", (f32 *)transformation);
-
-    UNUSED(glVendor);
-    UNUSED(glRenderer);
-    UNUSED(glVersion);
-    UNUSED(glExtensions);
-    UNUSED(glShaderLanguage);
-
+    f32 dt = 0.0f;
     while (!GameStateShouldStop()) {
 
-        ///< Rendering
-        BeginDrawing(renderer);
+        GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
 
-        GL_CALL(glUseProgram(shader));
-        GL_CALL(glActiveTexture(GL_TEXTURE0));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-        GL_CALL(glBindVertexArray(va));
-        // GL_CALL(
-        //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without
-        //     this
-        // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        mat4 model = {0};
+        {
+            vec3 xAxisVec = {0};
+            xAxisVec[0] = 1.0f;
 
-        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
-        // TODO(gr3yknigh1): Fix this
-        // GL_CALL(glDrawElements(
-        //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
-        //     GL_UNSIGNED_INT, 0));
+            glm_mat4_make(GLM_MAT4_IDENTITY, model);
+            glm_rotate(model, glm_rad(0.01f * dt), xAxisVec);
+        }
 
-        ClearBackground(renderer);
-        EndDrawing(renderer);
+        mat4 view = {0};
+        {
+            vec3 viewTranslation = {0};
+            viewTranslation[2] = -5.0f;
 
+            glm_mat4_make(GLM_MAT4_IDENTITY, view);
+            glm_translate(view, viewTranslation);
+        }
+
+        mat4 projection = {0};
+        {
+            f32 fov = 45.0f;
+
+            glm_perspective(
+                fov, (f32)windowRect.width / (f32)windowRect.height, 0.1f,
+                100.0f,
+                //   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                // NOTE(gr3yknigh1): Viewport width and height (not the window).
+                // [2024/09/22]
+                projection);
+        }
+
+        GLShaderSetUniformM4F32(shader, "u_Model", (f32 *)model);
+        GLShaderSetUniformM4F32(shader, "u_View", (f32 *)view);
+        GLShaderSetUniformM4F32(shader, "u_Projection", (f32 *)projection);
+
+        GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
+
+        WindowUpdate(window);
         PoolEvents(window);
 
         ///< Playing sound
@@ -263,11 +238,15 @@ GameMainloop(Renderer *renderer) {
             LARGE_INTEGER endCounter;
             ASSERT_NONZERO(QueryPerformanceCounter(&endCounter));
 
-            // TODO(ilya.a): Display counter [2024/11/08]
+            // TODO(ilya.a): Display counter [2025/11/08]
 
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
             LONGLONG counterElapsed =
                 endCounter.QuadPart - lastCounter.QuadPart;
+
+            dt = (f32)(1000LL * endCounter.QuadPart) /
+                 performanceCounterFrequency.QuadPart;
+
             u64 msPerFrame =
                 (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
             u64 framesPerSeconds =

@@ -17,7 +17,13 @@ typedef u32 GLShaderProgramID;
 typedef u32 GLTexture;
 
 typedef u32 GLVertexArray;
-typedef u32 GLVertexBuffer;
+
+typedef struct {
+    u32 id;
+    const void *data;
+    usize size;
+} GLVertexBuffer;
+
 typedef u32 GLIndexBuffer;
 
 typedef struct {
@@ -38,9 +44,10 @@ typedef struct {
 
 GLVertexArray GLVertexArrayMake(void);
 void GLVertexArrayAddBuffer(
-    GLVertexArray va, GLVertexBuffer vb, const GLVertexBufferLayout *layout);
+    GLVertexArray va, const GLVertexBuffer *vb,
+    const GLVertexBufferLayout *layout);
 
-GLVertexArray GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
+GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
 GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
 
@@ -48,6 +55,13 @@ GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 
 void GLVertexBufferLayoutPushAttributeF32(
     GLVertexBufferLayout *layout, u32 count);
+
+void GLClear(f32 r, f32 g, f32 b, f32 a);
+void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
+
+void GLDrawTriangles(
+    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout,
+    GLVertexArray va, GLShaderProgramID shader, GLTexture texture);
 
 typedef enum {
     GL_SHADER_TYPE_NONE,

@@ -43,14 +43,10 @@ RendererDestroy(Renderer *renderer) {
 void
 BeginDrawing(Renderer *renderer) {
     UNUSED(renderer);
-
-    GL_CALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }
 
 void
 EndDrawing(Renderer *renderer) {
-    WindowUpdate(renderer->window);
 
     renderer->commandQueue.end = renderer->commandQueue.begin;
     renderer->commandCount = 0;
