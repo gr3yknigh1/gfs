@@ -311,14 +311,6 @@ GameMainloop(Renderer *renderer) {
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
         }
-
-        {
-            char8 printBuffer[KILOBYTES(1)];
-            wsprintf(
-                printBuffer, "camera: x=%f y=%f z=%f\n", cameraPosition[0],
-                cameraPosition[1], cameraPosition[2]);
-            OutputDebugString(printBuffer);
-        }
     }
 
     WindowClose(window);
