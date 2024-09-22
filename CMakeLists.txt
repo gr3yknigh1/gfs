@@ -7,6 +7,8 @@ project(gfs
   LANGUAGES C
 )
 
+find_package(cglm REQUIRED)
+
 add_executable(gfs
   WIN32
   ${PROJECT_SOURCE_DIR}/code/gfs_string.c
@@ -35,6 +37,11 @@ add_executable(gfs
   ${PROJECT_SOURCE_DIR}/code/gfs_game.h
   ${PROJECT_SOURCE_DIR}/code/gfs_game_state.c
   ${PROJECT_SOURCE_DIR}/code/gfs_game_state.h
+)
+
+target_link_libraries(gfs
+  PRIVATE
+    cglm::cglm
 )
 
 set_target_properties(gfs

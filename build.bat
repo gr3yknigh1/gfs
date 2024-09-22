@@ -26,7 +26,7 @@ pushd %project_path%
 
 set configuration_path=%project_path%\build
 
-conan install . --output-folder %configuration_path% --build=missing --settings build_type=Debug --settings compiler.cstd=17 --settings compiler.runtime=static --settings compiler.runtime_type=Debug
+conan install . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static-ninja --settings build_type=Debug --settings compiler.runtime_type=Debug
 cmake --preset conan-default -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build --preset conan-debug
 
