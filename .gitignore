@@ -28,6 +28,9 @@ out/
 ## Emacs
 \#*#
 
+## RenderDoc
+/*.cap
+
 # Build artefacts
 *.obj
 *.exe

@@ -11,11 +11,17 @@
 #include <math.h> // sinf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
 
+#include <cglm/cglm.h>
+#include <cglm/vec3.h>
+#include <cglm/mat4.h>
+#include <cglm/affine.h>
+
 #include "gfs_game_state.h"
 #include "gfs_platform.h"
 #include "gfs_memory.h"
 #include "gfs_assert.h"
 #include "gfs_render.h"
+#include "gfs_types.h"
 #include "gfs_wave.h"
 #include "gfs_render_opengl.h"
 #include "gfs_bmp.h"
@@ -35,6 +41,8 @@ GameMainloop(Renderer *renderer) {
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
     ASSERT_NONNULL(window);
+
+    RectangleI32 windowRect = WindowGetRectangle(window);
 
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)); // XXX
@@ -68,6 +76,7 @@ GameMainloop(Renderer *renderer) {
         GLLinkShaderProgram(&runtimeScratch, &programData);
     ASSERT_NONZERO(shader);
 
+#if 0
     static const f32 vertices[] = {
         // positions        // colors         // texture coords
         0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
@@ -77,10 +86,54 @@ GameMainloop(Renderer *renderer) {
     };
 
     static const u32 indices[] = {0, 1, 2, 0, 2, 3};
+#else
+    static const f32 vertices[] = {
+        // l_Position        // l_TexCoord
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,   //
+        0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,   //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,   //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,   //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,   //
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,   //
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,   //
+        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
+        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,   //
+        -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,   //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,   //
+        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,   //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f  //
+    };
+
+    static const u32 indices[] = {0, 1, 2, 0, 2, 3};
+
+#endif
 
     BMPicture picture = {0};
     ASSERT_ISOK(
-        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
+        BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\dirt.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
@@ -91,7 +144,7 @@ GameMainloop(Renderer *renderer) {
 
     GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
+    // GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
 
     GLVertexArrayAddBuffer(va, vb, &vbLayout);
@@ -110,6 +163,42 @@ GameMainloop(Renderer *renderer) {
     const byte *glExtensions = glGetString(GL_EXTENSIONS);
     const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
 
+    mat4 model = {0};
+    {
+        vec3 xAxisVec = {0};
+        xAxisVec[0] = 1.0f;
+
+        glm_mat4_make(GLM_MAT4_IDENTITY, model);
+        glm_rotate(model, glm_rad(-55.0f), xAxisVec);
+    }
+
+    mat4 view = {0};
+    {
+        vec3 viewTranslation = {0};
+        viewTranslation[2] = -3.0f;
+
+        glm_mat4_make(GLM_MAT4_IDENTITY, view);
+        glm_translate(view, viewTranslation);
+    }
+
+    mat4 projection = {0};
+    {
+        f32 fov = 45.0f;
+
+        glm_perspective(
+            fov, (f32)windowRect.width / (f32)windowRect.height, 0.1f, 100.0f,
+            projection);
+    }
+
+    mat4 transformation = {0};
+    {
+        mat4 temp;
+        glm_mat4_mul(projection, view, temp);
+        glm_mat4_mul(temp, model, transformation);
+    }
+
+    GLShaderSetUniformM4F32(shader, "u_Transform", (f32 *)transformation);
+
     UNUSED(glVendor);
     UNUSED(glRenderer);
     UNUSED(glVersion);
@@ -125,9 +214,17 @@ GameMainloop(Renderer *renderer) {
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
         GL_CALL(glBindVertexArray(va));
-        GL_CALL(
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without this
-        GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+        // GL_CALL(
+        //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without
+        //     this
+        // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+
+        // GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+        // TODO(gr3yknigh1): Fix this
+        // GL_CALL(glDrawElements(
+        //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
+        //     GL_UNSIGNED_INT, 0));
 
         ClearBackground(renderer);
         EndDrawing(renderer);

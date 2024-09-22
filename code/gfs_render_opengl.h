@@ -86,6 +86,8 @@ void GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value);
 void GLShaderSetUniformV3F32(
     GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z);
 void GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value);
+void GLShaderSetUniformM4F32(
+    GLShaderProgramID shader, cstring8 name, f32 *value);
 
 cstring8 GLGetErrorString(i32 errorCode);
 

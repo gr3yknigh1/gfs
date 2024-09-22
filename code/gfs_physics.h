@@ -38,6 +38,15 @@ typedef struct {
     u16 height;
 } RectangleU16;
 
+
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 width;
+    f32 height;
+} RectangleF32;
+
+
 bool RectangleU16IsInside(RectangleU16 r, u16 x, u16 y);
 bool RectangleU16IsOverlapping(RectangleU16 r);
 

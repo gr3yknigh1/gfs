@@ -267,6 +267,16 @@ GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value) {
     GL_CALL(glUniform1i(uniformLocation, value));
 }
 
+void
+GLShaderSetUniformM4F32(GLShaderProgramID shader, cstring8 name, f32 *items) {
+    GL_CALL(glUseProgram(shader));
+
+    // TODO(gr3yknigh1: Error handle);
+    u32 uniformLocation = 0;
+    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
+    GL_CALL(glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, items));
+}
+
 cstring8
 GLGetErrorString(i32 errorCode) {
     switch (errorCode) {
