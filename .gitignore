@@ -32,8 +32,6 @@ out/
 /*.cap
 
 # Build artefacts
-*.obj
-*.exe
 [Bb]uild/
 
 ## CMake
