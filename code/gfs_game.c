@@ -76,7 +76,7 @@ GameMainloop(Renderer *renderer) {
         -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
     };
 
-    unsigned int indices[] = {0, 1, 2, 0, 2, 3};
+    static const u32 indices[] = {0, 1, 2, 0, 2, 3};
 
     BMPicture picture = {0};
     ASSERT_ISOK(
@@ -84,37 +84,17 @@ GameMainloop(Renderer *renderer) {
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
-    GLuint vao, vbo, ebo;
+    GLVertexArray va = GLVertexArrayMake();
+    GLVertexBuffer vb = GLVertexBufferMake(vertices, sizeof(vertices));
+    GLIndexBuffer ib = GLIndexBufferMake(indices, sizeof(indices));
+    UNUSED(vb);
 
-    // NOTE: it must be before `glVertexAttribPointer` call
-    GL_CALL(glGenVertexArrays(1, &vao));
-    GL_CALL(glBindVertexArray(vao));
+    GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
+    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
 
-    GL_CALL(glGenBuffers(1, &vbo));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-    GL_CALL(glBufferData(
-        GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
-
-    GL_CALL(glGenBuffers(1, &ebo));
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
-
-    // position attribute
-    GL_CALL(
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0));
-    GL_CALL(glEnableVertexAttribArray(0));
-
-    // color attribute
-    GL_CALL(glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(3 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(1));
-
-    GL_CALL(glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-        (void *)(6 * sizeof(float))));
-    GL_CALL(glEnableVertexAttribArray(2));
+    GLVertexArrayAddBuffer(va, vb, &vbLayout);
 
     GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
     GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
@@ -144,7 +124,9 @@ GameMainloop(Renderer *renderer) {
         GL_CALL(glUseProgram(shader));
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-        GL_CALL(glBindVertexArray(vao));
+        GL_CALL(glBindVertexArray(va));
+        GL_CALL(
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without this
         GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
         ClearBackground(renderer);

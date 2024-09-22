@@ -15,6 +15,88 @@
 
 #include <Windows.h> // wsprintf
 
+GLVertexArray
+GLVertexArrayMake(void) {
+    GLuint vao = 0;
+    GL_CALL(glGenVertexArrays(1, &vao));
+    GL_CALL(glBindVertexArray(vao));
+    return (GLVertexArray)vao;
+}
+
+void
+GLVertexArrayAddBuffer(
+    GLVertexArray va, GLVertexBuffer vb, const GLVertexBufferLayout *layout) {
+
+    GL_CALL(glBindVertexArray(va));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb));
+
+    u64 offset = 0;
+
+    for (u64 attributeIndex = 0; attributeIndex < layout->attributesCount;
+         ++attributeIndex) {
+        GLAttribute *attribute = layout->attributes + attributeIndex;
+
+        GL_CALL(glEnableVertexAttribArray(attributeIndex));
+        GL_CALL(glVertexAttribPointer(
+            attributeIndex, attribute->count, attribute->type,
+            attribute->isNormalized, layout->stride, (void *)offset));
+
+        offset += attribute->size * attribute->count;
+    }
+}
+
+GLVertexArray
+GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
+    GLuint vbo = 0;
+
+    GL_CALL(glGenBuffers(1, &vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferData(
+        GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_STATIC_DRAW));
+
+    return (GLVertexArray)vbo;
+}
+
+GLIndexBuffer
+GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
+    GLuint ebo = 0;
+
+    GL_CALL(glGenBuffers(1, &ebo));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+    GL_CALL(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, indexBuffer, GL_STATIC_DRAW));
+
+    return (GLIndexBuffer)ebo;
+}
+
+GLVertexBufferLayout
+GLVertexBufferLayoutMake(Scratch *scratch) {
+    GLVertexBufferLayout layout = {0};
+
+    layout.scratch = scratch;
+    layout.attributes = ScratchAllocZero(
+        scratch,
+        KILOBYTES(1)); // TODO(gr3yknigh1): replace with generic allocator
+    layout.attributesCount = 0;
+    layout.stride = 0;
+
+    return layout;
+}
+
+void
+GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count) {
+    usize attributeSize = sizeof(f32);
+
+    GLAttribute *attribute = layout->attributes + layout->attributesCount;
+    attribute->isNormalized = false;
+    attribute->type = GL_FLOAT;
+    attribute->count = count;
+    attribute->size = attributeSize;
+
+    layout->attributesCount += 1;
+    layout->stride += attributeSize * count;
+}
+
 GLShaderID
 GLCompileShaderFromFile(
     Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {

@@ -13,7 +13,41 @@
 
 typedef u32 GLShaderID;
 typedef u32 GLShaderProgramID;
+
 typedef u32 GLTexture;
+
+typedef u32 GLVertexArray;
+typedef u32 GLVertexBuffer;
+typedef u32 GLIndexBuffer;
+
+typedef struct {
+    bool isNormalized; // I don't like this bool
+    u32 type;
+    u32 count;
+    usize size;
+} GLAttribute;
+
+typedef struct {
+    Scratch *scratch;
+
+    GLAttribute *attributes;
+    u64 attributesCount;
+
+    u64 stride;
+} GLVertexBufferLayout;
+
+GLVertexArray GLVertexArrayMake(void);
+void GLVertexArrayAddBuffer(
+    GLVertexArray va, GLVertexBuffer vb, const GLVertexBufferLayout *layout);
+
+GLVertexArray GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
+
+GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
+
+GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
+
+void GLVertexBufferLayoutPushAttributeF32(
+    GLVertexBufferLayout *layout, u32 count);
 
 typedef enum {
     GL_SHADER_TYPE_NONE,
