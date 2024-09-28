@@ -6,8 +6,11 @@
  * */
 #define GFS_GAME_H_INCLUDED
 
-#include "gfs_render.h"
-
-void GameMainloop(Renderer *renderer);
+/*
+ * @breaf Game's mainloop code.
+ *
+ * Should be defined in Game specific code.
+ * */
+void GameMainloop();
 
 #endif // GFS_GAME_H_INCLUDED

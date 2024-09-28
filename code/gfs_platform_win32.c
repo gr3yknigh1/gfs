@@ -6,6 +6,7 @@
 #include "gfs_platform.h"
 
 #include <Windows.h>
+#include <Windowsx.h>
 #include <shlwapi.h> // PathFileExistsA
 
 #include <xinput.h>
@@ -59,8 +60,6 @@
 
 #define WGL_CONTEXT_CORE_PROFILE_BIT_ARB 0x00000001
 
-/// Dynamicly loaded procs
-
 #define WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME "wglCreateContextAttribsARB"
 #define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
 #define WIN32_GL_SWAPINTERVALEXT_PROCNAME "wglSwapIntervalEXT"
@@ -90,8 +89,6 @@ typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND 
 
 static Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
-static Renderer gRenderer;
-
 typedef struct Window {
     HWND windowHandle;
     WNDCLASS windowClass;
@@ -116,6 +113,54 @@ Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
     if (glad_glViewport != NULL) {
         GL_CALL(glViewport(0, 0, width, height));
     }
+}
+
+// XXX: Hack
+static bool gIsFocused = false;
+static Vector2I32 gMousePosition = {0};
+
+Vector2I32
+GetMousePosition(Window *window) {
+    UNUSED(window);
+
+    if (gIsFocused) {
+
+        POINT win32MousePosition = {0};
+        ASSERT_NONZERO(GetCursorPos(&win32MousePosition));
+        gMousePosition.x = win32MousePosition.x;
+        gMousePosition.y = win32MousePosition.y;
+    }
+
+    ScreenToClient(window->windowHandle, (LPPOINT)&gMousePosition);
+
+    return gMousePosition;
+}
+
+void
+SetMouseVisibility(MouseVisibilityState newState) {
+    switch (newState) {
+    case MOUSEVISIBILITYSTATE_SHOWN:
+        ShowCursor(true);
+        break;
+    case MOUSEVISIBILITYSTATE_HIDDEN:
+        ShowCursor(false);
+        break;
+    }
+}
+
+void
+SetMousePosition(Window *window, i32 x, i32 y) {
+    UNUSED(window);
+
+    if (!gIsFocused) {
+        return;
+    }
+
+    POINT win32Point = {0};
+    win32Point.x = x;
+    win32Point.y = y;
+    ASSERT_NONZERO(ClientToScreen(window->windowHandle, &win32Point));
+    ASSERT_NONZERO(SetCursorPos(win32Point.x, win32Point.y));
 }
 
 typedef i32 KeyStateMask;
@@ -287,6 +332,17 @@ WindowGetRectangle(Window *window) {
 }
 
 void
+KeepMouseInsideRectangle(Window *window) {
+    if (!gIsFocused) {
+        return;
+    }
+
+    RECT win32WindowRect = {0};
+    ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
+    ASSERT_NONZERO(ClipCursor(&win32WindowRect));
+}
+
+void
 WindowUpdate(Window *window) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
 }
@@ -409,9 +465,9 @@ typedef enum {
     WIN32_VK_NONE = 0x00,
 
     WIN32_VK_A = 0x41,
+    WIN32_VK_D = 0x44,
     WIN32_VK_S = 0x53,
     WIN32_VK_W = 0x57,
-    WIN32_VK_D = 0x44,
 
     WIN32_VK_COUNT,
 } Win32_VirtualKey;
@@ -424,16 +480,15 @@ Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk) {
     case WIN32_VK_A:
         key = KEY_A;
         break;
+    case WIN32_VK_D:
+        key = KEY_D;
+        break;
     case WIN32_VK_S:
         key = KEY_S;
         break;
     case WIN32_VK_W:
         key = KEY_W;
         break;
-    case WIN32_VK_D:
-        key = KEY_D;
-        break;
-
     case WIN32_VK_NONE:
     case WIN32_VK_COUNT:
     default:
@@ -448,6 +503,37 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
     LRESULT result = 0;
 
     switch (message) {
+    case WM_SETFOCUS: {
+        gIsFocused = true;
+    } break;
+    case WM_KILLFOCUS: {
+        gIsFocused = false;
+    } break;
+    case WM_ACTIVATE: {
+        // if (LOWORD(wParam) == WA_INACTIVE) {
+        // } else {
+        // }
+        result = DefWindowProc(windowHandle, message, wParam, lParam);
+    } break;
+    case WM_MOUSEMOVE: {
+        /*
+         * NOTE(gr3yknigh1): Do not use the `LOWORD` or `HIWORD` macros
+         * to extract the x- and y- coordinates of the cursor position
+         * because these macros return incorrect results on systems
+         * with multiple monitors. Systems with multiple monitors can
+         * have negative x- and y- coordinates, and LOWORD and HIWORD
+         * treat the coordinates as unsigned quantities.
+         *
+         * Reference: https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove?redirectedfrom=MSDN
+         * */
+        i32 xPosition = GET_X_LPARAM(lParam);
+        i32 yPosition = GET_Y_LPARAM(lParam);
+
+        UNUSED(xPosition);
+        UNUSED(yPosition);
+
+        result = DefWindowProc(windowHandle, message, wParam, lParam);
+    } break;
     case WM_SIZE: {
         UINT width = LOWORD(lParam);
         UINT height = HIWORD(lParam);
@@ -480,7 +566,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     UNUSED(showMode);
     UNUSED(prevInstance);
 
-    GameMainloop(&gRenderer);
+    GameMainloop();
 
     return 0;
 }
@@ -529,7 +615,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
 
     window->windowClass.lpfnWndProc = Win32_MainWindowProc;
     window->windowClass.hInstance = instance;
-    window->windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
+    // window->windowClass.hCursor = LoadCursorA(0, IDC_ARROW);
     window->windowClass.lpszClassName = copiedTitle;
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
@@ -552,9 +638,11 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
 
     ASSERT_NONZERO(gladLoadGL());
 
+    // TODO: Check for errors
     ShowWindow(window->windowHandle, SW_SHOW);
-    gRenderer = RendererMake(window, (Color4BGRA){0, 0, 0, 1});
     UpdateWindow(window->windowHandle);
+
+    Win32_OnWindowResize(window->windowHandle, width, height);
 
     // WindowResize(window, width, height);
 
@@ -567,15 +655,15 @@ void
 PoolEvents(Window *window) {
     UNUSED(window);
 
-    MSG message = {};
-    while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
+    MSG message = {0};
+    while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
         if (message.message == WM_QUIT) {
             // NOTE(ilya.a): Make sure that we will quit the mainloop.
             GameStateStop();
         }
 
         TranslateMessage(&message);
-        DispatchMessageA(&message);
+        DispatchMessage(&message);
     }
 
     for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex) {
@@ -635,7 +723,6 @@ PoolEvents(Window *window) {
 
 void
 WindowClose(Window *window) {
-    RendererDestroy(&gRenderer);
     ReleaseDC(window->windowHandle, window->deviceContext);
     CloseWindow(window->windowHandle);
 }

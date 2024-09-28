@@ -14,8 +14,8 @@ AlwaysBreakAfterReturnType: None
 #AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterDefinitionReturnType: All
 
-ColumnLimit:     80
-# ColumnLimit:     120
+# ColumnLimit:     80
+ColumnLimit:     120
 
 #IndentWidth:     2
 IndentWidth:     4

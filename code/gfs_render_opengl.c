@@ -156,6 +156,7 @@ GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType 
 
     ASSERT_ISOK(FileClose(sourceHandle));
 
+    // TODO(gr3yknigh1): Free sources after compilation [2024/09/22]
     return GLCompileShader(scratch, sourceBuffer, shaderType);
 }
 

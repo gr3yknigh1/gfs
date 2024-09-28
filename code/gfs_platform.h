@@ -22,7 +22,7 @@ typedef struct Window Window;
 typedef struct SoundDevice SoundDevice;
 
 /*
- * @breaf Sound output metadata.
+ * @breaf Sound output data.
  */
 typedef struct {
     u32 runningSampleIndex;
@@ -36,6 +36,33 @@ typedef struct {
     i32 latencySampleCount;
 } SoundOutput;
 
+/*
+ * @breaf Returns mouse's position.
+ * */
+Vector2I32 GetMousePosition(Window *window);
+
+/*
+ * @breaf Sets mouse position.
+ * */
+void SetMousePosition(Window *window, i32 x, i32 y);
+
+/*
+ * @breaf Clips mouse position according to window's size.
+ * */
+void KeepMouseInsideRectangle(Window *window);
+
+typedef enum {
+    MOUSEVISIBILITYSTATE_SHOWN,
+    MOUSEVISIBILITYSTATE_HIDDEN,
+} MouseVisibilityState;
+
+void SetMouseVisibility(MouseVisibilityState newState);
+
+/*
+ * @breaf IDs of keyboard keys.
+ *
+ * TODO: Add more keys.
+ * */
 typedef enum {
     KEY_NONE,
     KEY_W,
@@ -48,6 +75,11 @@ typedef enum {
 #define KEY_STATE_UP MKFLAG(0)
 #define KEY_STATE_DOWN MKFLAG(1)
 
+/*
+ * @breaf Returns true, if key is currently pressed by user.
+ *
+ * Only when he focused on window.
+ * */
 bool IsKeyDown(Key key);
 
 /*
@@ -94,6 +126,7 @@ typedef enum {
 
 FileLoadResultCode FileLoadToBuffer(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
+
 FileLoadResultCode FileLoadToBufferEx(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
 

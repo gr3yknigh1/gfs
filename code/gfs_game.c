@@ -8,7 +8,7 @@
 #include <Windows.h>
 #include <glad/glad.h>
 
-#include <math.h> // sinf
+#include <math.h> // sinf cosf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
 
 #include <cglm/cglm.h>
@@ -28,19 +28,51 @@
 
 #define PI32 3.14159265358979323846f
 
-static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
+typedef struct {
+    vec3 position;
+    vec3 front;
+    vec3 up;
 
+    f32 yaw;
+    f32 pitch;
+
+    f32 speed;
+    f32 sensitivity;
+    f32 fov;
+
+    Window *window;
+
+    struct {
+        i32 lastXPosition;
+        i32 lastYPosition;
+        bool firstTimeAssignment;
+    } _mouseState;
+} Camera;
+
+static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
 static void GameFillSoundBufferWaveAsset(
     SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite);
 
-void
-GameMainloop(Renderer *renderer) {
-    UNUSED(renderer);
+static Camera CameraMake(Window *window);
+static void CameraRotate(Camera *camera, i32 mouseXPosition, i32 mouseYPosition);
+static void CameraHandleInput(Camera *camera);
+static void CameraGetViewMatix(Camera *camera, mat4 *view);
+static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
 
+static void GetModelMatrix();
+
+static f32 ClampF32(f32 value, f32 min, f32 max);
+
+void
+GameMainloop(void) {
     Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");
     ASSERT_NONNULL(window);
+
+    RectangleI32 windowRect = WindowGetRectangle(window);
+    // SetMouseVisibility(MOUSEVISIBILITYSTATE_HIDDEN);
+    // SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
 
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -62,11 +94,12 @@ GameMainloop(Renderer *renderer) {
     ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
 
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
-    GLShaderProgramLinkData programData = {0};
-    programData.vertexShader = GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
-    programData.fragmentShader =
+    GLShaderProgramLinkData shaderLinkData = {0};
+    shaderLinkData.vertexShader =
+        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+    shaderLinkData.fragmentShader =
         GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
-    GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &programData);
+    GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
 #if 0
@@ -125,7 +158,7 @@ GameMainloop(Renderer *renderer) {
 #endif
 
     BMPicture picture = {0};
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\dirt.bmp"));
+    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
@@ -146,98 +179,35 @@ GameMainloop(Renderer *renderer) {
     GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
     GLShaderSetUniformI32(shader, "u_Texture", 0);
 
-    vec3 cameraPosition = {0, 0, 3.0f};
-    vec3 cameraFront = {0, 0, -1.0f};
-    vec3 cameraUp = {0, 1.0, 0};
-
-    // vec3 cameraTarget = {0, 0, 0};
-    // vec3 cameraDirection = {0};
-    // glm_vec3_sub(cameraPosition, cameraTarget, cameraDirection);
-    // glm_vec3_normalize(cameraDirection);
-
-    // vec3 upDirection = {0, 1, 0};
-    // vec3 cameraRight = {0};
-    // glm_vec3_cross(upDirection, cameraDirection, cameraRight);
-
-    u64 lastCycleCount = __rdtsc();
+    Camera camera = CameraMake(window);
 
     f32 dt = 0.0f;
-    f32 cameraSpeed = 0.05f;
+    u64 lastCycleCount = __rdtsc();
+
+    bool isFirstMainloopIteration = true;
 
     while (!GameStateShouldStop()) {
         PoolEvents(window);
 
-        {
-            if (IsKeyDown(KEY_W)) {
-                vec3 v = {0};
-                glm_vec3_fill(v, cameraSpeed);
-
-                glm_vec3_mul(v, cameraFront, v);
-                glm_vec3_add(cameraPosition, v, cameraPosition);
-            }
-
-            if (IsKeyDown(KEY_S)) {
-                vec3 v = {0};
-                glm_vec3_fill(v, cameraSpeed);
-
-                glm_vec3_mul(v, cameraFront, v);
-                glm_vec3_sub(cameraPosition, v, cameraPosition);
-            }
-
-            if (IsKeyDown(KEY_A)) {
-                vec3 v = {0};
-                glm_vec3_fill(v, cameraSpeed);
-
-                vec3 cameraDirection = {0};
-                glm_vec3_cross(cameraFront, cameraUp, cameraDirection);
-                glm_vec3_normalize(cameraDirection);
-                glm_vec3_mul(cameraDirection, v, cameraDirection);
-
-                glm_vec3_sub(cameraPosition, cameraDirection, cameraPosition);
-            }
-
-            if (IsKeyDown(KEY_D)) {
-                vec3 v = {0};
-                glm_vec3_fill(v, cameraSpeed);
-
-                vec3 cameraDirection = {0};
-                glm_vec3_cross(cameraFront, cameraUp, cameraDirection);
-                glm_vec3_normalize(cameraDirection);
-                glm_vec3_mul(cameraDirection, v, cameraDirection);
-
-                glm_vec3_add(cameraPosition, cameraDirection, cameraPosition);
-            }
-        }
+        windowRect = WindowGetRectangle(window);
+        Vector2I32 mousePosition = GetMousePosition(window);
+        CameraRotate(&camera, mousePosition.x, mousePosition.y);
+        CameraHandleInput(&camera);
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
 
         mat4 model = {0};
+        glm_mat4_copy(GLM_MAT4_IDENTITY, model);
         {
-            vec3 xAxisVec = {1.0f, 0, 0};
-            glm_mat4_make(GLM_MAT4_IDENTITY, model);
-            glm_rotate(model, glm_rad(0.01f * dt), xAxisVec);
+            // vec3 xAxisVec = {1.0f, 0, 0};
+            // glm_rotate(model, 0 /* glm_rad(0.01f * dt) */, xAxisVec);
         }
 
         mat4 view = {0};
-        {
-            vec3 cameraCenter = {0};
-            glm_vec3_add(cameraPosition, cameraFront, cameraCenter);
-            glm_lookat(cameraPosition, cameraCenter, cameraUp, view);
-        }
+        CameraGetViewMatix(&camera, &view);
 
         mat4 projection = {0};
-        {
-            f32 fov = 45.0f;
-
-            RectangleI32 windowRect = WindowGetRectangle(window);
-
-            glm_perspective(
-                fov, (f32)windowRect.width / (f32)windowRect.height, 0.1f,
-                //   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                // NOTE(gr3yknigh1): Viewport width and height (not the window).
-                // [2024/09/22]
-                100.0f, projection);
-        }
+        CameraGetProjectionMatix(&camera, &projection);
 
         GLShaderSetUniformM4F32(shader, "u_Model", (f32 *)model);
         GLShaderSetUniformM4F32(shader, "u_View", (f32 *)view);
@@ -246,6 +216,7 @@ GameMainloop(Renderer *renderer) {
         GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
 
         WindowUpdate(window);
+        // SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
 
         ///< Playing sound
         u32 playCursor = 0;
@@ -287,10 +258,18 @@ GameMainloop(Renderer *renderer) {
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
-            wsprintf(printBuffer, "%ums/f | %uf/s | %umc/f\n", msPerFrame, framesPerSeconds, megaCyclesPerFrame);
+            wsprintf(
+                printBuffer,
+                "%ums/f | %uf/s | %umc/f || mouse x=%hu y=%hu || camera yaw=%d pitch=%d || front=[%d %d %d]\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, GetMousePosition(window).x,
+                GetMousePosition(window).y, (i32)camera.yaw, (i32)camera.pitch, (i32)camera.front[0], (i32)camera.front[1], (i32)camera.front[2]);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
+        }
+
+        if (isFirstMainloopIteration) {
+            isFirstMainloopIteration = false;
         }
     }
 
@@ -377,4 +356,138 @@ GameFillSoundBufferWaveAsset(
     }
 
     SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
+}
+
+static Camera
+CameraMake(Window *window) {
+    RectangleI32 windowRect = WindowGetRectangle(window);
+
+    Camera camera = {
+        .position = {0, 0, 3.0f},
+        .front = {0, 0, -1.0f},
+        .up = {0, 1.0f, 0},
+
+        .yaw = -90.0f,
+        .pitch = 0.0f,
+
+        .speed = 0.05f,
+        .sensitivity = 0.1f,
+        .fov = 45.0f,
+
+        .window = window,
+
+        ._mouseState = {
+            .lastXPosition = windowRect.width / 2,
+            .lastYPosition = windowRect.height / 2,
+            .firstTimeAssignment = true,
+        }};
+    return camera;
+}
+
+static void
+CameraRotate(Camera *camera, i32 mouseXPosition, i32 mouseYPosition) {
+    if (camera->_mouseState.firstTimeAssignment) {
+        camera->_mouseState.lastXPosition = mouseXPosition;
+        camera->_mouseState.lastYPosition = mouseYPosition;
+        camera->_mouseState.firstTimeAssignment = false;
+    }
+
+    f32 xOffset = mouseXPosition - camera->_mouseState.lastXPosition;
+    f32 yOffset = camera->_mouseState.lastYPosition - mouseYPosition;
+
+    camera->_mouseState.lastXPosition = mouseXPosition;
+    camera->_mouseState.lastYPosition = mouseYPosition;
+
+    xOffset *= camera->sensitivity;
+    yOffset *= camera->sensitivity;
+
+    camera->yaw += xOffset;
+    camera->pitch += yOffset;
+
+    camera->pitch = ClampF32(camera->pitch, -89.0f, 89.0f);
+
+    vec3 direction = {0};
+
+    f32 yawRad = glm_rad(camera->yaw);
+    f32 pitchRad = glm_rad(camera->pitch);
+    direction[0] = cosf(yawRad) * cosf(pitchRad);
+    direction[1] = sinf(pitchRad);
+    direction[2] = sinf(yawRad) * cosf(pitchRad);
+
+    glm_normalize_to(direction, camera->front);
+}
+
+static void
+CameraHandleInput(Camera *camera) {
+    if (IsKeyDown(KEY_W)) {
+        vec3 v = {0};
+        glm_vec3_fill(v, camera->speed);
+
+        glm_vec3_mul(v, camera->front, v);
+        glm_vec3_add(camera->position, v, camera->position);
+    }
+
+    if (IsKeyDown(KEY_S)) {
+        vec3 v = {0};
+        glm_vec3_fill(v, camera->speed);
+
+        glm_vec3_mul(v, camera->front, v);
+        glm_vec3_sub(camera->position, v, camera->position);
+    }
+
+    if (IsKeyDown(KEY_A)) {
+        vec3 v = {0};
+        glm_vec3_fill(v, camera->speed);
+
+        vec3 cameraDirection = {0};
+        glm_vec3_cross(camera->front, camera->up, cameraDirection);
+        glm_vec3_normalize(cameraDirection);
+        glm_vec3_mul(cameraDirection, v, cameraDirection);
+
+        glm_vec3_sub(camera->position, cameraDirection, camera->position);
+    }
+
+    if (IsKeyDown(KEY_D)) {
+        vec3 v = {0};
+        glm_vec3_fill(v, camera->speed);
+
+        vec3 cameraDirection = {0};
+        glm_vec3_cross(camera->front, camera->up, cameraDirection);
+        glm_vec3_normalize(cameraDirection);
+        glm_vec3_mul(cameraDirection, v, cameraDirection);
+
+        glm_vec3_add(camera->position, cameraDirection, camera->position);
+    }
+}
+
+static void
+CameraGetViewMatix(Camera *camera, mat4 *view) {
+    vec3 center = {0};
+    glm_vec3_add(camera->position, camera->front, center);
+
+    glm_lookat(camera->position, center, camera->up, *view);
+}
+
+static void
+CameraGetProjectionMatix(Camera *camera, mat4 *projection) {
+    RectangleI32 windowRect = WindowGetRectangle(camera->window);
+    glm_perspective(
+        glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height, 0.1f,
+        //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // NOTE(gr3yknigh1): Viewport width and height (not the window).
+        // [2024/09/22]
+        100.0f, *projection);
+}
+
+static f32
+ClampF32(f32 value, f32 min, f32 max) {
+    if (value > max) {
+        return max;
+    }
+
+    if (value < min) {
+        return min;
+    }
+
+    return value;
 }
