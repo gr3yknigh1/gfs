@@ -1,13 +1,13 @@
 #if !defined(GFS_BMP_H_INCLUDED)
 /*
- * FILE      gfs_bmp.h
+ * FILE      gfs.core\include\gfs\bmp.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 #define GFS_BMP_H_INCLUDED
 
-#include "gfs_types.h"
-#include "gfs_memory.h"
+#include "gfs/types.h"
+#include "gfs/memory.h"
 
 typedef enum {
     BMP_HEADER_TYPE_BITMAPCOREHEADER = 12,

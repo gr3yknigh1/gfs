@@ -6,7 +6,7 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_types.h"
+#include "gfs/types.h"
 
 /*
  * @breaf Gets offset from beginning of the array, as if this array represents

@@ -7,8 +7,8 @@
 
 #define GFS_MEMORY_H_INCLUDED
 
-#include "gfs_types.h"
-#include "gfs_macros.h"
+#include "gfs/types.h"
+#include "gfs/macros.h"
 
 #define KILOBYTES(X) (1024 * (X))
 #define MEGABYTES(X) (1024 * 1024 * (X))

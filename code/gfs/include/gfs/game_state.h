@@ -6,7 +6,7 @@
  * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_types.h"
+#include "gfs/types.h"
 
 bool GameStateShouldStop(void);
 void GameStateStop(void);

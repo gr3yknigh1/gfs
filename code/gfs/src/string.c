@@ -3,9 +3,9 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_string.h"
+#include "gfs/string.h"
 
-#include "gfs_types.h"
+#include "gfs/types.h"
 
 StringView
 StringViewFromCString(cstring8 s) {

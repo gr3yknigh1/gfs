@@ -6,9 +6,9 @@
  * */
 #define GFS_RENDER_H_INCLUDED
 
-#include "gfs_types.h"
-#include "gfs_physics.h"
-#include "gfs_platform.h"
+#include "gfs/types.h"
+#include "gfs/physics.h"
+#include "gfs/platform.h"
 
 // NOTE(ilya.a): Ordered according to GDI requirements.
 // TODO(ilya.a): Replace ordering with RGA order.

@@ -2,7 +2,7 @@
 :: AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
 :: COPYRIGHT (c) 2024 Ilya Akkuzin
 
-@echo off
+@echo on
 
 :: Detect vcvarsall for x64 build...
 set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"

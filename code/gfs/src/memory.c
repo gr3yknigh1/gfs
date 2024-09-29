@@ -4,11 +4,11 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_memory.h"
+#include "gfs/memory.h"
 
-#include "gfs_platform.h"
-#include "gfs_types.h"
-#include "gfs_assert.h"
+#include "gfs/platform.h"
+#include "gfs/types.h"
+#include "gfs/assert.h"
 
 usize
 Align2PageSize(usize size) {

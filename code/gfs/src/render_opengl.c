@@ -3,13 +3,13 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_render_opengl.h"
+#include "gfs/render_opengl.h"
 
-#include "gfs_assert.h"
-#include "gfs_platform.h"
-#include "gfs_memory.h"
-#include "gfs_string.h"
-#include "gfs_types.h"
+#include "gfs/assert.h"
+#include "gfs/platform.h"
+#include "gfs/memory.h"
+#include "gfs/string.h"
+#include "gfs/types.h"
 
 #include <glad/glad.h>
 

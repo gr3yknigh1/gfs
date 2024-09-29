@@ -6,9 +6,9 @@
  * */
 #define GFS_WAVE_H_INCLUDED
 
-#include "gfs_assert.h"
-#include "gfs_types.h"
-#include "gfs_memory.h"
+#include "gfs/assert.h"
+#include "gfs/types.h"
+#include "gfs/memory.h"
 
 #define WAVEFILE_FILETYPE "RIFF"
 #define WAVEFILE_FORMATID "WAVE"

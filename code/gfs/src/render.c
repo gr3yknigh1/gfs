@@ -4,17 +4,16 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_render.h"
+#include "gfs/render.h"
 
 #include <glad/glad.h>
 
-#include "gfs_types.h"
-#include "gfs_physics.h"
-#include "gfs_memory.h"
-#include "gfs_macros.h"
-#include "gfs_assert.h"
-
-#include "gfs_render_opengl.h"
+#include "gfs/types.h"
+#include "gfs/physics.h"
+#include "gfs/memory.h"
+#include "gfs/macros.h"
+#include "gfs/assert.h"
+#include "gfs/render_opengl.h"
 
 #define RENDER_COMMAND_CAPACITY 1024
 

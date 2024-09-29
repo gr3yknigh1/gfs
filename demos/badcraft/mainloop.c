@@ -1,9 +1,9 @@
 /*
- * FILE      gfs_game.c
+ * FILE      badcraft\mainloop.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_game.h"
+#include "gfs/game.h"
 
 #include <Windows.h>
 #include <glad/glad.h>
@@ -16,15 +16,15 @@
 #include <cglm/mat4.h>
 #include <cglm/affine.h>
 
-#include "gfs_game_state.h"
-#include "gfs_platform.h"
-#include "gfs_memory.h"
-#include "gfs_assert.h"
-#include "gfs_render.h"
-#include "gfs_types.h"
-#include "gfs_wave.h"
-#include "gfs_render_opengl.h"
-#include "gfs_bmp.h"
+#include "gfs/game_state.h"
+#include "gfs/platform.h"
+#include "gfs/memory.h"
+#include "gfs/assert.h"
+#include "gfs/render.h"
+#include "gfs/types.h"
+#include "gfs/wave.h"
+#include "gfs/render_opengl.h"
+#include "gfs/bmp.h"
 
 #define PI32 3.14159265358979323846f
 

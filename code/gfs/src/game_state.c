@@ -3,8 +3,8 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT Copyright (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_game_state.h"
-#include "gfs_macros.h"
+#include "gfs/game_state.h"
+#include "gfs/macros.h"
 
 static volatile bool gGameShouldStop = false;
 

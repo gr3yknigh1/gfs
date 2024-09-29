@@ -6,10 +6,10 @@
  * */
 #define GFS_PLATFORM_H_INCLUDED
 
-#include "gfs_types.h"
-#include "gfs_macros.h"
-#include "gfs_memory.h"
-#include "gfs_physics.h"
+#include "gfs/types.h"
+#include "gfs/macros.h"
+#include "gfs/memory.h"
+#include "gfs/physics.h"
 
 /*
  * @breaf Actual platform-depended window represantation.

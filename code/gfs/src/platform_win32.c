@@ -3,7 +3,7 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs_platform.h"
+#include "gfs/platform.h"
 
 #include <Windows.h>
 #include <Windowsx.h>
@@ -16,17 +16,16 @@
 #include <glad/glad.h>
 #include <glad/wgl.h>
 
-#include "gfs_assert.h"
-#include "gfs_physics.h"
-#include "gfs_types.h"
-#include "gfs_memory.h"
-#include "gfs_game_state.h"
-#include "gfs_game.h"
-#include "gfs_string.h"
-#include "gfs_macros.h"
-#include "gfs_render.h"
-
-#include "gfs_render_opengl.h"
+#include "gfs/assert.h"
+#include "gfs/physics.h"
+#include "gfs/types.h"
+#include "gfs/memory.h"
+#include "gfs/game_state.h"
+#include "gfs/game.h"
+#include "gfs/string.h"
+#include "gfs/macros.h"
+#include "gfs/render.h"
+#include "gfs/render_opengl.h"
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
 #define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))

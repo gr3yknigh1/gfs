@@ -3,13 +3,12 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
+#include "gfs/wave.h"
 
-#include "gfs_wave.h"
-
-#include "gfs_assert.h"
-#include "gfs_platform.h"
-#include "gfs_types.h"
-#include "gfs_string.h"
+#include "gfs/assert.h"
+#include "gfs/platform.h"
+#include "gfs/types.h"
+#include "gfs/string.h"
 
 WaveAssetLoadResult
 WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {

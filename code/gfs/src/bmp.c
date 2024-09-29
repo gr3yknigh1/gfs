@@ -4,10 +4,10 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
-#include "gfs_bmp.h"
-#include "gfs_platform.h"
-#include "gfs_assert.h"
-#include "gfs_render.h"
+#include "gfs/bmp.h"
+#include "gfs/platform.h"
+#include "gfs/assert.h"
+#include "gfs/render.h"
 
 BMPictureLoadFromFileRC
 BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {

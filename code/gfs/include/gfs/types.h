@@ -7,7 +7,7 @@
 
 #define GFS_TYPES_H_INCLUDED
 
-#include "gfs_static_assert.h"
+#include "gfs/static_assert.h"
 
 #if defined(WIN32)
 #define _LONG_64 long long

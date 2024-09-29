@@ -1,12 +1,12 @@
 #if !defined(GFS_ASSERT_H_INCLUDED)
 /*
- * FILE      gfs_assert.h
+ * FILE      gfs.core\include\gfs\assert.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 #define GFS_ASSERT_H_INCLUDED
 
-#include "gfs_platform.h"
+#include "gfs/platform.h"
 
 #define ASSERT(COND)                                                                                                   \
     do {                                                                                                               \

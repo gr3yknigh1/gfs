@@ -6,7 +6,7 @@
  * */
 #define GFS_STRING_H_INCLUDED
 
-#include "gfs_types.h"
+#include "gfs/types.h"
 
 typedef struct {
     const char8 *buffer;
