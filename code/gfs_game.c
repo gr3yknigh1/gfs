@@ -59,8 +59,6 @@ static void CameraHandleInput(Camera *camera);
 static void CameraGetViewMatix(Camera *camera, mat4 *view);
 static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
 
-static void GetModelMatrix();
-
 static f32 ClampF32(f32 value, f32 min, f32 max);
 
 void
@@ -72,7 +70,7 @@ GameMainloop(void) {
 
     RectangleI32 windowRect = WindowGetRectangle(window);
     // SetMouseVisibility(MOUSEVISIBILITYSTATE_HIDDEN);
-    // SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
+    SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
 
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -191,6 +189,7 @@ GameMainloop(void) {
 
         windowRect = WindowGetRectangle(window);
         Vector2I32 mousePosition = GetMousePosition(window);
+        SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
         CameraRotate(&camera, mousePosition.x, mousePosition.y);
         CameraHandleInput(&camera);
 
@@ -198,10 +197,10 @@ GameMainloop(void) {
 
         mat4 model = {0};
         glm_mat4_copy(GLM_MAT4_IDENTITY, model);
-        {
-            // vec3 xAxisVec = {1.0f, 0, 0};
-            // glm_rotate(model, 0 /* glm_rad(0.01f * dt) */, xAxisVec);
-        }
+#if 0
+        vec3 xAxisVec = {1.0f, 0, 0};
+        glm_rotate(model, 0 /* glm_rad(0.01f * dt) */, xAxisVec);
+#endif
 
         mat4 view = {0};
         CameraGetViewMatix(&camera, &view);
@@ -216,7 +215,6 @@ GameMainloop(void) {
         GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
 
         WindowUpdate(window);
-        // SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
 
         ///< Playing sound
         u32 playCursor = 0;
@@ -260,9 +258,10 @@ GameMainloop(void) {
             char8 printBuffer[KILOBYTES(1)];
             wsprintf(
                 printBuffer,
-                "%ums/f | %uf/s | %umc/f || mouse x=%hu y=%hu || camera yaw=%d pitch=%d || front=[%d %d %d]\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, GetMousePosition(window).x,
-                GetMousePosition(window).y, (i32)camera.yaw, (i32)camera.pitch, (i32)camera.front[0], (i32)camera.front[1], (i32)camera.front[2]);
+                "%ums/f | %uf/s | %umc/f || mouse x=%d y=%d || camera yaw=%d pitch=%d || front=[%d %d %d]\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, mousePosition.x,
+                mousePosition.y, (i32)camera.yaw, (i32)camera.pitch, (i32)camera.front[0],
+                (i32)camera.front[1], (i32)camera.front[2]);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
