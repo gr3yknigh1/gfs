@@ -6,11 +6,16 @@
  * */
 #define GFS_GAME_H_INCLUDED
 
+
+#if !defined(GFS_NOENTRY)
+
 /*
  * @breaf Game's entry. Mainloop code.
  *
  * Should be defined in Game specific code.
  * */
-void Entry();
+void Entry(void);
+
+#endif
 
 #endif // GFS_GAME_H_INCLUDED

@@ -529,7 +529,7 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
     return result;
 }
 
-#if !defined(GFS_WIN32_DISABLE_WINMAIN)
+#if !defined(GFS_NOENTRY)
 
 int WINAPI
 WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
@@ -537,9 +537,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     UNUSED(commandLine);
     UNUSED(showMode);
     UNUSED(prevInstance);
-
     Entry();
-
     return 0;
 }
 
