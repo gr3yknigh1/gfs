@@ -10,5 +10,7 @@ target_link_libraries(badcraft
   PRIVATE
     SDL2::SDL2main
     cglm::cglm
+
+    gfs_noentry
 )
 
