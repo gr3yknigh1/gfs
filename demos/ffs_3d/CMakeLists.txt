@@ -1,12 +1,12 @@
 
 find_package(cglm REQUIRED)
 
-add_executable(badcraft
+add_executable(ffs_3d
   WIN32   # XXX
   ${CMAKE_CURRENT_SOURCE_DIR}/mainloop.c
 )
 
-target_link_libraries(badcraft
+target_link_libraries(ffs_3d
   PRIVATE
     cglm::cglm
     glad
@@ -14,24 +14,24 @@ target_link_libraries(badcraft
 )
 
 if(MSVC)
-  set_target_properties(badcraft
+  set_target_properties(ffs_3d
     PROPERTIES
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
-  target_link_options(badcraft
+  target_link_options(ffs_3d
     PUBLIC
       /DEBUG:FULL
   )
 
-  target_compile_options(badcraft
+  target_compile_options(ffs_3d
     PRIVATE
       /MP  # Build with multiple processes
       /W4  # Warning level
   )
 endif()
 
-target_compile_features(badcraft
+target_compile_features(ffs_3d
   PRIVATE
     c_std_17
 )

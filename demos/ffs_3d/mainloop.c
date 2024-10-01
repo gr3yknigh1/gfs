@@ -1,5 +1,9 @@
 /*
- * FILE      demos\badcraft\mainloop.c
+ * Fully From Scratch 3D.
+ *
+ * Trying to get working windowing, music and other 3D stuff on Windows API.
+ *
+ * FILE      demos\ffs_3d\mainloop.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */

@@ -529,6 +529,8 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
     return result;
 }
 
+#if !defined(GFS_WIN32_DISABLE_WINMAIN)
+
 int WINAPI
 WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
     UNUSED(instance);
@@ -540,6 +542,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
 
     return 0;
 }
+
+#endif
 
 typedef enum { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR } Win32_LoadXInputResult;
 
@@ -580,7 +584,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
 
     MemoryZero(window, sizeof(Window));
 
-    gWindow = window;  // TODO(gr3yknigh1): Some day add support for multiple windows.
+    gWindow = window; // TODO(gr3yknigh1): Some day add support for multiple windows.
 
     HINSTANCE instance = GetModuleHandle(NULL);
 
