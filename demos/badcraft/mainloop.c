@@ -1,5 +1,5 @@
 /*
- * FILE      badcraft\mainloop.c
+ * FILE      demos\badcraft\mainloop.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <glad/glad.h>
 
+#include <stdio.h>
 #include <math.h> // sinf cosf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
 
@@ -41,12 +42,6 @@ typedef struct {
     f32 fov;
 
     Window *window;
-
-    struct {
-        i32 lastXPosition;
-        i32 lastYPosition;
-        bool firstTimeAssignment;
-    } _mouseState;
 } Camera;
 
 static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
@@ -54,7 +49,7 @@ static void GameFillSoundBufferWaveAsset(
     SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite);
 
 static Camera CameraMake(Window *window);
-static void CameraRotate(Camera *camera, i32 mouseXPosition, i32 mouseYPosition);
+static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 static void CameraHandleInput(Camera *camera);
 static void CameraGetViewMatix(Camera *camera, mat4 *view);
 static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
@@ -183,14 +178,27 @@ GameMainloop(void) {
     u64 lastCycleCount = __rdtsc();
 
     bool isFirstMainloopIteration = true;
+    i32 lastMouseXPosition = 0;
+    i32 lastMouseYPosition = 0;
 
     while (!GameStateShouldStop()) {
         PoolEvents(window);
 
         windowRect = WindowGetRectangle(window);
         Vector2I32 mousePosition = GetMousePosition(window);
-        SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
-        CameraRotate(&camera, mousePosition.x, mousePosition.y);
+
+        if (isFirstMainloopIteration) {
+            lastMouseXPosition = mousePosition.x;
+            lastMouseYPosition = mousePosition.y;
+        }
+
+        f32 mouseXOffset = (f32)mousePosition.x - lastMouseXPosition;
+        f32 mouseYOffset = (f32)lastMouseYPosition - mousePosition.y;
+
+        lastMouseXPosition = mousePosition.x;
+        lastMouseYPosition = mousePosition.y;
+
+        CameraRotate(&camera, mouseXOffset, mouseYOffset);
         CameraHandleInput(&camera);
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
@@ -256,12 +264,12 @@ GameMainloop(void) {
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
-            wsprintf(
+            sprintf(
                 printBuffer,
-                "%ums/f | %uf/s | %umc/f || mouse x=%d y=%d || camera yaw=%d pitch=%d || front=[%d %d %d]\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, mousePosition.x,
-                mousePosition.y, (i32)camera.yaw, (i32)camera.pitch, (i32)camera.front[0],
-                (i32)camera.front[1], (i32)camera.front[2]);
+                "%llums/f | %lluf/s | %llumc/f || mouse x=%d y=%d || camera yaw=%.3f pitch=%.3f || mouseOffset=[%.3f "
+                "%.3f] || lastPos=[%d %d]\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, mousePosition.x, mousePosition.y, camera.yaw,
+                camera.pitch, mouseXOffset, mouseYOffset, lastMouseXPosition, lastMouseYPosition);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
@@ -359,7 +367,7 @@ GameFillSoundBufferWaveAsset(
 
 static Camera
 CameraMake(Window *window) {
-    RectangleI32 windowRect = WindowGetRectangle(window);
+    UNUSED(window);
 
     Camera camera = {
         .position = {0, 0, 3.0f},
@@ -374,29 +382,12 @@ CameraMake(Window *window) {
         .fov = 45.0f,
 
         .window = window,
-
-        ._mouseState = {
-            .lastXPosition = windowRect.width / 2,
-            .lastYPosition = windowRect.height / 2,
-            .firstTimeAssignment = true,
-        }};
+    };
     return camera;
 }
 
 static void
-CameraRotate(Camera *camera, i32 mouseXPosition, i32 mouseYPosition) {
-    if (camera->_mouseState.firstTimeAssignment) {
-        camera->_mouseState.lastXPosition = mouseXPosition;
-        camera->_mouseState.lastYPosition = mouseYPosition;
-        camera->_mouseState.firstTimeAssignment = false;
-    }
-
-    f32 xOffset = mouseXPosition - camera->_mouseState.lastXPosition;
-    f32 yOffset = camera->_mouseState.lastYPosition - mouseYPosition;
-
-    camera->_mouseState.lastXPosition = mouseXPosition;
-    camera->_mouseState.lastYPosition = mouseYPosition;
-
+CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     xOffset *= camera->sensitivity;
     yOffset *= camera->sensitivity;
 

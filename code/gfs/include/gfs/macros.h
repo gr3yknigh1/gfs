@@ -13,4 +13,20 @@
 #define MKFLAG(BITINDEX) (1 << (BITINDEX))
 #define HASANYBIT(MASK, FLAG) ((MASK) | (FLAG))
 
+#define EXPAND(X) (X)
+
+#if defined(__cplusplus)
+#define LITERAL(X) X
+#else
+#define LITERAL(X) EXPAND(X)
+#endif
+
+#if defined(__cplusplus)
+#define INIT_EMPTY_STRUCT(X)                                                                                              \
+    LITERAL(X) {}
+#else
+#define INIT_EMPTY_STRUCT(X)                                                                                              \
+    LITERAL(X) {0}
+#endif
+
 #endif // GFS_MACROS_H_INCLUDED

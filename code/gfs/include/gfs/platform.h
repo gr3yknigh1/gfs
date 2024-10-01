@@ -46,11 +46,6 @@ Vector2I32 GetMousePosition(Window *window);
  * */
 void SetMousePosition(Window *window, i32 x, i32 y);
 
-/*
- * @breaf Clips mouse position according to window's size.
- * */
-void KeepMouseInsideRectangle(Window *window);
-
 typedef enum {
     MOUSEVISIBILITYSTATE_SHOWN,
     MOUSEVISIBILITYSTATE_HIDDEN,

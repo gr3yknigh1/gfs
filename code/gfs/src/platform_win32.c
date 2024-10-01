@@ -105,6 +105,11 @@ typedef struct SoundDevice {
     LPDIRECTSOUNDBUFFER audioBuffer;
 } SoundDevice;
 
+/*
+ * @breaf Because currently we supporting only one window at the time, we can use just one single Window pointer.
+ * */
+static Window *gWindow = NULL;
+
 static void
 Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
     UNUSED(windowHandle);
@@ -114,25 +119,10 @@ Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
     }
 }
 
-// XXX: Hack
-static bool gIsFocused = false;
-static Vector2I32 gMousePosition = {0};
-
 Vector2I32
 GetMousePosition(Window *window) {
     UNUSED(window);
-
-    if (gIsFocused) {
-
-        POINT win32MousePosition = {0};
-        ASSERT_NONZERO(GetCursorPos(&win32MousePosition));
-        gMousePosition.x = win32MousePosition.x;
-        gMousePosition.y = win32MousePosition.y;
-    }
-
-    ScreenToClient(window->windowHandle, (LPPOINT)&gMousePosition);
-
-    return gMousePosition;
+    return INIT_EMPTY_STRUCT(Vector2I32);
 }
 
 void
@@ -150,16 +140,8 @@ SetMouseVisibility(MouseVisibilityState newState) {
 void
 SetMousePosition(Window *window, i32 x, i32 y) {
     UNUSED(window);
-
-    if (!gIsFocused) {
-        return;
-    }
-
-    POINT win32Point = {0};
-    win32Point.x = x;
-    win32Point.y = y;
-    ASSERT_NONZERO(ClientToScreen(window->windowHandle, &win32Point));
-    ASSERT_NONZERO(SetCursorPos(win32Point.x, win32Point.y));
+    UNUSED(x);
+    UNUSED(y);
 }
 
 typedef i32 KeyStateMask;
@@ -331,17 +313,6 @@ WindowGetRectangle(Window *window) {
 }
 
 void
-KeepMouseInsideRectangle(Window *window) {
-    if (!gIsFocused) {
-        return;
-    }
-
-    RECT win32WindowRect = {0};
-    ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
-    ASSERT_NONZERO(ClipCursor(&win32WindowRect));
-}
-
-void
 WindowUpdate(Window *window) {
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
 }
@@ -398,8 +369,11 @@ Win32_OpenGLContextExts_Init(void) {
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
-    // ReleaseDC(dummyWindowHandle, dummyDeviceContext);
-    // DestroyWindow(dummyWindowHandle);
+
+#if 0
+    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
+    DestroyWindow(dummyWindowHandle);
+#endif
 }
 
 static HGLRC
@@ -503,15 +477,12 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
 
     switch (message) {
     case WM_SETFOCUS: {
-        gIsFocused = true;
+        result = DefWindowProc(windowHandle, message, wParam, lParam);
     } break;
     case WM_KILLFOCUS: {
-        gIsFocused = false;
+        result = DefWindowProc(windowHandle, message, wParam, lParam);
     } break;
     case WM_ACTIVATE: {
-        // if (LOWORD(wParam) == WA_INACTIVE) {
-        // } else {
-        // }
         result = DefWindowProc(windowHandle, message, wParam, lParam);
     } break;
     case WM_MOUSEMOVE: {
@@ -598,6 +569,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
+    ASSERT_ISNULL(gWindow);
+
     usize titleLength = CString8GetLength(title);
     char8 *copiedTitle = ScratchAlloc(scratch, titleLength + 1);
     MemoryCopy(copiedTitle, title, titleLength + 1);
@@ -606,6 +579,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONNULL(window);
 
     MemoryZero(window, sizeof(Window));
+
+    gWindow = window;  // TODO(gr3yknigh1): Some day add support for multiple windows.
 
     HINSTANCE instance = GetModuleHandle(NULL);
 
