@@ -7,10 +7,10 @@
 #define GFS_GAME_H_INCLUDED
 
 /*
- * @breaf Game's mainloop code.
+ * @breaf Game's entry. Mainloop code.
  *
  * Should be defined in Game specific code.
  * */
-void GameMainloop();
+void Entry();
 
 #endif // GFS_GAME_H_INCLUDED

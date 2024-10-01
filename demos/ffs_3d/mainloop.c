@@ -7,7 +7,6 @@
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "gfs/game.h"
 
 #include <Windows.h>
 #include <glad/glad.h>
@@ -21,15 +20,16 @@
 #include <cglm/mat4.h>
 #include <cglm/affine.h>
 
-#include "gfs/game_state.h"
-#include "gfs/platform.h"
-#include "gfs/memory.h"
-#include "gfs/assert.h"
-#include "gfs/render.h"
-#include "gfs/types.h"
-#include "gfs/wave.h"
-#include "gfs/render_opengl.h"
-#include "gfs/bmp.h"
+#include <gfs/entry.h>
+#include <gfs/game_state.h>
+#include <gfs/platform.h>
+#include <gfs/memory.h>
+#include <gfs/assert.h>
+#include <gfs/render.h>
+#include <gfs/types.h>
+#include <gfs/wave.h>
+#include <gfs/render_opengl.h>
+#include <gfs/bmp.h>
 
 #define PI32 3.14159265358979323846f
 
@@ -61,7 +61,7 @@ static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
 static f32 ClampF32(f32 value, f32 min, f32 max);
 
 void
-GameMainloop(void) {
+Entry(void) {
     Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");

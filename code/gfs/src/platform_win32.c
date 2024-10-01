@@ -21,7 +21,7 @@
 #include "gfs/types.h"
 #include "gfs/memory.h"
 #include "gfs/game_state.h"
-#include "gfs/game.h"
+#include "gfs/entry.h"
 #include "gfs/string.h"
 #include "gfs/macros.h"
 #include "gfs/render.h"
@@ -538,7 +538,7 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     UNUSED(showMode);
     UNUSED(prevInstance);
 
-    GameMainloop();
+    Entry();
 
     return 0;
 }

@@ -12,7 +12,7 @@ class GFSRecipe(ConanFile):
 
     settings = "os", "arch", "compiler", "build_type"
 
-    requires = "cglm/0.9.1"
+    requires = "cglm/0.9.1", "sdl/2.30.7"
 
     def generate(self):
         deps = CMakeDeps(self)
