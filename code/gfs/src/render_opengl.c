@@ -115,11 +115,12 @@ GLDrawTriangles(
 
     GL_CALL(glUseProgram(shader));
 
-    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
-                                           // texture support. [2024/09/22]
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    if (texture > 0) {
+        GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                               // texture support. [2024/09/22]
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    }
 
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
     GL_CALL(glBindVertexArray(va));
 
     // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
