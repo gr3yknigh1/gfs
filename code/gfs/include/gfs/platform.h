@@ -39,19 +39,19 @@ typedef struct {
 /*
  * @breaf Returns mouse's position.
  * */
-Vector2I32 GetMousePosition(Window *window);
+GFS_EXPORT Vector2I32 GetMousePosition(Window *window);
 
 /*
  * @breaf Sets mouse position.
  * */
-void SetMousePosition(Window *window, i32 x, i32 y);
+GFS_EXPORT void SetMousePosition(Window *window, i32 x, i32 y);
 
 typedef enum {
     MOUSEVISIBILITYSTATE_SHOWN,
     MOUSEVISIBILITYSTATE_HIDDEN,
 } MouseVisibilityState;
 
-void SetMouseVisibility(MouseVisibilityState newState);
+GFS_EXPORT void SetMouseVisibility(MouseVisibilityState newState);
 
 /*
  * @breaf IDs of keyboard keys.
@@ -75,7 +75,7 @@ typedef enum {
  *
  * Only when he focused on window.
  * */
-bool IsKeyDown(Key key);
+GFS_EXPORT bool IsKeyDown(Key key);
 
 /*
  * @breaf Actual platform-dependend file handle represantation.
@@ -85,7 +85,7 @@ typedef struct FileHandle FileHandle;
 /*
  * @breaf Checks if platform file handle is valid.
  */
-bool FileHandleIsValid(FileHandle *handle);
+GFS_EXPORT bool FileHandleIsValid(FileHandle *handle);
 
 typedef u8 Permissions;
 
@@ -105,71 +105,71 @@ typedef struct {
 
 // FileOpenResult FileOpen(cstring8 filePath);
 
-FileOpenResult FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions);
+GFS_EXPORT FileOpenResult FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions);
 
 typedef enum {
     FILE_CLOSE_OK,
     FILE_CLOSE_ERR,
 } FileCloseResultCode;
 
-FileCloseResultCode FileClose(FileHandle *handle);
+GFS_EXPORT FileCloseResultCode FileClose(FileHandle *handle);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
     PLATFORM_FILE_FAILED_TO_READ,
 } FileLoadResultCode;
 
-FileLoadResultCode FileLoadToBuffer(
+GFS_EXPORT FileLoadResultCode FileLoadToBuffer(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
 
-FileLoadResultCode FileLoadToBufferEx(
+GFS_EXPORT FileLoadResultCode FileLoadToBufferEx(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
 
-usize FileGetSize(FileHandle *handle);
+GFS_EXPORT usize FileGetSize(FileHandle *handle);
 
 /*
  * @breaf Opens platforms window.
  * */
-Window *WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title);
+GFS_EXPORT Window *WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
  * */
-void WindowClose(Window *window);
+GFS_EXPORT void WindowClose(Window *window);
 
 /*
  * @breaf Updates window.
  */
-void WindowUpdate(Window *window);
+GFS_EXPORT void WindowUpdate(Window *window);
 
 /*
  * @breaf Resizes render buffer.
  *
  * @warn No implementation
  */
-void WindowResize(Window *window, i32 width, i32 height);
+GFS_EXPORT void WindowResize(Window *window, i32 width, i32 height);
 
 /*
  * @breaf Returns rectangle of platform's window.
  *
  * TODO(ilya.a): Check X and Y values [2024/08/31]
  */
-RectangleI32 WindowGetRectangle(Window *window);
+GFS_EXPORT RectangleI32 WindowGetRectangle(Window *window);
 
 /*
  * @breaf Processes platform's events.
  * */
-void PoolEvents(Window *window);
+GFS_EXPORT void PoolEvents(Window *window);
 
 /*
  * @breaf Returns platform's pagesize.
  * */
-usize GetPageSize();
+GFS_EXPORT usize GetPageSize();
 
 /*
  * @breaf Allocates memory aligned to platform's default pagesize.
  * */
-void *MemoryAllocate(usize size);
+GFS_EXPORT void *MemoryAllocate(usize size);
 
 typedef enum {
     PLATFORM_MEMORY_FREE_OK,
@@ -179,39 +179,39 @@ typedef enum {
 /*
  * @breaf Unmaps memory page.
  * */
-MemoryFreeResultCode MemoryFree(void *data);
+GFS_EXPORT MemoryFreeResultCode MemoryFree(void *data);
 
 /*
  * @breaf Checks if path exists in filesystem.
  */
-bool IsPathExists(cstring8 path);
+GFS_EXPORT bool IsPathExists(cstring8 path);
 
 /*
  * @breaf Initializes `SoundOutput` struct with default values.
  *
  * TODO(ilya.a): Expose move parameters to the arguments [2024/08/31]
  */
-SoundOutput SoundOutputMake(i32 samplesPerSecond);
+GFS_EXPORT SoundOutput SoundOutputMake(i32 samplesPerSecond);
 
-void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
+GFS_EXPORT void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 
-SoundDevice *SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize);
+GFS_EXPORT SoundDevice *SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize);
 
 typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } SoundDeviceGetCurrentPositionResult;
 
-SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
+GFS_EXPORT SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
     SoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
-void SoundDeviceLockBuffer(
+GFS_EXPORT void SoundDeviceLockBuffer(
     SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
     u32 *region1Size);
-void SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
-void SoundDevicePlay(SoundDevice *device);
+GFS_EXPORT void SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+GFS_EXPORT void SoundDevicePlay(SoundDevice *device);
 
-void SoundDeviceClose(SoundDevice *device);
+GFS_EXPORT void SoundDeviceClose(SoundDevice *device);
 
 /*
  * @breaf Puts whole null terminated string to stdout.
@@ -219,22 +219,22 @@ void SoundDeviceClose(SoundDevice *device);
  * NOTE: Currently calls `OutputDebugString` for win32 platform.
  * TODO: Propertly implement IO on platform layer.
  */
-void PutString(cstring8 s);
+GFS_EXPORT void PutString(cstring8 s);
 
 /*
  * @breaf Called in ASSERT macro in order to print last error of platform level
  * code.
  */
-void PutLastError(void);
+GFS_EXPORT void PutLastError(void);
 
 /*
  * @breaf Calls platform specific break function.
  */
-void ThrowDebugBreak(void);
+GFS_EXPORT void ThrowDebugBreak(void);
 
 /*
  * @breaf Exits the process with specified code.
  */
-void ProcessExit(u32 code);
+GFS_EXPORT void ProcessExit(u32 code);
 
 #endif // GFS_PLATFORM_H_INCLUDED

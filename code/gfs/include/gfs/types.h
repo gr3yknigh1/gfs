@@ -56,19 +56,24 @@ typedef const char *cstring8; // NOTE(ilya.a): Explicitly distiguasing C style
 EXPECT_TYPE_SIZE(char8, 1);
 EXPECT_TYPE_SIZE(cstring8, POINTER_SIZE);
 
+#if !defined(__cplusplus)
+
+// TODO(gr3yknigh1): Typedef to _Bool if C11
 #if !defined(bool)
-typedef _Bool bool;
+typedef i8 bool;
 #endif
 
-EXPECT_TYPE_SIZE(bool, 1);
-
-#ifndef true
+#if !defined(true)
 #define true 1
 #endif // true
 
-#ifndef false
+#if !defined(false)
 #define false 0
 #endif // false
+
+#endif
+
+EXPECT_TYPE_SIZE(bool, 1);
 
 #ifndef NULL
 #define NULL ((void *)0)

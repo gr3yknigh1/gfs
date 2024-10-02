@@ -7,8 +7,9 @@
  * */
 
 #include "gfs/types.h"
+#include "gfs/macros.h"
 
-bool GameStateShouldStop(void);
-void GameStateStop(void);
+GFS_EXPORT bool GameStateShouldStop(void);
+GFS_EXPORT void GameStateStop(void);
 
 #endif // GFS_GAME_STATE_H_INCLUDED

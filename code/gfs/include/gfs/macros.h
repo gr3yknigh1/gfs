@@ -6,6 +6,22 @@
  * */
 #define GFS_MACROS_H_INCLUDED
 
+#if defined(__cplusplus)
+#define CLINKAGE extern "C"
+#define CLINKAGE_BEGIN extern "C" {
+#define CLINKAGE_END }
+#else
+#define CLINKAGE
+#define CLINKAGE_BEGIN
+#define CLINKAGE_END
+#endif
+
+#if defined(__cplusplus)
+#define GFS_EXPORT CLINKAGE
+#else
+#define GFS_EXPORT
+#endif
+
 #define STRINGIFY(X) #X
 
 #define UNUSED(X) ((void)(X))

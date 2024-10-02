@@ -42,21 +42,21 @@ typedef struct {
     u64 stride;
 } GLVertexBufferLayout;
 
-GLVertexArray GLVertexArrayMake(void);
-void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
+GFS_EXPORT GLVertexArray GLVertexArrayMake(void);
+GFS_EXPORT void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
 
-GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
+GFS_EXPORT GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
-GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
+GFS_EXPORT GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
 
-GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
+GFS_EXPORT GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 
-void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count);
+GFS_EXPORT void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count);
 
-void GLClear(f32 r, f32 g, f32 b, f32 a);
-void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
+GFS_EXPORT void GLClear(f32 r, f32 g, f32 b, f32 a);
+GFS_EXPORT void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
-void GLDrawTriangles(
+GFS_EXPORT void GLDrawTriangles(
     const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va, GLShaderProgramID shader,
     GLTexture texture);
 
@@ -72,33 +72,33 @@ typedef enum {
  *
  * @return Shader ID
  * */
-GLShaderID GLCompileShaderFromFile(Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
+GFS_EXPORT GLShaderID GLCompileShaderFromFile(Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
 
 /*
  * @breaf Compiles OpenGL shader.
  *
  * @return Shader ID
  * */
-GLShaderID GLCompileShader(Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
+GFS_EXPORT GLShaderID GLCompileShader(Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
 
 typedef struct {
     GLShaderID vertexShader;
     GLShaderID fragmentShader;
 } GLShaderProgramLinkData;
 
-GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
+GFS_EXPORT GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
 
-GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture);
+GFS_EXPORT GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture);
 
-void GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value);
-void GLShaderSetUniformV3F32(GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z);
-void GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value);
-void GLShaderSetUniformM4F32(GLShaderProgramID shader, cstring8 name, f32 *value);
+GFS_EXPORT void GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value);
+GFS_EXPORT void GLShaderSetUniformV3F32(GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z);
+GFS_EXPORT void GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value);
+GFS_EXPORT void GLShaderSetUniformM4F32(GLShaderProgramID shader, cstring8 name, f32 *value);
 
-cstring8 GLGetErrorString(i32 errorCode);
+GFS_EXPORT cstring8 GLGetErrorString(i32 errorCode);
 
-void GLClearErrors(void);
-void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
+GFS_EXPORT void GLClearErrors(void);
+GFS_EXPORT void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
 
 #define GL_CALL(EXPR)                                                                                                  \
     do {                                                                                                               \

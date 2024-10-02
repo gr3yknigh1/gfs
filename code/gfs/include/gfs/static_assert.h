@@ -6,7 +6,12 @@
  * */
 #define GFS_STATIC_ASSERT_H_INCLUDED
 
+#if !defined(__cplusplus)
 #define STATIC_ASSERT(COND) _Static_assert((COND), "")
+#else
+#define STATIC_ASSERT(COND) static_assert((COND), "")
+#endif
+
 #define EXPECT_TYPE_SIZE(TYPE, SIZE) STATIC_ASSERT(sizeof(TYPE) == (SIZE))
 
 #endif // GFS_STATIC_ASSERT_H_INCLUDED
