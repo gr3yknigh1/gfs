@@ -12,5 +12,6 @@ target_link_libraries(badcraft
     cglm::cglm
 
     gfs_noentry
+    glad
 )
 
