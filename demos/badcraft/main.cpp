@@ -156,59 +156,74 @@ main(int argc, char *args[]) {
     GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
     GLShaderSetUniformI32(shader, "u_Texture", 0);
 
+    i32 windowWidth = 0, windowHeight = 0;
+    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+
     // Enable VSync
     SDL_GL_SetSwapInterval(-1);
 
+    SDL_bool isRelativeMouseMode = SDL_TRUE;
+    SDL_SetRelativeMouseMode(isRelativeMouseMode);
+
+    // Wrap mouse inside window
+    SDL_WarpMouseInWindow(window, windowWidth / 2, windowHeight / 2);
+
     Camera camera = CameraMake();
 
-    bool isFirstMainloopIteration = true;
-    i32 lastMouseXPosition = 0;
-    i32 lastMouseYPosition = 0;
-
     u64 currentPerfCounter = SDL_GetPerformanceCounter(), previousPerfCounter = 0;
+
+    bool isFirstMouseMotion = true;
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
         currentPerfCounter = SDL_GetPerformanceCounter();
 
+        // Might be multiplied by 1000?
         f32 deltaTime = static_cast<f32>(
-            ((currentPerfCounter - previousPerfCounter) * 1000) / static_cast<f32>(SDL_GetPerformanceFrequency()));
+            (currentPerfCounter - previousPerfCounter) / static_cast<f32>(SDL_GetPerformanceFrequency()));
 
         // Input
-
         SDL_Event event = INIT_EMPTY_STRUCT(SDL_Event);
 
+        f32 mouseXOffset = 0;
+        f32 mouseYOffset = 0;
+
         while (SDL_PollEvent(&event)) {
-            if (ImGui_ImplSDL2_ProcessEvent(&event)) {
-                continue;
-            }
+            ImGui_ImplSDL2_ProcessEvent(&event);
 
             if (event.type == SDL_QUIT) {
                 GameStateStop();
+            } else if (event.type == SDL_MOUSEMOTION) {
+                if (isFirstMouseMotion) {
+                    mouseXOffset = 0;
+                    mouseYOffset = 0;
+                    isFirstMouseMotion = false;
+                } else {
+                    mouseXOffset = event.motion.xrel;
+                    mouseYOffset = event.motion.yrel;
+                }
             }
         }
 
         gSDLKeyState = SDL_GetKeyboardState(nullptr);
 
-        Vector2I32 mousePosition = INIT_EMPTY_STRUCT(Vector2I32);
-        UNUSED(SDL_GetMouseState(&mousePosition.x, &mousePosition.y));
+        // Quit...
 
-        if (isFirstMainloopIteration) {
-            lastMouseXPosition = mousePosition.x;
-            lastMouseYPosition = mousePosition.y;
+        if (gSDLKeyState[SDL_SCANCODE_Q]) {
+            GameStateStop();
         }
 
-        f32 mouseXOffset = (f32)mousePosition.x - lastMouseXPosition;
-        f32 mouseYOffset = (f32)lastMouseYPosition - mousePosition.y;
+        // Toggle mouse...
 
-        lastMouseXPosition = mousePosition.x;
-        lastMouseYPosition = mousePosition.y;
+        if (gSDLKeyState[SDL_SCANCODE_ESCAPE]) {
+            isRelativeMouseMode = isRelativeMouseMode ? SDL_FALSE : SDL_TRUE;
+            SDL_SetRelativeMouseMode(isRelativeMouseMode);
+        }
 
         // Update
 
         CameraRotate(&camera, mouseXOffset, mouseYOffset);
         CameraHandleInput(&camera, deltaTime);
 
-        i32 windowWidth = 0, windowHeight = 0;
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
         GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
 
@@ -229,7 +244,11 @@ main(int argc, char *args[]) {
         ImGui::NewFrame();
 
         ImGui::Begin("Debug Information");
-        ImGui::Text("DeltaTime: %.03f", deltaTime);
+        ImGui::Text("DeltaTime: %.05f", deltaTime);
+        ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
+        // ImGui::Text("Mouse position: [%i %i]", mousePosition.x, mousePosition.y);
+        // ImGui::Text("Mouse last position: [%i %i]", lastMouseXPosition, lastMouseYPosition);
+        ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
         ImGui::End();
 
         ImGui::Render();
@@ -261,7 +280,7 @@ CameraMake() {
         .yaw = -90.0f,
         .pitch = 0.0f,
 
-        .speed = 100.0f,
+        .speed = 1.0f,
         .sensitivity = 0.1f,
         .fov = 45.0f,
     };
@@ -273,8 +292,8 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     xOffset *= camera->sensitivity;
     yOffset *= camera->sensitivity;
 
-    camera->yaw += xOffset;
-    camera->pitch += yOffset;
+    camera->yaw += xOffset * 1;
+    camera->pitch += yOffset * -1;
 
     camera->pitch = ClampF32(camera->pitch, -89.0f, 89.0f);
 
