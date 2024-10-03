@@ -1,8 +1,11 @@
+import os.path
+
 from conan import ConanFile
 
 from conan.tools.cmake import CMake
 from conan.tools.cmake import CMakeDeps
 from conan.tools.cmake import CMakeToolchain
+from conan.tools.files import copy
 
 
 class GFSRecipe(ConanFile):
@@ -12,9 +15,15 @@ class GFSRecipe(ConanFile):
 
     settings = "os", "arch", "compiler", "build_type"
 
-    requires = "cglm/0.9.1", "sdl/2.30.7"
+    requires = "cglm/0.9.1", "sdl/2.30.7", "glm/cci.20230113", "imgui/1.91.2"
 
     def generate(self):
+        # NOTE(gr3yknigh1): This is stupid
+        copy(self, "*sdl2*", os.path.join(self.dependencies["imgui"].package_folder,
+            "res", "bindings"), os.path.join(self.source_folder, "build", "bindings"))
+        copy(self, "*opengl3*", os.path.join(self.dependencies["imgui"].package_folder,
+            "res", "bindings"), os.path.join(self.source_folder, "build", "bindings"))
+
         deps = CMakeDeps(self)
         deps.generate()
 

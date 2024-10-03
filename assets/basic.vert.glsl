@@ -7,8 +7,6 @@ layout (location = 2) in vec2 l_TexCoord;
 out vec4 f_Color;
 out vec2 f_TexCoord;
 
-// uniform mat4 u_Transform;
-
 uniform mat4 u_Model = mat4(0);
 uniform mat4 u_View = mat4(0);
 uniform mat4 u_Projection = mat4(0);
