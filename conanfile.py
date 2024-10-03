@@ -32,6 +32,9 @@ class GFSRecipe(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(variables={
+            "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+            "GFS_OPENGL_DEBUG": "ON" if self.settings.build_type == "Debug" else "OFF",
+        })
         cmake.build()
 

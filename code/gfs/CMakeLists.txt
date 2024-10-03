@@ -69,6 +69,13 @@ function(_gfs_add_library _target_name)
       glad
   )
 
+  if (GFS_OPENGL_DEBUG)
+    target_compile_definitions(gfs
+      PUBLIC
+        GFS_OPENGL_DEBUG=1
+    )
+  endif()
+
   # TODO(ilya.a): Add unicode support. [2024/05/24]
   # target_compile_definitions(
   #   ${PROJECT_NAME}

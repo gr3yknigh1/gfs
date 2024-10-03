@@ -56,9 +56,7 @@ GFS_EXPORT void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layou
 GFS_EXPORT void GLClear(f32 r, f32 g, f32 b, f32 a);
 GFS_EXPORT void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
-GFS_EXPORT void GLDrawTriangles(
-    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va, GLShaderProgramID shader,
-    GLTexture texture);
+GFS_EXPORT void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
 
 typedef enum {
     GL_SHADER_TYPE_NONE,
@@ -100,6 +98,8 @@ GFS_EXPORT cstring8 GLGetErrorString(i32 errorCode);
 GFS_EXPORT void GLClearErrors(void);
 GFS_EXPORT void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
 
+#if defined(GFS_OPENGL_DEBUG)
+
 #define GL_CALL(EXPR)                                                                                                  \
     do {                                                                                                               \
         GLClearErrors();                                                                                               \
@@ -113,5 +113,12 @@ GFS_EXPORT void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 s
         *(OUT) = (EXPR);                                                                                               \
         GLAssertNoErrors(STRINGIFY(EXPR), __FILE__, __LINE__);                                                         \
     } while (0)
+
+#else
+
+#define GL_CALL(X) (X)
+#define GL_CALL_O(X, O) (*(O) = (X))
+
+#endif
 
 #endif // GFS_RENDER_OPENGL_H_INCLUDED

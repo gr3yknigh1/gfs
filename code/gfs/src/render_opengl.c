@@ -110,16 +110,7 @@ GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
 
 void
 GLDrawTriangles(
-    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va, GLShaderProgramID shader,
-    GLTexture texture) {
-
-    GL_CALL(glUseProgram(shader));
-
-    if (texture > 0) {
-        GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
-                                               // texture support. [2024/09/22]
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-    }
+    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va) {
 
     GL_CALL(glBindVertexArray(va));
 
@@ -135,12 +126,6 @@ GLDrawTriangles(
     // GL_CALL(glDrawElements(
     //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
     //     GL_UNSIGNED_INT, 0));
-
-    if (texture > 0) {
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-    }
-
-    GL_CALL(glUseProgram(0));
 }
 
 GLShaderID

@@ -93,9 +93,9 @@ Entry(void) {
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
     GLShaderProgramLinkData shaderLinkData = {0};
     shaderLinkData.vertexShader =
-        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
     shaderLinkData.fragmentShader =
-        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
@@ -155,7 +155,7 @@ Entry(void) {
 #endif
 
     BMPicture picture = {0};
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
+    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
@@ -184,6 +184,11 @@ Entry(void) {
     bool isFirstMainloopIteration = true;
     i32 lastMouseXPosition = 0;
     i32 lastMouseYPosition = 0;
+
+    GL_CALL(glUseProgram(shader));
+    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                           // texture support. [2024/09/22]
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
     while (!GameStateShouldStop()) {
         PoolEvents(window);
@@ -224,7 +229,7 @@ Entry(void) {
         GLShaderSetUniformM4F32(shader, "u_View", (f32 *)view);
         GLShaderSetUniformM4F32(shader, "u_Projection", (f32 *)projection);
 
-        GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
+        GLDrawTriangles(&vb, &vbLayout, va);
 
         WindowUpdate(window);
 

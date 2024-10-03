@@ -2,7 +2,10 @@
 :: AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
 :: COPYRIGHT (c) 2024 Ilya Akkuzin
 
-@echo off
+@echo on
+
+set build_type=%1
+shift
 
 :: Detect vcvarsall for x64 build...
 set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
@@ -26,9 +29,20 @@ pushd %project_path%
 
 set configuration_path=%project_path%\build
 
-conan install . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static-ninja --settings build_type=Debug --settings compiler.runtime_type=Debug
-cmake --preset conan-default -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build --preset conan-debug
+if [%build_type%]==[] set build_type=Debug
+
+if "%build_type%" == "Debug" (
+  echo I: Building debug
+  conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static --settings build_type=Debug --settings compiler.runtime_type=Debug
+) else (
+  if "%build_type%" == "Release" (
+    echo I: Building release
+    conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static --settings build_type=Release --settings compiler.runtime_type=Release
+  ) else (
+    echo E: Invalid build type: %build_type%
+    exit 1
+  )
+)
 
 if exist %configuration_path%\compile_commands.json (
   echo I: Copying compilation database...

@@ -84,8 +84,9 @@ main(int argc, char *args[]) {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    SDL_Window *window =
-        SDL_CreateWindow("Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+    SDL_Window *window = SDL_CreateWindow(
+        "Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 2880, 1800,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
     ASSERT_NONNULL(window);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -103,15 +104,15 @@ main(int argc, char *args[]) {
     GL_CALL(glEnable(GL_DEPTH_TEST));
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
-    GL_CALL(glEnable(GL_CULL_FACE));
-    GL_CALL(glCullFace(GL_FRONT));
-    GL_CALL(glFrontFace(GL_CW));
+    // GL_CALL(glEnable(GL_CULL_FACE));
+    // GL_CALL(glCullFace(GL_FRONT));
+    // GL_CALL(glFrontFace(GL_CW));
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
-        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
     shaderLinkData.fragmentShader =
-        GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
@@ -156,7 +157,7 @@ main(int argc, char *args[]) {
     };
 
     BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
+    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
     GLVertexArray va = GLVertexArrayMake();
@@ -190,6 +191,12 @@ main(int argc, char *args[]) {
     u64 currentPerfCounter = SDL_GetPerformanceCounter(), previousPerfCounter = 0;
 
     bool isFirstMouseMotion = true;
+
+    GL_CALL(glUseProgram(shader));
+    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                           // texture support. [2024/09/22]
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
         currentPerfCounter = SDL_GetPerformanceCounter();
@@ -268,11 +275,11 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, "u_View", glm::value_ptr(view));
         GLShaderSetUniformM4F32(shader, "u_Projection", glm::value_ptr(projection));
 
-        for (u32 i = 0; i < 32; ++i) {
-            for (u32 j = 0; j < 32; ++j) {
+        for (u32 i = 0; i < 64 * 2; ++i) {
+            for (u32 j = 0; j < 64 * 2; ++j) {
                 glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(1 * i, 0, 1 * j));
                 GLShaderSetUniformM4F32(shader, "u_Model", glm::value_ptr(model));
-                GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
+                GLDrawTriangles(&vb, &vbLayout, va);
             }
         }
 
