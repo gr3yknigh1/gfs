@@ -20,7 +20,7 @@ void main()
     gl_Position = transformation * vec4(
         l_Position * u_VertexModifier + u_VertexOffset, 1.0);
 
-    f_Color = vec4(1);
+    f_Color = vec4(l_Color, 1.0);
     f_TexCoord = l_TexCoord;
 }
 

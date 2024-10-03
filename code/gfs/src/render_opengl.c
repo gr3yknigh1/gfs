@@ -129,10 +129,18 @@ GLDrawTriangles(
     //     this
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, vb->size / layout->stride));
 
+    GL_CALL(glBindVertexArray(0));
+
     // TODO(gr3yknigh1): Fix this
     // GL_CALL(glDrawElements(
     //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
     //     GL_UNSIGNED_INT, 0));
+
+    if (texture > 0) {
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+    }
+
+    GL_CALL(glUseProgram(0));
 }
 
 GLShaderID
@@ -261,6 +269,9 @@ GLTextureMakeFromBMPicture(const BMPicture *picture) {
 
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+
+    // Unbind (cleanup)
+    GL_CALL((glBindTexture(GL_TEXTURE_2D, 0)));
 
     return (GLTexture)texture;
 }

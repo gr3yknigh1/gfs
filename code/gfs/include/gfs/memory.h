@@ -87,18 +87,18 @@ GFS_EXPORT bool ScratchHasSpaceFor(const Scratch *scratch, usize extraSize);
  * @breaf Block for block-allocator. Contains arena and pointer to
  * next block in allocator.
  * */
-typedef struct Block {
+typedef struct AllocationBlock {
     Scratch arena;
-    struct Block *next;
-} Block;
+    struct AllocationBlock *next;
+} AllocationBlock;
 
-Block *BlockMake(usize size);
+AllocationBlock *BlockMake(usize size);
 
 /*
  * @breaf Block Allocator
  */
 typedef struct {
-    Block *head;
+    AllocationBlock *head;
 } BlockAllocator;
 
 GFS_EXPORT BlockAllocator BlockAllocatorMake();

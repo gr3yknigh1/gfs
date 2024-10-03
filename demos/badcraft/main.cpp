@@ -41,6 +41,19 @@ typedef struct {
     f32 fov;
 } Camera;
 
+#define CHUNK_WIDTH 64
+#define CHUNK_HEIGHT 64
+
+typedef struct {
+    u16 textureIndex;
+} Block;
+
+typedef struct {
+    Block blocks[CHUNK_WIDTH * CHUNK_HEIGHT];
+} Chunk;
+
+// GetOffsetForGridArray
+
 static Camera CameraMake(void);
 static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
@@ -72,7 +85,7 @@ main(int argc, char *args[]) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     SDL_Window *window =
-        SDL_CreateWindow("Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL);
+        SDL_CreateWindow("Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
     ASSERT_NONNULL(window);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
@@ -90,6 +103,10 @@ main(int argc, char *args[]) {
     GL_CALL(glEnable(GL_DEPTH_TEST));
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
+    GL_CALL(glEnable(GL_CULL_FACE));
+    GL_CALL(glCullFace(GL_FRONT));
+    GL_CALL(glFrontFace(GL_CW));
+
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
         GLCompileShaderFromFile(&runtimeScratch, "assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
@@ -98,52 +115,52 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    static const f32 vertices[] = {
+    static const f32 blockMesh[] = {
         // l_Position        // l_Color        // l_TexCoord
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, //
-        0.5f,  0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f  //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f  //
     };
 
-    BMPicture picture = {0};
+    BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "assets\\kitty.bmp"));
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
     GLVertexArray va = GLVertexArrayMake();
-    GLVertexBuffer vb = GLVertexBufferMake(vertices, sizeof(vertices));
+    GLVertexBuffer vb = GLVertexBufferMake(blockMesh, sizeof(blockMesh));
 
     GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
@@ -193,7 +210,8 @@ main(int argc, char *args[]) {
             if (event.type == SDL_QUIT) {
                 GameStateStop();
             } else if (event.type == SDL_MOUSEMOTION) {
-                if (isFirstMouseMotion) {
+
+                if (isFirstMouseMotion || !isRelativeMouseMode) {
                     mouseXOffset = 0;
                     mouseYOffset = 0;
                     isFirstMouseMotion = false;
@@ -226,15 +244,6 @@ main(int argc, char *args[]) {
 
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
         GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
-
-        glm::mat4 model = glm::identity<glm::mat4>();
-        glm::mat4 view = CameraGetViewMatix(&camera);
-        glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
-
-        GLShaderSetUniformM4F32(shader, "u_Model", glm::value_ptr(model));
-        GLShaderSetUniformM4F32(shader, "u_View", glm::value_ptr(view));
-        GLShaderSetUniformM4F32(shader, "u_Projection", glm::value_ptr(projection));
-
         // Render
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
@@ -244,16 +253,28 @@ main(int argc, char *args[]) {
         ImGui::NewFrame();
 
         ImGui::Begin("Debug Information");
+        ImGui::Text("FPS: %.05f", 1 / deltaTime);
         ImGui::Text("DeltaTime: %.05f", deltaTime);
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
-        // ImGui::Text("Mouse position: [%i %i]", mousePosition.x, mousePosition.y);
-        // ImGui::Text("Mouse last position: [%i %i]", lastMouseXPosition, lastMouseYPosition);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
         ImGui::End();
 
         ImGui::Render();
 
-        GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
+        // glm::mat4 model = glm::identity<glm::mat4>();
+        glm::mat4 view = CameraGetViewMatix(&camera);
+        glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
+
+        GLShaderSetUniformM4F32(shader, "u_View", glm::value_ptr(view));
+        GLShaderSetUniformM4F32(shader, "u_Projection", glm::value_ptr(projection));
+
+        for (u32 i = 0; i < 32; ++i) {
+            for (u32 j = 0; j < 32; ++j) {
+                glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(1 * i, 0, 1 * j));
+                GLShaderSetUniformM4F32(shader, "u_Model", glm::value_ptr(model));
+                GLDrawTriangles(&vb, &vbLayout, va, shader, texture);
+            }
+        }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -280,7 +301,7 @@ CameraMake() {
         .yaw = -90.0f,
         .pitch = 0.0f,
 
-        .speed = 1.0f,
+        .speed = 10.0f,
         .sensitivity = 0.1f,
         .fov = 45.0f,
     };

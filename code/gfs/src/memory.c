@@ -153,21 +153,21 @@ ScratchHasSpaceFor(const Scratch *scratch, usize extraSize) {
     return scratch->occupied + extraSize <= scratch->capacity;
 }
 
-Block *
+AllocationBlock *
 BlockMake(usize size) {
-    usize bytesAllocated = Align2PageSize(size + sizeof(Block));
+    usize bytesAllocated = Align2PageSize(size + sizeof(AllocationBlock));
     void *allocatedData = MemoryAllocate(bytesAllocated);
 
     if (allocatedData == NULL) {
         return NULL;
     }
 
-    Block *segment = (Block *)allocatedData;
-    void *data = (byte *)(allocatedData) + sizeof(Block);
+    AllocationBlock *segment = (AllocationBlock *)allocatedData;
+    void *data = (byte *)(allocatedData) + sizeof(AllocationBlock);
 
     segment = allocatedData;
     segment->arena.data = data;
-    segment->arena.capacity = bytesAllocated - sizeof(Block);
+    segment->arena.capacity = bytesAllocated - sizeof(AllocationBlock);
     segment->arena.occupied = 0;
     segment->next = NULL;
 
@@ -192,8 +192,8 @@ void *
 BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
     ASSERT_NONNULL(allocator);
 
-    Block *previousBlock = NULL;
-    Block *currentBlock = allocator->head;
+    AllocationBlock *previousBlock = NULL;
+    AllocationBlock *currentBlock = allocator->head;
 
     while (currentBlock != NULL) {
         if (!ScratchHasSpaceFor(&currentBlock->arena, size)) {
@@ -204,7 +204,7 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
         return ScratchAlloc(&currentBlock->arena, size);
     }
 
-    Block *newBlock = BlockMake(size);
+    AllocationBlock *newBlock = BlockMake(size);
 
     if (allocator->head == NULL) {
         allocator->head = newBlock;
@@ -227,8 +227,8 @@ BlockAllocatorFree(BlockAllocator *allocator) {
     ASSERT_NONNULL(allocator);
     ASSERT_NONNULL(allocator->head);
 
-    Block *previousBlock = NULL;
-    Block *currentBlock = allocator->head;
+    AllocationBlock *previousBlock = NULL;
+    AllocationBlock *currentBlock = allocator->head;
 
     while (currentBlock != NULL) {
         previousBlock = currentBlock;
