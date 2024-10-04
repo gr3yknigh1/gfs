@@ -13,6 +13,7 @@
 
 typedef u32 GLShaderID;
 typedef u32 GLShaderProgramID;
+typedef u32 GLUniformLocation;
 
 typedef u32 GLTexture;
 
@@ -42,21 +43,21 @@ typedef struct {
     u64 stride;
 } GLVertexBufferLayout;
 
-GFS_EXPORT GLVertexArray GLVertexArrayMake(void);
-GFS_EXPORT void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
+GFS_API GLVertexArray GLVertexArrayMake(void);
+GFS_API void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
 
-GFS_EXPORT GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
+GFS_API GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
-GFS_EXPORT GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
+GFS_API GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
 
-GFS_EXPORT GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
+GFS_API GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 
-GFS_EXPORT void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count);
+GFS_API void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count);
 
-GFS_EXPORT void GLClear(f32 r, f32 g, f32 b, f32 a);
-GFS_EXPORT void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
+GFS_API void GLClear(f32 r, f32 g, f32 b, f32 a);
+GFS_API void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
-GFS_EXPORT void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
+GFS_API void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
 
 typedef enum {
     GL_SHADER_TYPE_NONE,
@@ -70,33 +71,41 @@ typedef enum {
  *
  * @return Shader ID
  * */
-GFS_EXPORT GLShaderID GLCompileShaderFromFile(Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
+GFS_API GLShaderID GLCompileShaderFromFile(Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
 
 /*
  * @breaf Compiles OpenGL shader.
  *
  * @return Shader ID
  * */
-GFS_EXPORT GLShaderID GLCompileShader(Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
+GFS_API GLShaderID GLCompileShader(Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
 
 typedef struct {
     GLShaderID vertexShader;
     GLShaderID fragmentShader;
 } GLShaderProgramLinkData;
 
-GFS_EXPORT GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
+GFS_API GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
 
-GFS_EXPORT GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture);
+GFS_API GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture);
 
-GFS_EXPORT void GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value);
-GFS_EXPORT void GLShaderSetUniformV3F32(GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z);
-GFS_EXPORT void GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value);
-GFS_EXPORT void GLShaderSetUniformM4F32(GLShaderProgramID shader, cstring8 name, f32 *value);
+/*
+ * @breaf Returns location of uniform.
+ *
+ * @param shader Shader program id which should be enabled with glUseProgram call.
+ * @param name Name of uniform.
+ * */
+GFS_API GLUniformLocation GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name);
 
-GFS_EXPORT cstring8 GLGetErrorString(i32 errorCode);
+GFS_API void GLShaderSetUniformF32(GLShaderProgramID shader, GLUniformLocation location, f32 value);
+GFS_API void GLShaderSetUniformV3F32(GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z);
+GFS_API void GLShaderSetUniformI32(GLShaderProgramID shader, GLUniformLocation location, i32 value);
+GFS_API void GLShaderSetUniformM4F32(GLShaderProgramID shader, GLUniformLocation location, f32 *value);
 
-GFS_EXPORT void GLClearErrors(void);
-GFS_EXPORT void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
+GFS_API cstring8 GLGetErrorString(i32 errorCode);
+
+GFS_API void GLClearErrors(void);
+GFS_API void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
 
 #if defined(GFS_OPENGL_DEBUG)
 

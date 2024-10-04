@@ -109,23 +109,9 @@ GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
 }
 
 void
-GLDrawTriangles(
-    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va) {
-
+GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va) {
     GL_CALL(glBindVertexArray(va));
-
-    // GL_CALL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
-    // GL_CALL(
-    //     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib)); // Renders without
-    //     this
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, vb->size / layout->stride));
-
-    GL_CALL(glBindVertexArray(0));
-
-    // TODO(gr3yknigh1): Fix this
-    // GL_CALL(glDrawElements(
-    //     GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]),
-    //     GL_UNSIGNED_INT, 0));
 }
 
 GLShaderID
@@ -240,7 +226,6 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
 
 GLTexture
 GLTextureMakeFromBMPicture(const BMPicture *picture) {
-
     GLuint texture;
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
@@ -261,44 +246,35 @@ GLTextureMakeFromBMPicture(const BMPicture *picture) {
     return (GLTexture)texture;
 }
 
-void
-GLShaderSetUniformF32(GLShaderProgramID shader, cstring8 name, f32 value) {
-    GL_CALL(glUseProgram(shader));
-
-    // TODO(gr3yknigh1: Error handle);
+GFS_API GLUniformLocation
+GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name) {
     u32 uniformLocation = 0;
     GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
-    GL_CALL(glUniform1f(uniformLocation, value));
+    return uniformLocation;
 }
 
 void
-GLShaderSetUniformV3F32(GLShaderProgramID shader, cstring8 name, f32 x, f32 y, f32 z) {
-    GL_CALL(glUseProgram(shader));
-
-    // TODO(gr3yknigh1: Error handle);
-    u32 uniformLocation = 0;
-    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
-    GL_CALL(glUniform3f(uniformLocation, x, y, z));
+GLShaderSetUniformF32(GLShaderProgramID shader, GLUniformLocation location, f32 value) {
+    UNUSED(shader);
+    GL_CALL(glUniform1f(location, value));
 }
 
 void
-GLShaderSetUniformI32(GLShaderProgramID shader, cstring8 name, i32 value) {
-    GL_CALL(glUseProgram(shader));
-
-    // TODO(gr3yknigh1: Error handle);
-    u32 uniformLocation = 0;
-    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
-    GL_CALL(glUniform1i(uniformLocation, value));
+GLShaderSetUniformV3F32(GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z) {
+    UNUSED(shader);
+    GL_CALL(glUniform3f(location, x, y, z));
 }
 
 void
-GLShaderSetUniformM4F32(GLShaderProgramID shader, cstring8 name, f32 *items) {
-    GL_CALL(glUseProgram(shader));
+GLShaderSetUniformI32(GLShaderProgramID shader, GLUniformLocation location, i32 value) {
+    UNUSED(shader);
+    GL_CALL(glUniform1i(location, value));
+}
 
-    // TODO(gr3yknigh1: Error handle);
-    u32 uniformLocation = 0;
-    GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
-    GL_CALL(glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, items));
+void
+GLShaderSetUniformM4F32(GLShaderProgramID shader, GLUniformLocation location, f32 *items) {
+    UNUSED(shader);
+    GL_CALL(glUniformMatrix4fv(location, 1, GL_FALSE, items));
 }
 
 cstring8

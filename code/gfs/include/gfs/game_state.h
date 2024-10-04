@@ -9,7 +9,7 @@
 #include "gfs/types.h"
 #include "gfs/macros.h"
 
-GFS_EXPORT bool GameStateShouldStop(void);
-GFS_EXPORT void GameStateStop(void);
+GFS_API bool GameStateShouldStop(void);
+GFS_API void GameStateStop(void);
 
 #endif // GFS_GAME_STATE_H_INCLUDED

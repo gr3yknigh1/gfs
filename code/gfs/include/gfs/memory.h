@@ -14,11 +14,11 @@
 #define MEGABYTES(X) (1024 * 1024 * (X))
 #define GIGABYTES(X) (1024 * 1024 * 1024 * (X))
 
-GFS_EXPORT usize Align2PageSize(usize size);
+GFS_API usize Align2PageSize(usize size);
 
-GFS_EXPORT void MemoryCopy(void *dest, const void *source, usize size);
-GFS_EXPORT void MemorySet(void *data, byte value, usize size);
-GFS_EXPORT void MemoryZero(void *data, usize size);
+GFS_API void MemoryCopy(void *dest, const void *source, usize size);
+GFS_API void MemorySet(void *data, byte value, usize size);
+GFS_API void MemoryZero(void *data, usize size);
 
 /*
  * @breaf Stack allocator
@@ -35,11 +35,11 @@ typedef struct {
  * @param size Allocation size.
  * @return New stack allocator.
  * */
-GFS_EXPORT StackAllocator StackAllocatorMake(usize size);
+GFS_API StackAllocator StackAllocatorMake(usize size);
 
-GFS_EXPORT void *StackAllocatorAlloc(StackAllocator *allocator, usize size);
+GFS_API void *StackAllocatorAlloc(StackAllocator *allocator, usize size);
 
-GFS_EXPORT void StackAllocatorPop(StackAllocator *allocator);
+GFS_API void StackAllocatorPop(StackAllocator *allocator);
 
 /*
  * @breaf Scratch Allocator.
@@ -53,7 +53,7 @@ typedef struct {
 /*
  * @breaf Initializes scratch allocator.
  * */
-GFS_EXPORT Scratch ScratchMake(usize size);
+GFS_API Scratch ScratchMake(usize size);
 
 /*
  * @breaf Bumps internal counter of allocated memory and returns pointer to
@@ -62,7 +62,7 @@ GFS_EXPORT Scratch ScratchMake(usize size);
  * @return Pointer to chuck of memory which user can write on. Overflow of this
  * chuck if UB. Returns `NULL` if capacity can't hold enough.
  * */
-GFS_EXPORT void *ScratchAlloc(Scratch *scratch, usize size);
+GFS_API void *ScratchAlloc(Scratch *scratch, usize size);
 
 /*
  * @breaf Same as `ScratchAlloc`, but calls `MemoryZero` on allocated block.
@@ -73,15 +73,15 @@ GFS_EXPORT void *ScratchAlloc(Scratch *scratch, usize size);
  * @see ScratchAlloc
  *
  * */
-GFS_EXPORT void *ScratchAllocZero(Scratch *scratch, usize size);
+GFS_API void *ScratchAllocZero(Scratch *scratch, usize size);
 
 /*
  * @breaf Destroys scratch allocator. Deallocates whole block of memory, which
  * was allocated on `ScratchMake`.
  * */
-GFS_EXPORT void ScratchDestroy(Scratch *scratch);
+GFS_API void ScratchDestroy(Scratch *scratch);
 
-GFS_EXPORT bool ScratchHasSpaceFor(const Scratch *scratch, usize extraSize);
+GFS_API bool ScratchHasSpaceFor(const Scratch *scratch, usize extraSize);
 
 /*
  * @breaf Block for block-allocator. Contains arena and pointer to
@@ -101,12 +101,12 @@ typedef struct {
     AllocationBlock *head;
 } BlockAllocator;
 
-GFS_EXPORT BlockAllocator BlockAllocatorMake();
-GFS_EXPORT BlockAllocator BlockAllocatorMakeEx(usize size);
+GFS_API BlockAllocator BlockAllocatorMake();
+GFS_API BlockAllocator BlockAllocatorMakeEx(usize size);
 
-GFS_EXPORT void *BlockAllocatorAlloc(BlockAllocator *allocator, usize size);
-GFS_EXPORT void *BlockAllocatorAllocZ(BlockAllocator *allocator, usize size);
+GFS_API void *BlockAllocatorAlloc(BlockAllocator *allocator, usize size);
+GFS_API void *BlockAllocatorAllocZ(BlockAllocator *allocator, usize size);
 
-GFS_EXPORT void BlockAllocatorFree(BlockAllocator *allocator);
+GFS_API void BlockAllocatorFree(BlockAllocator *allocator);
 
 #endif // GFS_MEMORY_H_INCLUDED

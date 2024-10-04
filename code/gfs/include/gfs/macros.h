@@ -17,9 +17,9 @@
 #endif
 
 #if defined(__cplusplus)
-#define GFS_EXPORT CLINKAGE
+#define GFS_API CLINKAGE
 #else
-#define GFS_EXPORT
+#define GFS_API
 #endif
 
 #define STRINGIFY(X) #X

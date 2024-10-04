@@ -172,9 +172,17 @@ Entry(void) {
 
     GLVertexArrayAddBuffer(va, &vb, &vbLayout);
 
-    GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
-    GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
-    GLShaderSetUniformI32(shader, "u_Texture", 0);
+    GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
+    GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
+    GLUniformLocation uniformTextureLocation = GLShaderFindUniformLocation(shader, "u_Texture");
+
+    GLUniformLocation uniformModelLocation = GLShaderFindUniformLocation(shader, "u_Model");
+    GLUniformLocation uniformViewLocation = GLShaderFindUniformLocation(shader, "u_View");
+    GLUniformLocation uniformProjectionLocation = GLShaderFindUniformLocation(shader, "u_Projection");
+
+    GLShaderSetUniformF32(shader, uniformVertexModifierLocation, 1.0f);
+    GLShaderSetUniformV3F32(shader, uniformVertexOffsetLocation, 0.3f, 0.3f, 0.3f);
+    GLShaderSetUniformI32(shader, uniformTextureLocation, 0);
 
     Camera camera = CameraMake(window);
 
@@ -225,9 +233,9 @@ Entry(void) {
         mat4 projection = {0};
         CameraGetProjectionMatix(&camera, &projection);
 
-        GLShaderSetUniformM4F32(shader, "u_Model", (f32 *)model);
-        GLShaderSetUniformM4F32(shader, "u_View", (f32 *)view);
-        GLShaderSetUniformM4F32(shader, "u_Projection", (f32 *)projection);
+        GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
+        GLShaderSetUniformM4F32(shader, uniformViewLocation, (f32 *)view);
+        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
 
         GLDrawTriangles(&vb, &vbLayout, va);
 

@@ -102,11 +102,11 @@ main(int argc, char *args[]) {
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_DEPTH_TEST));
-    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
-    // GL_CALL(glEnable(GL_CULL_FACE));
-    // GL_CALL(glCullFace(GL_FRONT));
-    // GL_CALL(glFrontFace(GL_CW));
+    // GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    GL_CALL(glEnable(GL_CULL_FACE));
+    GL_CALL(glCullFace(GL_FRONT));
+    GL_CALL(glFrontFace(GL_CW));
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
@@ -116,52 +116,162 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    static const f32 blockMesh[] = {
-        // l_Position        // l_Color        // l_TexCoord
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        0.5f,  -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        -0.5f, -0.5f, 0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        -0.5f, -0.5f, -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f, //
-        0.5f,  0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 1.0f, 1.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        0.5f,  0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 1.0f, 0.0f, //
-        -0.5f, 0.5f,  0.5f,  0.5f, 0.4f, 0.5f, 0.0f, 0.0f, //
-        -0.5f, 0.5f,  -0.5f, 0.5f, 0.4f, 0.5f, 0.0f, 1.0f  //
+    // clang-format off
+#if 1
+    // NOTE(gr3yknigh1) Clock-wise. [2024/10/03]
+    static const f32 blockMeshData[] = {
+    // Back face
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+
+    // Front face
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+
+    // Left face
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+
+    // Right face
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+
+    // Bottom face
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+
+    // Top face
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f  // bottom-left
     };
+
+    // static const u32 blockMeshIndexes[] = {
+    // };
+
+#else
+    // NOTE(gr3yknigh1) Counter clock-wise, but tex coords are messed up.
+    // So it need to be fixed, but I am lazy. [2024/10/03]
+
+    static const f32 blockMesh[] = {
+    // l_Position        // l_Color        // l_TexCoord
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    // Front face
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    // Left face
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    // Right face
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+    // Bottom face
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    // Top face
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top-left
+
+    // Back face
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    // Front face
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+    // Left face
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    // Right face
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
+    // Bottom face
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
+     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
+    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
+    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
+    // Top face
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
+    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top-left
+    };
+#endif
+    // clang-format on
 
     BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
 
     GLVertexArray va = GLVertexArrayMake();
-    GLVertexBuffer vb = GLVertexBufferMake(blockMesh, sizeof(blockMesh));
+    GLVertexBuffer vb = GLVertexBufferMake(blockMeshData, sizeof(blockMeshData));
 
     GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
@@ -170,9 +280,23 @@ main(int argc, char *args[]) {
 
     GLVertexArrayAddBuffer(va, &vb, &vbLayout);
 
-    GLShaderSetUniformF32(shader, "u_VertexModifier", 1.0f);
-    GLShaderSetUniformV3F32(shader, "u_VertexOffset", 0.3f, 0.3f, 0.3f);
-    GLShaderSetUniformI32(shader, "u_Texture", 0);
+    // u32 ebo;
+    // glGenBuffers(1, &ebo);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(blockMeshIndexes), blockMeshIndexes, GL_STATIC_DRAW);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
+    GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
+    GLUniformLocation uniformTextureLocation = GLShaderFindUniformLocation(shader, "u_Texture");
+
+    GLUniformLocation uniformModelLocation = GLShaderFindUniformLocation(shader, "u_Model");
+    GLUniformLocation uniformViewLocation = GLShaderFindUniformLocation(shader, "u_View");
+    GLUniformLocation uniformProjectionLocation = GLShaderFindUniformLocation(shader, "u_Projection");
+
+    GLShaderSetUniformF32(shader, uniformVertexModifierLocation, 1.0f);
+    GLShaderSetUniformV3F32(shader, uniformVertexOffsetLocation, 0.3f, 0.3f, 0.3f);
+    GLShaderSetUniformI32(shader, uniformTextureLocation, 0);
 
     i32 windowWidth = 0, windowHeight = 0;
     SDL_GetWindowSize(window, &windowWidth, &windowHeight);
@@ -264,22 +388,34 @@ main(int argc, char *args[]) {
         ImGui::Text("DeltaTime: %.05f", deltaTime);
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
+
+        static bool renderOneCube = true;
+        ImGui::Checkbox("Render one cube?", &renderOneCube);
+
         ImGui::End();
 
         ImGui::Render();
 
-        // glm::mat4 model = glm::identity<glm::mat4>();
         glm::mat4 view = CameraGetViewMatix(&camera);
         glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
 
-        GLShaderSetUniformM4F32(shader, "u_View", glm::value_ptr(view));
-        GLShaderSetUniformM4F32(shader, "u_Projection", glm::value_ptr(projection));
+        GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
+        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
 
-        for (u32 i = 0; i < 64 * 2; ++i) {
-            for (u32 j = 0; j < 64 * 2; ++j) {
-                glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(1 * i, 0, 1 * j));
-                GLShaderSetUniformM4F32(shader, "u_Model", glm::value_ptr(model));
-                GLDrawTriangles(&vb, &vbLayout, va);
+        if (renderOneCube) {
+            glm::mat4 model = glm::identity<glm::mat4>();
+            GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+            GLDrawTriangles(&vb, &vbLayout, va);
+            //glDrawElements(GL_TRIANGLES, sizeof(blockMeshIndexes) / sizeof(blockMeshIndexes[0]), GL_UNSIGNED_INT, 0);
+        } else {
+            for (u8 x = 0; x < 16; ++x) {
+                for (u8 y = 0; y < 16; ++y) {
+                    for (u8 z = 0; z < 16; ++z) {
+                        glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
+                        GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+                        GLDrawTriangles(&vb, &vbLayout, va);
+                    }
+                }
             }
         }
 
@@ -309,7 +445,7 @@ CameraMake() {
         .pitch = 0.0f,
 
         .speed = 10.0f,
-        .sensitivity = 0.1f,
+        .sensitivity = 0.5f,
         .fov = 45.0f,
     };
     return camera;

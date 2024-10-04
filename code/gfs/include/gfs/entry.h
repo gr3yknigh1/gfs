@@ -15,7 +15,7 @@
  *
  * Should be defined in Game specific code.
  * */
-GFS_EXPORT void Entry(void);
+GFS_API void Entry(void);
 
 #endif
 
