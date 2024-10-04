@@ -1,8 +1,19 @@
+::
 :: FILE      build.bat
 :: AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
 :: COPYRIGHT (c) 2024 Ilya Akkuzin
+::
+::                          USAGE
+::
+:: 1. cmd /c build.bat <build_type>
+:: 2. done.
+::
+:: Build types:
+::     - Debug
+::     - Release
+::
 
-@echo on
+@echo off
 
 set build_type=%1
 shift

@@ -13,4 +13,4 @@ OUTPUT_DIRECTORY            = "./generated"
 
 
 INPUT                       = "./../../code"
-RECURSIVE                   = NO
+RECURSIVE                   = YES

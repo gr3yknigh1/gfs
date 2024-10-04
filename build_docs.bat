@@ -25,6 +25,19 @@
 set project_path=%~dp0
 set doxygen_folder=%project_path%\docs\doxygen
 set sphinx_folder=%project_path%\docs\sphinx
+set docs_venv_path=%project_path%\.venv-docs"
+
+pushd %project_path%
+
+:: if exists %docs_venv_path% (
+::   call %docs_venv_path%\Scripts\activate.bat
+:: ) else (
+python -m venv %docs_venv_path%
+call %docs_venv_path%\Scripts\activate.bat
+python -m pip install -r docs-requirements.txt.lock
+::)
+
+popd
 
 pushd %doxygen_folder%
 doxygen Doxyfile
