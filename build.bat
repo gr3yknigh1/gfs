@@ -15,8 +15,13 @@
 
 @echo off
 
+set project_path=%~dp0
+set configuration_path=%project_path%\build
+
 set build_type=%1
 shift
+
+if [%build_type%]==[] set build_type=Debug
 
 :: Detect vcvarsall for x64 build...
 set vc2022_bootstrap="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
@@ -35,12 +40,7 @@ if exist %vc2022_bootstrap% (
 )
 
 :: Compiling project...
-set project_path=%~dp0
 pushd %project_path%
-
-set configuration_path=%project_path%\build
-
-if [%build_type%]==[] set build_type=Debug
 
 if "%build_type%" == "Debug" (
   echo I: Building debug
