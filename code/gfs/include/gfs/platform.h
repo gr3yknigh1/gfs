@@ -119,8 +119,8 @@ typedef enum {
     PLATFORM_FILE_FAILED_TO_READ,
 } FileLoadResultCode;
 
-GFS_API FileLoadResultCode FileLoadToBuffer(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
+GFS_API FileLoadResultCode
+FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
 
 GFS_API FileLoadResultCode FileLoadToBufferEx(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
@@ -202,13 +202,14 @@ typedef enum {
     PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } SoundDeviceGetCurrentPositionResult;
 
-GFS_API SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
-    SoundDevice *device, u32 *playCursor, u32 *writeCursor);
+GFS_API SoundDeviceGetCurrentPositionResult
+SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
 GFS_API void SoundDeviceLockBuffer(
     SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
     u32 *region1Size);
-GFS_API void SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+GFS_API void SoundDeviceUnlockBuffer(
+    SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
 GFS_API void SoundDevicePlay(SoundDevice *device);
 
 GFS_API void SoundDeviceClose(SoundDevice *device);

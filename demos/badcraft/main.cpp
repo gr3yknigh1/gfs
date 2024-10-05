@@ -4,6 +4,13 @@
  * References:
  *     - https://sibras.github.io/OpenGL4-Tutorials/docs/Tutorials/01-Tutorial1/#part-1-getting-required-libraries
  *
+ * TODOs:
+ *   - [X] Render with element buffer
+ *   - [ ] Learn and possibly implement instancing rendering
+ *   - [ ] Implement chunking system
+ *   - [ ] Try to use strip rendering
+ *   - [ ] Learn and implement texture atlas
+ *
  * FILE      demos\badcraft\main.cpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
@@ -45,7 +52,7 @@ typedef struct {
 #define CHUNK_HEIGHT 64
 
 typedef struct {
-    u16 textureIndex;
+    u16 id;
 } Block;
 
 typedef struct {
@@ -85,9 +92,10 @@ main(int argc, char *args[]) {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     SDL_Window *window = SDL_CreateWindow(
-        "Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 2880, 1800,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+        "Badcraft", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 900, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     ASSERT_NONNULL(window);
+
+    SDL_MaximizeWindow(window);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     ASSERT_NONNULL(context);
@@ -103,10 +111,9 @@ main(int argc, char *args[]) {
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_DEPTH_TEST));
 
-    // GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
     GL_CALL(glEnable(GL_CULL_FACE));
     GL_CALL(glCullFace(GL_FRONT));
-    GL_CALL(glFrontFace(GL_CW));
+    GL_CALL(glFrontFace(GL_CCW));
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
@@ -117,153 +124,43 @@ main(int argc, char *args[]) {
     ASSERT_NONZERO(shader);
 
     // clang-format off
-#if 1
-    // NOTE(gr3yknigh1) Clock-wise. [2024/10/03]
+    // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
     static const f32 blockMeshData[] = {
-    // Back face
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-
+    // Position                 Colors                 UV
     // Front face
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-
-    // Left face
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-
-    // Right face
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-
-    // Bottom face
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-
-    // Top face
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f  // bottom-left
-    };
-
-    // static const u32 blockMeshIndexes[] = {
-    // };
-
-#else
-    // NOTE(gr3yknigh1) Counter clock-wise, but tex coords are messed up.
-    // So it need to be fixed, but I am lazy. [2024/10/03]
-
-    static const f32 blockMesh[] = {
-    // l_Position        // l_Color        // l_TexCoord
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    // Front face
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    // Left face
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    // Right face
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-    // Bottom face
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    // Top face
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top-left
+    -0.5f,  0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 1.0f, // [0] top-left
+     0.5f,  0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 1.0f, // [1] top-right
+     0.5f, -0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 0.0f, // [2] bottom-right
+    -0.5f, -0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 0.0f, // [3] bottom-left
 
     // Back face
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Bottom-left
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    // Front face
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-    // Left face
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-left
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    // Right face
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // bottom-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // top-left
-    // Bottom face
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-left
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-left
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-right
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-right
-    // Top face
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, // top-left
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, // top-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, // bottom-right
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // bottom-left
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top-left
+    -0.5f,  0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 0.0f, // [4] top-left
+     0.5f,  0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 0.0f, // [5] top-right
+     0.5f, -0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 1.0f, // [6] bottom-right
+    -0.5f, -0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 1.0f, // [7] bottom-left
     };
-#endif
+
+    // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented. [2024/10/05]
+    static const u32 blockMeshIndexes[] = {
+        // Front face
+        0, 1, 3, // top-left
+        3, 1, 2, // bottom-right
+        // Left face
+        4, 0, 7, // top-left
+        7, 0, 3, // bottom-right
+        // Right face
+        1, 5, 2, // top-left
+        2, 5, 6, // bottom-right
+        // Bottom face
+        3, 2, 7, // top-left
+        7, 2, 6, // bottom-right
+        // Back face
+        5, 4, 6, // top-left
+        6, 4, 7, // bottom-right
+        // Top face
+        4, 5, 0, // top-left
+        0, 5, 1, // bottom-right
+    };
     // clang-format on
 
     BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
@@ -280,11 +177,7 @@ main(int argc, char *args[]) {
 
     GLVertexArrayAddBuffer(va, &vb, &vbLayout);
 
-    // u32 ebo;
-    // glGenBuffers(1, &ebo);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(blockMeshIndexes), blockMeshIndexes, GL_STATIC_DRAW);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    GLElementBuffer eb = GLElementBufferMake(blockMeshIndexes, STATIC_ARRAY_LENGTH(blockMeshIndexes));
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
@@ -405,15 +298,14 @@ main(int argc, char *args[]) {
         if (renderOneCube) {
             glm::mat4 model = glm::identity<glm::mat4>();
             GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-            GLDrawTriangles(&vb, &vbLayout, va);
-            //glDrawElements(GL_TRIANGLES, sizeof(blockMeshIndexes) / sizeof(blockMeshIndexes[0]), GL_UNSIGNED_INT, 0);
+            GLDrawElements(&eb, &vb, va);
         } else {
             for (u8 x = 0; x < 16; ++x) {
                 for (u8 y = 0; y < 16; ++y) {
                     for (u8 z = 0; z < 16; ++z) {
                         glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
                         GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-                        GLDrawTriangles(&vb, &vbLayout, va);
+                        GLDrawElements(&eb, &vb, va);
                     }
                 }
             }

@@ -35,6 +35,12 @@ typedef struct {
 } GLAttribute;
 
 typedef struct {
+    u32 id;
+    const u32 *elements;
+    u64 count;
+} GLElementBuffer;
+
+typedef struct {
     Scratch *scratch;
 
     GLAttribute *attributes;
@@ -48,7 +54,21 @@ GFS_API void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, 
 
 GFS_API GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
+/*
+ * @breaf Naive wrapper around element buffer.
+ * @deprecated Use GLElementBuffer instead.
+ * @cleanup
+ */
+
 GFS_API GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
+
+/*
+ * @breaf Constructs element buffer, which doesn't owns indicies, which was passed in
+ *
+ * TODO(gr3yknigh1): Copy indicies inside [2024/10/05]
+ * TODO(gr3yknigh1): Add option for dynamic draw [2024/10/05]
+ */
+GFS_API GLElementBuffer GLElementBufferMake(const u32 *indicies, u64 count);
 
 GFS_API GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 
@@ -57,6 +77,7 @@ GFS_API void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, 
 GFS_API void GLClear(f32 r, f32 g, f32 b, f32 a);
 GFS_API void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
+GFS_API void GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va);
 GFS_API void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
 
 typedef enum {

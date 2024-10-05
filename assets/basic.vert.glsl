@@ -16,7 +16,7 @@ uniform vec3 u_VertexOffset = vec3(0, 0, 0);
 
 void main()
 {
-    mat4 transformation =  u_Projection * u_View * u_Model;
+    mat4 transformation = u_Projection * u_View * u_Model;
     gl_Position = transformation * vec4(
         l_Position * u_VertexModifier + u_VertexOffset, 1.0);
 

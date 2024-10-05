@@ -24,6 +24,8 @@
 
 #define STRINGIFY(X) #X
 
+#define STATIC_ARRAY_LENGTH(A) (sizeof((A)) / sizeof((A)[0]))
+
 #define UNUSED(X) ((void)(X))
 
 #define MKFLAG(BITINDEX) (1 << (BITINDEX))

@@ -69,6 +69,23 @@ GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
     return (GLIndexBuffer)ebo;
 }
 
+GLElementBuffer
+GLElementBufferMake(const u32 *elements, u64 count) {
+    GLElementBuffer eb;
+
+    usize elementsBufferSize = sizeof(elements[0]) * count;
+
+    GL_CALL(glGenBuffers(1, &(eb.id)));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)elements, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id)); // @cleanup
+
+    eb.elements = elements;
+    eb.count = count;
+
+    return eb;
+}
+
 GLVertexBufferLayout
 GLVertexBufferLayoutMake(Scratch *scratch) {
     GLVertexBufferLayout layout = {0};
@@ -106,6 +123,13 @@ void
 GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
     GL_CALL(glClearColor(r, g, b, a));
     GL_CALL(glClear(clearMask));
+}
+
+void
+GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va) {
+    GL_CALL(glBindVertexArray(va));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb->id));
+    glDrawElements(GL_TRIANGLES, eb->count, GL_UNSIGNED_INT, 0);
 }
 
 void
