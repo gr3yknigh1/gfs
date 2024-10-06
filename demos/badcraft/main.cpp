@@ -35,6 +35,11 @@
 #include <gfs/game_state.h>
 #include <gfs/render_opengl.h>
 
+/*
+ * @breaf Chunk size in one of dimentions
+ */
+#define CHUNK_SIZE 16
+
 typedef struct {
     glm::vec3 position;
     glm::vec3 front;
@@ -48,18 +53,18 @@ typedef struct {
     f32 fov;
 } Camera;
 
-#define CHUNK_WIDTH 64
-#define CHUNK_HEIGHT 64
+enum class BlockType : u16 {
+    Nothing,
+    Stone,
+};
 
 typedef struct {
-    u16 id;
+    BlockType type;
 } Block;
 
 typedef struct {
-    Block blocks[CHUNK_WIDTH * CHUNK_HEIGHT];
+    Block blocks[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
 } Chunk;
-
-// GetOffsetForGridArray
 
 static Camera CameraMake(void);
 static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
@@ -214,6 +219,8 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
+    Chunk *chunks = ScratchAllocZero(scratch, sizeof(Chunk) * countOfChunksToAllocate);
+
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
         currentPerfCounter = SDL_GetPerformanceCounter();
@@ -357,7 +364,7 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     f32 pitchRad = glm::radians(camera->pitch);
 
     glm::vec3 direction = LITERAL(glm::vec3){
-        cosf(yawRad) * cosf(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
+        cosf(yawRad) * cosf(pitchRad),                  // TODO(gr3yknigh1): Change to `glm::*` functions
         sinf(pitchRad),
         sinf(yawRad) * cosf(pitchRad),
     };

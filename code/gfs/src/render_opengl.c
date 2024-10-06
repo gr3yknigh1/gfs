@@ -205,7 +205,7 @@ GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType
             PutString(compilationInfoLog);
         }
 
-        ThrowDebugBreak(); // XXX
+        ThrowDebugBreak(); // @cleanup Hack
         return 0;
     }
 
@@ -241,7 +241,7 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
             PutString(linkInfoLog);
         }
 
-        ThrowDebugBreak(); // XXX
+        ThrowDebugBreak(); // @cleanup Hack
         return 0;
     }
 

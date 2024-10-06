@@ -18,7 +18,10 @@ RectangleU16IsOverlapping(RectangleU16 r) {
            RectangleU16IsInside(r, r.x + r.width, r.y + 0) || RectangleU16IsInside(r, r.x + 0, r.y + r.height);
 }
 
-u64
-GetOffsetForGridArray(u64 width, u64 y, u64 x) {
+u32
+GetOffsetFromCoords2DGridArray(u32 width, u32 x, u32 y) {
     return width * y + x;
 }
+
+// GetOffsetFromCoordsGrid3DArray
+// GetCoordsFrom3DGridArrayOffset
