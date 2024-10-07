@@ -39,6 +39,7 @@
  * @breaf Chunk size in one of dimentions
  */
 #define CHUNK_SIZE 16
+#define CHUNK_BLOCK_COUNT CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {
     glm::vec3 position;
@@ -60,10 +61,17 @@ enum class BlockType : u16 {
 
 typedef struct {
     BlockType type;
+    Vector3 position;
 } Block;
 
 typedef struct {
-    Block blocks[CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+    Block blocks[CHUNK_BLOCK_COUNT];
+
+    struct {
+        Vector3 *data;
+        usize capacity;
+        u64 count;
+    } faceBuffer;
 } Chunk;
 
 static Camera CameraMake(void);
@@ -128,61 +136,11 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    // clang-format off
-    // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
-    static const f32 blockMeshData[] = {
-    // Position                 Colors                 UV
-    // Front face
-    -0.5f,  0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 1.0f, // [0] top-left
-     0.5f,  0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 1.0f, // [1] top-right
-     0.5f, -0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 0.0f, // [2] bottom-right
-    -0.5f, -0.5f,  0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 0.0f, // [3] bottom-left
-
-    // Back face
-    -0.5f,  0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 0.0f, // [4] top-left
-     0.5f,  0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 0.0f, // [5] top-right
-     0.5f, -0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      0.0f, 1.0f, // [6] bottom-right
-    -0.5f, -0.5f, -0.5f,        1.0f, 1.0f, 1.0f,      1.0f, 1.0f, // [7] bottom-left
-    };
-
-    // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented. [2024/10/05]
-    static const u32 blockMeshIndexes[] = {
-        // Front face
-        0, 1, 3, // top-left
-        3, 1, 2, // bottom-right
-        // Left face
-        4, 0, 7, // top-left
-        7, 0, 3, // bottom-right
-        // Right face
-        1, 5, 2, // top-left
-        2, 5, 6, // bottom-right
-        // Bottom face
-        3, 2, 7, // top-left
-        7, 2, 6, // bottom-right
-        // Back face
-        5, 4, 6, // top-left
-        6, 4, 7, // bottom-right
-        // Top face
-        4, 5, 0, // top-left
-        0, 5, 1, // bottom-right
-    };
-    // clang-format on
+    const Mesh *cubeMesh = GLGetCubeMesh(&runtimeScratch, GL_COUNTER_CLOCK_WISE);
 
     BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
-
-    GLVertexArray va = GLVertexArrayMake();
-    GLVertexBuffer vb = GLVertexBufferMake(blockMeshData, sizeof(blockMeshData));
-
-    GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
-
-    GLVertexArrayAddBuffer(va, &vb, &vbLayout);
-
-    GLElementBuffer eb = GLElementBufferMake(blockMeshIndexes, STATIC_ARRAY_LENGTH(blockMeshIndexes));
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
@@ -219,7 +177,18 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
-    Chunk *chunks = ScratchAllocZero(scratch, sizeof(Chunk) * countOfChunksToAllocate);
+    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk) * 1));
+
+#if 0
+    for (u16 blockIndex = 0; blockIndex < CHUNK_BLOCK_COUNT; ++blockIndex) {
+        Block *block = chunk->blocks + blockIndex;
+        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffset(/**/);
+
+        if (blockPosition.y == 1) {
+            block->type = BlockType::Stone;
+        }
+    }
+#endif
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -302,21 +271,26 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
         GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
 
+        // glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(chunk->position.x, chunk->position.y, chunk->position.z));
+        // GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+
+#if 1
         if (renderOneCube) {
             glm::mat4 model = glm::identity<glm::mat4>();
             GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-            GLDrawElements(&eb, &vb, va);
+            GLDrawMesh(cubeMesh);
         } else {
             for (u8 x = 0; x < 16; ++x) {
                 for (u8 y = 0; y < 16; ++y) {
                     for (u8 z = 0; z < 16; ++z) {
                         glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
                         GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-                        GLDrawElements(&eb, &vb, va);
+                        GLDrawMesh(cubeMesh);
                     }
                 }
             }
         }
+#endif
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

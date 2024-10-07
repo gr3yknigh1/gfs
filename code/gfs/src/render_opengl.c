@@ -129,7 +129,7 @@ void
 GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va) {
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb->id));
-    glDrawElements(GL_TRIANGLES, eb->count, GL_UNSIGNED_INT, 0);
+    GL_CALL(glDrawElements(GL_TRIANGLES, eb->count, GL_UNSIGNED_INT, 0));
 }
 
 void
@@ -137,6 +137,12 @@ GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GL
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, vb->size / layout->stride));
 }
+
+void
+GLDrawMesh(const Mesh *mesh) {
+    GLDrawElements(&mesh->elementBuffer, &mesh->vertexBuffer, mesh->vertexArray);
+}
+
 
 GLShaderID
 GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {
@@ -341,6 +347,93 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
             expression, sourceFile, sourceLine);
         THROW(printBuffer);
     }
+}
+
+Mesh *
+GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
+    ASSERT_EQ(orientation, GL_COUNTER_CLOCK_WISE); // TODO: Implement clockwise mesh.
+
+    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
+
+    // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
+    // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented. [2024/10/05]
+    // clang-format off
+    static const f32 vertexes[] = {
+        // Position    Colors        UV
+        // Front face
+        0, 1, 1,       1, 1, 1,      0, 1, // [00] top-left
+        1, 1, 1,       1, 1, 1,      1, 1, // [01] top-right
+        1, 0, 1,       1, 1, 1,      1, 0, // [02] bottom-right
+        0, 0, 1,       1, 1, 1,      0, 0, // [03] bottom-left
+
+        // Back face
+        0, 1, 0,       1, 1, 1,      1, 1, // [04] top-left
+        1, 1, 0,       1, 1, 1,      0, 1, // [05] top-right
+        1, 0, 0,       1, 1, 1,      0, 0, // [06] bottom-right
+        0, 0, 0,       1, 1, 1,      1, 0, // [07] bottom-left
+
+        // Top face
+        0, 1, 0,       1, 1, 1,      0, 1, // [08] top-left
+        1, 1, 0,       1, 1, 1,      1, 1, // [09] top-right
+        1, 1, 1,       1, 1, 1,      1, 0, // [10] bottom-right
+        0, 1, 1,       1, 1, 1,      0, 0, // [11] bottom-left
+
+        // Bottom face
+        0, 0, 1,       1, 1, 1,      0, 1, // [12] top-left
+        1, 0, 1,       1, 1, 1,      1, 1, // [13] top-right
+        1, 0, 0,       1, 1, 1,      1, 0, // [14] bottom-right
+        0, 0, 0,       1, 1, 1,      0, 0, // [15] bottom-left
+
+        // Left face
+        0, 1, 0,       1, 1, 1,      0, 1, // [16] top-left
+        0, 1, 1,       1, 1, 1,      1, 1, // [17] top-right
+        0, 0, 0,       1, 1, 1,      0, 0, // [18] bottom-right
+        0, 0, 1,       1, 1, 1,      1, 0, // [19] bottom-left
+
+        // Right face
+        1, 1, 0,       1, 1, 1,      1, 1, // [20] top-right
+        1, 1, 1,       1, 1, 1,      0, 1, // [21] top-left
+        1, 0, 0,       1, 1, 1,      1, 0, // [22] bottom-right
+        1, 0, 1,       1, 1, 1,      0, 0, // [23] bottom-left
+    };
+    // clang-format on
+
+    mesh->vertexArray = GLVertexArrayMake();
+    mesh->vertexBuffer = GLVertexBufferMake(vertexes, sizeof(vertexes));
+
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
+
+    GLVertexArrayAddBuffer(mesh->vertexArray, &mesh->vertexBuffer, &mesh->vertexLayout);
+
+    // clang-format off
+    static const u32 indexes[] = {
+        // Front face
+        0, 1, 3, // top-left
+        3, 1, 2, // bottom-right
+        // Back face
+        5, 4, 6, // top-left
+        6, 4, 7, // bottom-right
+        // Top face
+        11, 8, 9,  // top-left
+        11, 9, 10, // bottom-right
+        // Bottom face
+        13, 15, 12, // top-left
+        15, 13, 14, // bottom-right
+        // Left face
+        18, 16, 17, // top-left
+        18, 17, 19, // bottom-right
+        // Right face
+        23, 21, 20, // top-left
+        23, 20, 22, // bottom-right
+    };
+    // clang-format on
+
+    mesh->elementBuffer = GLElementBufferMake(indexes, STATIC_ARRAY_LENGTH(indexes));
+
+    return mesh;
 }
 
 // TODO(gr3yknigh1): Implement printing debug information [2024/09/22]

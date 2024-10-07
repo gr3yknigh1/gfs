@@ -49,6 +49,20 @@ typedef struct {
     u64 stride;
 } GLVertexBufferLayout;
 
+typedef struct {
+    GLVertexArray vertexArray;
+    GLVertexBuffer vertexBuffer;
+    GLElementBuffer elementBuffer;
+    GLVertexBufferLayout vertexLayout;
+} Mesh;
+
+typedef enum {
+    GL_CLOCK_WISE,
+    GL_COUNTER_CLOCK_WISE
+} GLVertexesOrientation;
+
+GFS_API Mesh *GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation);
+
 GFS_API GLVertexArray GLVertexArrayMake(void);
 GFS_API void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
 
@@ -79,6 +93,7 @@ GFS_API void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
 GFS_API void GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va);
 GFS_API void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
+GFS_API void GLDrawMesh(const Mesh *mesh);
 
 typedef enum {
     GL_SHADER_TYPE_NONE,

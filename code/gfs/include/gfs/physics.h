@@ -45,6 +45,14 @@ typedef struct {
 } Vector3U64;
 
 typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} Vector3F32;
+
+typedef Vector3F32 Vector3;
+
+typedef struct {
     u16 x;
     u16 y;
     u16 width;
@@ -68,9 +76,11 @@ typedef struct {
 /*
  * @breaf Gets offset from beginning of the array, as if this array represents
  * grid.
- *
  */
 GFS_API u32 GetOffsetFromCoords2DGridArray(u32 width, u32 x, u32 y);
+
+
+// #define chunk_pos_to_index(p) (p.x * CHUNK_SIZE.x * CHUNK_SIZE.z + p.z * CHUNK_SIZE.z + p.y)
 
 GFS_API u32 GetOffsetFromCoordsGrid3DArray(/**/);
 GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffset(/**/);

@@ -44,11 +44,11 @@ pushd %project_path%
 
 if "%build_type%" == "Debug" (
   echo I: Building debug
-  conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static --settings build_type=Debug --settings compiler.runtime_type=Debug
+  conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-release-static --settings build_type=Debug --settings compiler.runtime_type=Debug
 ) else (
   if "%build_type%" == "Release" (
     echo I: Building release
-    conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-static --settings build_type=Release --settings compiler.runtime_type=Release
+    conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-release-static --settings build_type=Release --settings compiler.runtime_type=Release
   ) else (
     echo E: Invalid build type: %build_type%
     exit 1
