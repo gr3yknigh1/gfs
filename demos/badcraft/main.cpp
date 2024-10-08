@@ -170,11 +170,25 @@ typedef struct {
     } indexArray;
 } Chunk;
 
+typedef struct {
+    BMPicture *picture;
+    u32 tileWidth;
+    u32 tileHeight;
+} Atlas;
+
 static Camera CameraMake(void);
 static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
 static glm::mat4 CameraGetViewMatix(Camera *camera);
 static glm::mat4 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight);
+
+static Atlas AtlasMake(BMPicture *picture, u32 tileWidth, u32 tileHeight);
+
+typedef enum {
+    ASSIGN_TEXTURES_OK,
+} AssignTexturesResult;
+
+static AssignTexturesResult AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType);
 
 static const u8 *gSDLKeyState = NULL;
 
@@ -233,6 +247,7 @@ main(int argc, char *args[]) {
     BMPicture atlasPicture = INIT_EMPTY_STRUCT(BMPicture);
     ASSERT_ISOK(BMPictureLoadFromFile(&atlasPicture, &runtimeScratch, "P:\\gfs\\assets\\atlas.bmp"));
     GLTexture atlasTexture = GLTextureMakeFromBMPicture(&atlasPicture, GL_TEXTURE_COLOR_ORDER_BGRA);
+    Atlas atlas = AtlasMake(&atlasPicture, 16, 16);
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
@@ -321,6 +336,7 @@ main(int argc, char *args[]) {
             MoveFaces(
                 faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
                 static_cast<f32>(blockPosition.z));
+            ASSERT_ISOK(AssignTextures(faces, FACE_PER_BLOCK, &atlas, block->type));
             chunk->faceBuffer.count += FACE_PER_BLOCK;
             chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
         }
@@ -512,4 +528,66 @@ static glm::mat4
 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) {
     return glm::perspective(
         glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), 0.1f, 100.0f);
+}
+
+static Atlas
+AtlasMake(BMPicture *picture, u32 tileWidth, u32 tileHeight) {
+    Atlas atlas = INIT_EMPTY_STRUCT(Atlas);
+
+    atlas.picture = picture;
+    atlas.tileWidth = tileWidth;
+    atlas.tileHeight = tileHeight;
+
+    return atlas;
+}
+
+static inline Vector2U32
+ConvertBlockTypeToTileCoords(Atlas *atlas, BlockType blockType) {
+    Vector2U32 coords = INIT_EMPTY_STRUCT(Vector2U32);
+
+    // TODO: Implement
+
+    coords.x = 1;
+    coords.y = 0;
+
+    return coords;
+}
+
+static inline f32
+MapU32ToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax) {
+    return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
+static AssignTexturesResult
+AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
+    Vector2U32 tileCoords = ConvertBlockTypeToTileCoords(atlas, blockType);
+    // ^^^^^^^^^^^^^^^^^^
+    // TODO(gr3yknigh1): Implement. There might be different textures for different faces. Leaving this for now.
+    // [2024/10/09]
+
+    u32 tileXCount = atlas->picture->dibHeader.width / atlas->tileWidth;
+    u32 tileYCount = atlas->picture->dibHeader.height / atlas->tileHeight;
+
+    f32 tileWidthInUV = MapU32ToF32(atlas->tileWidth, 0, atlas->picture->dibHeader.width, 0.0f, 1.0f);
+    f32 tileHeightInUV = MapU32ToF32(atlas->tileHeight, 0, atlas->picture->dibHeader.height, 0.0f, 1.0f);
+
+    f32 textureYCoord = MapU32ToF32(tileCoords.x, 0, tileXCount, 0.0f, 1.0f);
+    f32 textureXCoord = MapU32ToF32(tileCoords.y, 0, tileYCount, 0.0f, 1.0f);
+
+    for (u32 faceIndex = 0; faceIndex < faceCount; ++faceIndex) {
+        Face *face = faces + faceIndex;
+
+        face->vertexes[0].uv[0] = textureYCoord + tileHeightInUV;
+        face->vertexes[0].uv[1] = textureXCoord + tileWidthInUV;
+
+        face->vertexes[1].uv[0] = textureYCoord + tileHeightInUV;
+        face->vertexes[1].uv[1] = textureXCoord + 0;
+
+        face->vertexes[2].uv[0] = textureYCoord + 0;
+        face->vertexes[2].uv[1] = textureXCoord + 0;
+
+        face->vertexes[3].uv[0] = textureYCoord + 0;
+        face->vertexes[3].uv[1] = textureXCoord + tileWidthInUV;
+    }
+    return ASSIGN_TEXTURES_OK;
 }
