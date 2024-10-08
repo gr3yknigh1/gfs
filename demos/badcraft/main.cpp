@@ -7,7 +7,7 @@
  * TODOs:
  *   - [X] Render with element buffer
  *   - [ ] Learn and possibly implement instancing rendering
- *   - [ ] Implement chunking system
+ *   - [X] Implement basic chunk render system
  *   - [ ] Try to use strip rendering
  *   - [ ] Learn and implement texture atlas
  *
@@ -176,8 +176,6 @@ static void CameraHandleInput(Camera *camera, f32 deltaTime);
 static glm::mat4 CameraGetViewMatix(Camera *camera);
 static glm::mat4 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight);
 
-static f32 ClampF32(f32 value, f32 min, f32 max);
-
 static const u8 *gSDLKeyState = NULL;
 
 int
@@ -185,7 +183,7 @@ main(int argc, char *args[]) {
     UNUSED(argc);
     UNUSED(args);
 
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(64));
+    Scratch runtimeScratch = ScratchMake(MEGABYTES(1000));
 
     SDL_version v = INIT_EMPTY_STRUCT(SDL_version);
     SDL_GetVersion(&v);
@@ -232,9 +230,9 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
-    GLTexture texture = GLTextureMakeFromBMPicture(&picture);
+    BMPicture atlasPicture = INIT_EMPTY_STRUCT(BMPicture);
+    ASSERT_ISOK(BMPictureLoadFromFile(&atlasPicture, &runtimeScratch, "P:\\gfs\\assets\\atlas.bmp"));
+    GLTexture atlasTexture = GLTextureMakeFromBMPicture(&atlasPicture, GL_TEXTURE_COLOR_ORDER_BGRA);
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
@@ -269,7 +267,7 @@ main(int argc, char *args[]) {
     GL_CALL(glUseProgram(shader));
     GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
                                            // texture support. [2024/09/22]
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, atlasTexture));
 
     Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk)));
     chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
@@ -283,9 +281,9 @@ main(int argc, char *args[]) {
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
         Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
-        if (blockPosition.y == 0) {
+        //if (blockPosition.y == 0) {
             block->type = BlockType::Stone;
-        }
+        //}
     }
 
     // Preparing faces
@@ -470,7 +468,7 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     camera->yaw += xOffset * 1;
     camera->pitch += yOffset * -1;
 
-    camera->pitch = ClampF32(camera->pitch, -89.0f, 89.0f);
+    camera->pitch = glm::clamp(camera->pitch, -89.0f, 89.0f);
 
     f32 yawRad = glm::radians(camera->yaw);
     f32 pitchRad = glm::radians(camera->pitch);
@@ -514,17 +512,4 @@ static glm::mat4
 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) {
     return glm::perspective(
         glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), 0.1f, 100.0f);
-}
-
-static f32
-ClampF32(f32 value, f32 min, f32 max) {
-    if (value > max) {
-        return max;
-    }
-
-    if (value < min) {
-        return min;
-    }
-
-    return value;
 }
