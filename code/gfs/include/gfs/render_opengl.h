@@ -61,6 +61,22 @@ typedef enum { GL_CLOCK_WISE, GL_COUNTER_CLOCK_WISE } GLVertexesOrientation;
 /* TODO: Customize layout? */
 GFS_API Mesh *GLMeshMakeEx(
     Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount);
+
+/*
+ * @breaf Returns identity cube mesh. Used only for testing perpuses.
+ *
+ * Example:
+ *     ```c
+ *          const Mesh *cubeMesh = GLGetCubeMesh(&runtimeScratch, GL_COUNTER_CLOCK_WISE);
+ *          // ...
+ *          while (true) {
+ *              // ...
+ *              glm::mat4 model = glm::identity<glm::mat4>();
+ *              GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+ *              GLDrawMesh(cubeMesh);
+ *          }
+ *     ```
+ */
 GFS_API Mesh *GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation);
 
 GFS_API GLVertexArray GLVertexArrayMake(void);
@@ -73,7 +89,6 @@ GFS_API GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBuff
  * @deprecated Use GLElementBuffer instead.
  * @cleanup
  */
-
 GFS_API GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
 
 /*

@@ -232,8 +232,6 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    const Mesh *cubeMesh = GLGetCubeMesh(&runtimeScratch, GL_COUNTER_CLOCK_WISE);
-
     BMPicture picture = INIT_EMPTY_STRUCT(BMPicture);
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
     GLTexture texture = GLTextureMakeFromBMPicture(&picture);
@@ -401,42 +399,19 @@ main(int argc, char *args[]) {
         ImGui::Text("DeltaTime: %.05f", deltaTime);
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
-
-        static bool renderOneCube = true;
-        ImGui::Checkbox("Render chunk?", &renderOneCube);
-
         ImGui::End();
 
         ImGui::Render();
 
         glm::mat4 view = CameraGetViewMatix(&camera);
         glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
+        glm::mat4 model = glm::identity<glm::mat4>();
 
         GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
         GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
+        GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
 
-        // glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(chunk->position.x, chunk->position.y,
-        // chunk->position.z)); GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-
-#if 1
-        if (renderOneCube) {
-            glm::mat4 model = glm::identity<glm::mat4>();
-            GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-            GLDrawMesh(cubeMesh);
-        } else {
-            GLDrawMesh(chunkMesh);
-
-            // for (u8 x = 0; x < 16; ++x) {
-            //     for (u8 y = 0; y < 16; ++y) {
-            //         for (u8 z = 0; z < 16; ++z) {
-            //             glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
-            //             GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-            //             GLDrawMesh(cubeMesh);
-            //         }
-            //     }
-            // }
-        }
-#endif
+        GLDrawMesh(chunkMesh);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
