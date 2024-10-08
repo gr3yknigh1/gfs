@@ -61,6 +61,8 @@ typedef enum {
     GL_COUNTER_CLOCK_WISE
 } GLVertexesOrientation;
 
+/* TODO: Customize layout? */
+GFS_API Mesh *GLMeshMakeEx(Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount);
 GFS_API Mesh *GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation);
 
 GFS_API GLVertexArray GLVertexArrayMake(void);

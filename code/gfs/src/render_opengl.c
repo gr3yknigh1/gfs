@@ -436,6 +436,28 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
     return mesh;
 }
 
+Mesh *
+GLMeshMakeEx(Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount) {
+
+    // TODO: Do we need to allocate mesh on the heap?
+    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
+
+    mesh->vertexArray = GLVertexArrayMake();
+    mesh->vertexBuffer = GLVertexBufferMake(vertexBuffer, vertexBufferSize);
+
+    // TODO: Customize layout?
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
+
+    GLVertexArrayAddBuffer(mesh->vertexArray, &mesh->vertexBuffer, &mesh->vertexLayout);
+
+    mesh->elementBuffer = GLElementBufferMake(indexBuffer, indexesCount);
+
+    return mesh;
+}
+
 // TODO(gr3yknigh1): Implement printing debug information [2024/09/22]
 #if 0
     const byte *glVendor = glGetString(GL_VENDOR);

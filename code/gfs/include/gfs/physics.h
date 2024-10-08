@@ -73,17 +73,33 @@ typedef struct {
     i32 height;
 } RectangleI32;
 
+// TODO(gr3yknigh1): Maybe inline them? [2024/10/08]
+
 /*
- * @breaf Gets offset from beginning of the array, as if this array represents
- * grid.
+ * @breaf Gets offset from beginning of the array, as if this flattened array
+ * represents 2D grid in row-major order.
+ *
+ * @param width Represents count of items in one row. Max X value.
+ * @param x Self explanatory
+ * @param y Self explanatory
  */
-GFS_API u32 GetOffsetFromCoords2DGridArray(u32 width, u32 x, u32 y);
+GFS_API u32 GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y);
 
+/*
+ * @breaf Gets offset from beginning of the array, as if this flattened array
+ * represents 3D grid in row-major order.
+ *
+ * @param width Represents count of items in one row. Max X value.
+ * @param height Represents count of rows in one column. Max Y value.
+ * @param x Self explanatory
+ * @param y Self explanatory
+ */
+GFS_API u32 GetOffsetFromCoords3DGridArrayRM(u32 width, u32 height, u32 x, u32 y, u32 z);
 
-// #define chunk_pos_to_index(p) (p.x * CHUNK_SIZE.x * CHUNK_SIZE.z + p.z * CHUNK_SIZE.z + p.y)
-
-GFS_API u32 GetOffsetFromCoordsGrid3DArray(/**/);
-GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffset(/**/);
+/*
+ * @breaf Gets coordinates (x,y,z) from index of flattened 3D array (row-major order).
+ */
+GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffsetRM(u32 width, u32 height, u32 length, u32 offset);
 
 GFS_API bool RectangleU16IsInside(RectangleU16 r, u16 x, u16 y);
 GFS_API bool RectangleU16IsOverlapping(RectangleU16 r);

@@ -38,8 +38,10 @@
 /*
  * @breaf Chunk size in one of dimentions
  */
-#define CHUNK_SIZE 16
-#define CHUNK_BLOCK_COUNT CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
+#define CHUNK_SIZE EXPAND(16)
+#define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
+#define FACE_PER_BLOCK EXPAND(6)
+#define INDEXES_PER_FACE EXPAND(6)
 
 typedef struct {
     glm::vec3 position;
@@ -61,17 +63,110 @@ enum class BlockType : u16 {
 
 typedef struct {
     BlockType type;
-    Vector3 position;
 } Block;
 
 typedef struct {
-    Block blocks[CHUNK_BLOCK_COUNT];
+    f32 position[3];
+    f32 color[3];
+    f32 uv[2];
+} Vertex;
 
+typedef struct {
+    Vertex vertexes[4];
+} Face;
+
+const static Face FRONT_FACE = LITERAL(Face) {{
+    // Position  Colors      UV
+    { {0, 1, 1}, {1, 1, 1}, {0, 1} }, // [00] top-left
+    { {1, 1, 1}, {1, 1, 1}, {1, 1} }, // [01] top-right
+    { {1, 0, 1}, {1, 1, 1}, {1, 0} }, // [02] bottom-right
+    { {0, 0, 1}, {1, 1, 1}, {0, 0} }  // [03] bottom-left
+}};
+
+const static u32 FRONT_FACE_INDEXES[6] = {
+    0, 1, 3, // top-left
+    3, 1, 2, // bottom-right
+};
+
+const static Face BACK_FACE = LITERAL(Face) {{
+    // Position  Colors     UV
+    { {0, 1, 0}, {1, 1, 1}, {1, 1} }, // [04] top-left
+    { {1, 1, 0}, {1, 1, 1}, {0, 1} }, // [05] top-right
+    { {1, 0, 0}, {1, 1, 1}, {0, 0} }, // [06] bottom-right
+    { {0, 0, 0}, {1, 1, 1}, {1, 0} }  // [07] bottom-left
+}};
+
+const static u32 BACK_FACE_INDEXES[6] = {
+    5, 4, 6, // top-left
+    6, 4, 7, // bottom-right
+};
+
+const static Face TOP_FACE = LITERAL(Face) {{
+    // Position  Colors     UV
+    { {0, 1, 0}, {1, 1, 1}, {0, 1} }, // [08] top-left
+    { {1, 1, 0}, {1, 1, 1}, {1, 1} }, // [09] top-right
+    { {1, 1, 1}, {1, 1, 1}, {1, 0} }, // [10] bottom-right
+    { {0, 1, 1}, {1, 1, 1}, {0, 0} }  // [11] bottom-left
+}};
+
+const static u32 TOP_FACE_INDEXES[6] = {
+    11, 8, 9,  // top-left
+    11, 9, 10, // bottom-right
+};
+
+const static Face BOTTOM_FACE = LITERAL(Face) {{
+    // Position  Colors    UV
+    { {0, 0, 1}, {1, 1, 1}, {0, 1} }, // [12] top-left
+    { {1, 0, 1}, {1, 1, 1}, {1, 1} }, // [13] top-right
+    { {1, 0, 0}, {1, 1, 1}, {1, 0} }, // [14] bottom-right
+    { {0, 0, 0}, {1, 1, 1}, {0, 0} }  // [15] bottom-left
+}};
+
+const static u32 BOTTOM_FACE_INDEXES[6] = {
+    13, 15, 12, // top-left
+    15, 13, 14, // bottom-right
+};
+
+const static Face LEFT_FACE = LITERAL(Face) {{
+    // Position  Colors      UV
+    { {0, 1, 0}, {1, 1, 1}, {0, 1} }, // [16] top-left
+    { {0, 1, 1}, {1, 1, 1}, {1, 1} }, // [17] top-right
+    { {0, 0, 0}, {1, 1, 1}, {0, 0} }, // [18] bottom-right
+    { {0, 0, 1}, {1, 1, 1}, {1, 0} }  // [19] bottom-left
+}};
+
+const static u32 LEFT_FACE_INDEXES[6] = {
+    18, 16, 17, // top-left
+    18, 17, 19, // bottom-right
+};
+
+const static Face RIGHT_FACE = LITERAL(Face) {{
+    // Position  Colors      UV
+    { {1, 1, 0}, {1, 1, 1}, {1, 1}}, // [20] top-right
+    { {1, 1, 1}, {1, 1, 1}, {0, 1}}, // [21] top-left
+    { {1, 0, 0}, {1, 1, 1}, {1, 0}}, // [22] bottom-right
+    { {1, 0, 1}, {1, 1, 1}, {0, 0}}  // [23] bottom-left
+}};
+
+const static u32 RIGHT_FACE_INDEXES[6] = {
+    23, 21, 20, // top-left
+    23, 20, 22, // bottom-right
+};
+
+static void MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z);
+
+typedef struct {
+    Block blocks[CHUNK_MAX_BLOCK_COUNT];
     struct {
-        Vector3 *data;
-        usize capacity;
+        Face *data;
+        u64 capacity;
         u64 count;
     } faceBuffer;
+    struct {
+        u32 *data;
+        u64 capacity;
+        u64 count;
+    } indexArray;
 } Chunk;
 
 static Camera CameraMake(void);
@@ -89,7 +184,7 @@ main(int argc, char *args[]) {
     UNUSED(argc);
     UNUSED(args);
 
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
+    Scratch runtimeScratch = ScratchMake(MEGABYTES(64));
 
     SDL_version v = INIT_EMPTY_STRUCT(SDL_version);
     SDL_GetVersion(&v);
@@ -177,18 +272,61 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
-    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk) * 1));
+    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk)));
+    chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
+    chunk->faceBuffer.data = static_cast<Face *>(ScratchAllocZero(&runtimeScratch, chunk->faceBuffer.capacity * sizeof(Face)));
+    chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
+    chunk->indexArray.data = static_cast<u32 *>(ScratchAllocZero(&runtimeScratch, chunk->indexArray.capacity * sizeof(u32)));
 
-#if 0
-    for (u16 blockIndex = 0; blockIndex < CHUNK_BLOCK_COUNT; ++blockIndex) {
+    // "Generation"
+    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffset(/**/);
-
-        if (blockPosition.y == 1) {
+        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
+        if (blockPosition.z == 0 && blockPosition.x == 0) {
             block->type = BlockType::Stone;
         }
     }
-#endif
+
+    // Preparing faces
+    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
+        Block *block = chunk->blocks + blockIndex;
+        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
+
+        if (block->type == BlockType::Stone) {
+            // Push faces
+            Face *faces = chunk->faceBuffer.data + chunk->faceBuffer.count;
+            u32 *indexes = chunk->indexArray.data + chunk->indexArray.count;
+
+            faces[0] = FRONT_FACE;
+            MemoryCopy(indexes + 0 * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[1] = BACK_FACE;
+            MemoryCopy(indexes + 1 * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[2] = TOP_FACE;
+            MemoryCopy(indexes + 2 * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[3] = BOTTOM_FACE;
+            MemoryCopy(indexes + 3 * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[4] = LEFT_FACE;
+            MemoryCopy(indexes + 4 * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[5] = RIGHT_FACE;
+            MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
+                indexes[indexIndex] += chunk->faceBuffer.count;
+            }
+
+            MoveFaces(faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y), static_cast<f32>(blockPosition.z));
+            chunk->faceBuffer.count += FACE_PER_BLOCK;
+            chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
+        }
+    }
+
+    Mesh *chunkMesh = GLMeshMakeEx(&runtimeScratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data),
+        chunk->faceBuffer.count * sizeof(Face), chunk->indexArray.data, chunk->indexArray.count);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -280,20 +418,21 @@ main(int argc, char *args[]) {
             GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
             GLDrawMesh(cubeMesh);
         } else {
-            for (u8 x = 0; x < 16; ++x) {
-                for (u8 y = 0; y < 16; ++y) {
-                    for (u8 z = 0; z < 16; ++z) {
-                        glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
-                        GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-                        GLDrawMesh(cubeMesh);
-                    }
-                }
-            }
+            GLDrawMesh(chunkMesh);
+
+            // for (u8 x = 0; x < 16; ++x) {
+            //     for (u8 y = 0; y < 16; ++y) {
+            //         for (u8 z = 0; z < 16; ++z) {
+            //             glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(x, y, z));
+            //             GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+            //             GLDrawMesh(cubeMesh);
+            //         }
+            //     }
+            // }
         }
 #endif
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         SDL_GL_SwapWindow(window);
     }
 
@@ -305,6 +444,24 @@ main(int argc, char *args[]) {
     ScratchDestroy(&runtimeScratch);
 
     return 0;
+}
+
+static inline void
+MovePositionArray(f32 *position, f32 x, f32 y, f32 z) {
+    position[0] += x;
+    position[1] += y;
+    position[2] += z;
+}
+
+static void
+MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z) {
+    for (u32 faceIndex = 0; faceIndex < faceCount; ++faceIndex) {
+        Face *face = faces + faceIndex;
+        MovePositionArray(face->vertexes[0].position, x, y, z);
+        MovePositionArray(face->vertexes[1].position, x, y, z);
+        MovePositionArray(face->vertexes[2].position, x, y, z);
+        MovePositionArray(face->vertexes[3].position, x, y, z);
+    }
 }
 
 static Camera
