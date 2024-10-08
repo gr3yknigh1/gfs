@@ -42,6 +42,7 @@
 #define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
+#define VERTEXES_PER_FACE EXPAND(4)
 
 typedef struct {
     glm::vec3 position;
@@ -90,10 +91,10 @@ const static u32 FRONT_FACE_INDEXES[6] = {
 
 const static Face BACK_FACE = LITERAL(Face) {{
     // Position  Colors     UV
-    { {0, 1, 0}, {1, 1, 1}, {1, 1} }, // [04] top-left
-    { {1, 1, 0}, {1, 1, 1}, {0, 1} }, // [05] top-right
-    { {1, 0, 0}, {1, 1, 1}, {0, 0} }, // [06] bottom-right
-    { {0, 0, 0}, {1, 1, 1}, {1, 0} }  // [07] bottom-left
+    { {0, 1, 0}, {1, 1, 1}, {1, 1} }, // [04] top-right
+    { {1, 1, 0}, {1, 1, 1}, {0, 1} }, // [05] top-left
+    { {1, 0, 0}, {1, 1, 1}, {0, 0} }, // [06] bottom-left
+    { {0, 0, 0}, {1, 1, 1}, {1, 0} }  // [07] bottom-right
 }};
 
 const static u32 BACK_FACE_INDEXES[6] = {
@@ -282,7 +283,7 @@ main(int argc, char *args[]) {
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
         Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
-        if (blockPosition.z == 0 && blockPosition.x == 0) {
+        if (blockPosition.y == 0) {
             block->type = BlockType::Stone;
         }
     }
@@ -316,7 +317,7 @@ main(int argc, char *args[]) {
             MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
 
             for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
-                indexes[indexIndex] += chunk->faceBuffer.count;
+                indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
             }
 
             MoveFaces(faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y), static_cast<f32>(blockPosition.z));
@@ -397,7 +398,7 @@ main(int argc, char *args[]) {
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
 
         static bool renderOneCube = true;
-        ImGui::Checkbox("Render one cube?", &renderOneCube);
+        ImGui::Checkbox("Render chunk?", &renderOneCube);
 
         ImGui::End();
 
