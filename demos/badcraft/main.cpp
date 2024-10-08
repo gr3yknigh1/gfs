@@ -39,7 +39,7 @@
  * @breaf Chunk size in one of dimentions
  */
 #define CHUNK_SIZE EXPAND(16)
-#define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
+#define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIZE *CHUNK_SIZE *CHUNK_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
@@ -76,12 +76,12 @@ typedef struct {
     Vertex vertexes[4];
 } Face;
 
-const static Face FRONT_FACE = LITERAL(Face) {{
+const static Face FRONT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    { {0, 1, 1}, {1, 1, 1}, {0, 1} }, // [00] top-left
-    { {1, 1, 1}, {1, 1, 1}, {1, 1} }, // [01] top-right
-    { {1, 0, 1}, {1, 1, 1}, {1, 0} }, // [02] bottom-right
-    { {0, 0, 1}, {1, 1, 1}, {0, 0} }  // [03] bottom-left
+    {{0, 1, 1}, {1, 1, 1}, {0, 1}}, // [00] top-left
+    {{1, 1, 1}, {1, 1, 1}, {1, 1}}, // [01] top-right
+    {{1, 0, 1}, {1, 1, 1}, {1, 0}}, // [02] bottom-right
+    {{0, 0, 1}, {1, 1, 1}, {0, 0}}  // [03] bottom-left
 }};
 
 const static u32 FRONT_FACE_INDEXES[6] = {
@@ -89,12 +89,12 @@ const static u32 FRONT_FACE_INDEXES[6] = {
     3, 1, 2, // bottom-right
 };
 
-const static Face BACK_FACE = LITERAL(Face) {{
+const static Face BACK_FACE = LITERAL(Face){{
     // Position  Colors     UV
-    { {0, 1, 0}, {1, 1, 1}, {1, 1} }, // [04] top-right
-    { {1, 1, 0}, {1, 1, 1}, {0, 1} }, // [05] top-left
-    { {1, 0, 0}, {1, 1, 1}, {0, 0} }, // [06] bottom-left
-    { {0, 0, 0}, {1, 1, 1}, {1, 0} }  // [07] bottom-right
+    {{0, 1, 0}, {1, 1, 1}, {1, 1}}, // [04] top-right
+    {{1, 1, 0}, {1, 1, 1}, {0, 1}}, // [05] top-left
+    {{1, 0, 0}, {1, 1, 1}, {0, 0}}, // [06] bottom-left
+    {{0, 0, 0}, {1, 1, 1}, {1, 0}}  // [07] bottom-right
 }};
 
 const static u32 BACK_FACE_INDEXES[6] = {
@@ -102,12 +102,12 @@ const static u32 BACK_FACE_INDEXES[6] = {
     6, 4, 7, // bottom-right
 };
 
-const static Face TOP_FACE = LITERAL(Face) {{
+const static Face TOP_FACE = LITERAL(Face){{
     // Position  Colors     UV
-    { {0, 1, 0}, {1, 1, 1}, {0, 1} }, // [08] top-left
-    { {1, 1, 0}, {1, 1, 1}, {1, 1} }, // [09] top-right
-    { {1, 1, 1}, {1, 1, 1}, {1, 0} }, // [10] bottom-right
-    { {0, 1, 1}, {1, 1, 1}, {0, 0} }  // [11] bottom-left
+    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [08] top-left
+    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [09] top-right
+    {{1, 1, 1}, {1, 1, 1}, {1, 0}}, // [10] bottom-right
+    {{0, 1, 1}, {1, 1, 1}, {0, 0}}  // [11] bottom-left
 }};
 
 const static u32 TOP_FACE_INDEXES[6] = {
@@ -115,12 +115,12 @@ const static u32 TOP_FACE_INDEXES[6] = {
     11, 9, 10, // bottom-right
 };
 
-const static Face BOTTOM_FACE = LITERAL(Face) {{
+const static Face BOTTOM_FACE = LITERAL(Face){{
     // Position  Colors    UV
-    { {0, 0, 1}, {1, 1, 1}, {0, 1} }, // [12] top-left
-    { {1, 0, 1}, {1, 1, 1}, {1, 1} }, // [13] top-right
-    { {1, 0, 0}, {1, 1, 1}, {1, 0} }, // [14] bottom-right
-    { {0, 0, 0}, {1, 1, 1}, {0, 0} }  // [15] bottom-left
+    {{0, 0, 1}, {1, 1, 1}, {0, 1}}, // [12] top-left
+    {{1, 0, 1}, {1, 1, 1}, {1, 1}}, // [13] top-right
+    {{1, 0, 0}, {1, 1, 1}, {1, 0}}, // [14] bottom-right
+    {{0, 0, 0}, {1, 1, 1}, {0, 0}}  // [15] bottom-left
 }};
 
 const static u32 BOTTOM_FACE_INDEXES[6] = {
@@ -128,12 +128,12 @@ const static u32 BOTTOM_FACE_INDEXES[6] = {
     15, 13, 14, // bottom-right
 };
 
-const static Face LEFT_FACE = LITERAL(Face) {{
+const static Face LEFT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    { {0, 1, 0}, {1, 1, 1}, {0, 1} }, // [16] top-left
-    { {0, 1, 1}, {1, 1, 1}, {1, 1} }, // [17] top-right
-    { {0, 0, 0}, {1, 1, 1}, {0, 0} }, // [18] bottom-right
-    { {0, 0, 1}, {1, 1, 1}, {1, 0} }  // [19] bottom-left
+    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [16] top-left
+    {{0, 1, 1}, {1, 1, 1}, {1, 1}}, // [17] top-right
+    {{0, 0, 0}, {1, 1, 1}, {0, 0}}, // [18] bottom-right
+    {{0, 0, 1}, {1, 1, 1}, {1, 0}}  // [19] bottom-left
 }};
 
 const static u32 LEFT_FACE_INDEXES[6] = {
@@ -141,12 +141,12 @@ const static u32 LEFT_FACE_INDEXES[6] = {
     18, 17, 19, // bottom-right
 };
 
-const static Face RIGHT_FACE = LITERAL(Face) {{
+const static Face RIGHT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    { {1, 1, 0}, {1, 1, 1}, {1, 1}}, // [20] top-right
-    { {1, 1, 1}, {1, 1, 1}, {0, 1}}, // [21] top-left
-    { {1, 0, 0}, {1, 1, 1}, {1, 0}}, // [22] bottom-right
-    { {1, 0, 1}, {1, 1, 1}, {0, 0}}  // [23] bottom-left
+    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [20] top-right
+    {{1, 1, 1}, {1, 1, 1}, {0, 1}}, // [21] top-left
+    {{1, 0, 0}, {1, 1, 1}, {1, 0}}, // [22] bottom-right
+    {{1, 0, 1}, {1, 1, 1}, {0, 0}}  // [23] bottom-left
 }};
 
 const static u32 RIGHT_FACE_INDEXES[6] = {
@@ -275,9 +275,11 @@ main(int argc, char *args[]) {
 
     Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk)));
     chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
-    chunk->faceBuffer.data = static_cast<Face *>(ScratchAllocZero(&runtimeScratch, chunk->faceBuffer.capacity * sizeof(Face)));
+    chunk->faceBuffer.data =
+        static_cast<Face *>(ScratchAllocZero(&runtimeScratch, chunk->faceBuffer.capacity * sizeof(Face)));
     chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
-    chunk->indexArray.data = static_cast<u32 *>(ScratchAllocZero(&runtimeScratch, chunk->indexArray.capacity * sizeof(u32)));
+    chunk->indexArray.data =
+        static_cast<u32 *>(ScratchAllocZero(&runtimeScratch, chunk->indexArray.capacity * sizeof(u32)));
 
     // "Generation"
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
@@ -320,14 +322,17 @@ main(int argc, char *args[]) {
                 indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
             }
 
-            MoveFaces(faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y), static_cast<f32>(blockPosition.z));
+            MoveFaces(
+                faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
+                static_cast<f32>(blockPosition.z));
             chunk->faceBuffer.count += FACE_PER_BLOCK;
             chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
         }
     }
 
-    Mesh *chunkMesh = GLMeshMakeEx(&runtimeScratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data),
-        chunk->faceBuffer.count * sizeof(Face), chunk->indexArray.data, chunk->indexArray.count);
+    Mesh *chunkMesh = GLMeshMakeEx(
+        &runtimeScratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face),
+        chunk->indexArray.data, chunk->indexArray.count);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -410,8 +415,8 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
         GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
 
-        // glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(chunk->position.x, chunk->position.y, chunk->position.z));
-        // GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+        // glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), glm::vec3(chunk->position.x, chunk->position.y,
+        // chunk->position.z)); GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
 
 #if 1
         if (renderOneCube) {
@@ -496,7 +501,7 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     f32 pitchRad = glm::radians(camera->pitch);
 
     glm::vec3 direction = LITERAL(glm::vec3){
-        cosf(yawRad) * cosf(pitchRad),                  // TODO(gr3yknigh1): Change to `glm::*` functions
+        cosf(yawRad) * cosf(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
         sinf(pitchRad),
         sinf(yawRad) * cosf(pitchRad),
     };

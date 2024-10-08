@@ -143,7 +143,6 @@ GLDrawMesh(const Mesh *mesh) {
     GLDrawElements(&mesh->elementBuffer, &mesh->vertexBuffer, mesh->vertexArray);
 }
 
-
 GLShaderID
 GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {
     ASSERT_ISTRUE(IsPathExists(sourceFilePath));
@@ -356,7 +355,8 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
     Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
 
     // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
-    // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented. [2024/10/05]
+    // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented.
+    // [2024/10/05]
     // clang-format off
     static const f32 vertexes[] = {
         // Position    Colors        UV
@@ -437,7 +437,8 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
 }
 
 Mesh *
-GLMeshMakeEx(Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount) {
+GLMeshMakeEx(
+    Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount) {
 
     // TODO: Do we need to allocate mesh on the heap?
     Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
