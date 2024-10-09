@@ -91,15 +91,15 @@ const static u32 FRONT_FACE_INDEXES[6] = {
 
 const static Face BACK_FACE = LITERAL(Face){{
     // Position  Colors     UV
-    {{0, 1, 0}, {1, 1, 1}, {1, 1}}, // [04] top-right
-    {{1, 1, 0}, {1, 1, 1}, {0, 1}}, // [05] top-left
-    {{1, 0, 0}, {1, 1, 1}, {0, 0}}, // [06] bottom-left
-    {{0, 0, 0}, {1, 1, 1}, {1, 0}}  // [07] bottom-right
+    {{1, 1, 0}, {1, 1, 1}, {0, 1}}, // [04] top-left
+    {{0, 1, 0}, {1, 1, 1}, {1, 1}}, // [05] top-right
+    {{0, 0, 0}, {1, 1, 1}, {1, 0}}, // [06] bottom-right
+    {{1, 0, 0}, {1, 1, 1}, {0, 0}}  // [07] bottom-left
 }};
 
 const static u32 BACK_FACE_INDEXES[6] = {
-    5, 4, 6, // top-left
-    6, 4, 7, // bottom-right
+    4, 5, 6, // top-left
+    6, 7, 4, // bottom-right
 };
 
 const static Face TOP_FACE = LITERAL(Face){{
@@ -112,7 +112,7 @@ const static Face TOP_FACE = LITERAL(Face){{
 
 const static u32 TOP_FACE_INDEXES[6] = {
     11, 8, 9,  // top-left
-    11, 9, 10, // bottom-right
+    9, 10, 11, // bottom-right
 };
 
 const static Face BOTTOM_FACE = LITERAL(Face){{
@@ -124,7 +124,7 @@ const static Face BOTTOM_FACE = LITERAL(Face){{
 }};
 
 const static u32 BOTTOM_FACE_INDEXES[6] = {
-    13, 15, 12, // top-left
+    12, 13, 15, // top-left
     15, 13, 14, // bottom-right
 };
 
@@ -132,26 +132,26 @@ const static Face LEFT_FACE = LITERAL(Face){{
     // Position  Colors      UV
     {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [16] top-left
     {{0, 1, 1}, {1, 1, 1}, {1, 1}}, // [17] top-right
-    {{0, 0, 0}, {1, 1, 1}, {0, 0}}, // [18] bottom-right
-    {{0, 0, 1}, {1, 1, 1}, {1, 0}}  // [19] bottom-left
+    {{0, 0, 1}, {1, 1, 1}, {0, 0}}, // [18] bottom-right
+    {{0, 0, 0}, {1, 1, 1}, {1, 0}}  // [19] bottom-left
 }};
 
 const static u32 LEFT_FACE_INDEXES[6] = {
-    18, 16, 17, // top-left
-    18, 17, 19, // bottom-right
+    19, 16, 17, // top-left
+    17, 18, 19  // bottom-right
 };
 
 const static Face RIGHT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [20] top-right
-    {{1, 1, 1}, {1, 1, 1}, {0, 1}}, // [21] top-left
-    {{1, 0, 0}, {1, 1, 1}, {1, 0}}, // [22] bottom-right
-    {{1, 0, 1}, {1, 1, 1}, {0, 0}}  // [23] bottom-left
+    {{1, 1, 1}, {1, 1, 1}, {0, 1}}, // [20] top-left
+    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [21] top-right
+    {{1, 0, 0}, {1, 1, 1}, {0, 0}}, // [22] bottom-right
+    {{1, 0, 1}, {1, 1, 1}, {1, 0}}  // [23] bottom-left
 }};
 
 const static u32 RIGHT_FACE_INDEXES[6] = {
-    23, 21, 20, // top-left
-    23, 20, 22, // bottom-right
+    20, 21, 23, // top-left
+    23, 21, 22  // bottom-right
 };
 
 static void MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z);
