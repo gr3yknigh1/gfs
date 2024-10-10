@@ -225,6 +225,39 @@ FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, us
     return FileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
+FileSetCursorResult
+FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor) {
+    ASSERT_NONNULL(handle);
+    ASSERT(FileHandleIsValid(handle));
+
+    DWORD moveMethod;
+
+    if (anchor == FILE_CURSOR_ANCHOR_BEGIN) {
+        moveMethod = FILE_BEGIN;
+    } else if (anchor == FILE_CURSOR_ANCHOR_CURRENT) {
+        moveMethod = FILE_CURRENT;
+    } else if (anchor == FILE_CURSOR_ANCHOR_END) {
+        moveMethod = FILE_END;
+    } else {
+        return FILE_SET_CURSOR_INVALID_INPUT;
+    }
+
+    if (offset == 0) {
+        return FILE_SET_CURSOR_OK;
+    }
+
+    LARGE_INTEGER win32Offset;
+    win32Offset.QuadPart = offset;
+
+    DWORD result = SetFilePointerEx(handle->win32Handle, win32Offset, NULL, moveMethod);
+
+    if (result == INVALID_SET_FILE_POINTER) {
+        return FILE_SET_CURSOR_FAILED;
+    }
+
+    return FILE_SET_CURSOR_OK;
+}
+
 FileLoadResultCode
 FileLoadToBufferEx(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
@@ -233,23 +266,7 @@ FileLoadToBufferEx(
     ASSERT_NONNULL(buffer);
     ASSERT_NONZERO(numberOfBytesToLoad);
 
-#if 0
-    // TODO(ilya.a): Check what was wrong about this piece of code.
-    // (Unable to offset and read properly). [2024/05/26]
-
-    LARGE_INTEGER offsetPair;
-    offsetPair.LowPart = ((U32 *)&offset)[1];
-    offsetPair.HighPart = ((U32 *)&offset)[0];
-#endif
-
-    DWORD setFilePointerResult = SetFilePointer(
-        handle->win32Handle,
-        (u32)loadOffset, // XXX(ilya.a): Hack [2024/05/26]
-        NULL, FILE_BEGIN);
-
-    if (setFilePointerResult == INVALID_SET_FILE_POINTER) {
-        return FILE_FAILED_TO_READ;
-    }
+    ASSERT_ISOK(FileSetCursor(handle, loadOffset, FILE_CURSOR_ANCHOR_BEGIN));
 
     DWORD numberOfBytesRead = 0;
     BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);

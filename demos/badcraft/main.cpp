@@ -21,10 +21,6 @@
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
-#include <glm/common.hpp>
-#include <glm/ext.hpp>
-#include <glm/fwd.hpp>
-#include <glm/ext/matrix_transform.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
@@ -36,24 +32,13 @@
 #include <gfs/game_state.h>
 #include <gfs/render_opengl.h>
 
+#include "camera.hpp"
+
 #define CHUNK_SIDE_SIZE EXPAND(16)
 #define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
-
-typedef struct {
-    glm::vec3 position;
-    glm::vec3 front;
-    glm::vec3 up;
-
-    f32 yaw;
-    f32 pitch;
-
-    f32 speed;
-    f32 sensitivity;
-    f32 fov;
-} Camera;
 
 enum class BlockType : u16 {
     Nothing,
@@ -73,6 +58,20 @@ typedef struct {
 typedef struct {
     Vertex vertexes[4];
 } Face;
+
+typedef struct {
+    Block blocks[CHUNK_MAX_BLOCK_COUNT];
+    struct {
+        Face *data;
+        u64 capacity;
+        u64 count;
+    } faceBuffer;
+    struct {
+        u32 *data;
+        u64 capacity;
+        u64 count;
+    } indexArray;
+} Chunk;
 
 const static Face FRONT_FACE = LITERAL(Face){{
     // Position  Colors      UV
@@ -153,34 +152,10 @@ const static u32 RIGHT_FACE_INDEXES[6] = {
 };
 
 static void MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z);
-
-typedef struct {
-    Block blocks[CHUNK_MAX_BLOCK_COUNT];
-    struct {
-        Face *data;
-        u64 capacity;
-        u64 count;
-    } faceBuffer;
-    struct {
-        u32 *data;
-        u64 capacity;
-        u64 count;
-    } indexArray;
-} Chunk;
-
-static Camera CameraMake(void);
-static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
-static glm::mat4 CameraGetViewMatix(Camera *camera);
-static glm::mat4 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight);
-
 static BlockType GenerateNextBlock(Vector3U32 blockPosition);
 
-typedef enum {
-    ASSIGN_TEXTURES_OK,
-} AssignTexturesResult;
-
-static AssignTexturesResult AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType);
+static void AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType);
 
 static const u8 *gSDLKeyState = NULL;
 
@@ -335,7 +310,7 @@ main(int argc, char *args[]) {
             MoveFaces(
                 faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
                 static_cast<f32>(blockPosition.z));
-            ASSERT_ISOK(AssignTextures(faces, FACE_PER_BLOCK, &atlas, block->type));
+            AssignTextures(faces, FACE_PER_BLOCK, &atlas, block->type);
             chunk->faceBuffer.count += FACE_PER_BLOCK;
             chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
         }
@@ -458,47 +433,12 @@ MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z) {
     }
 }
 
-static Camera
-CameraMake() {
-    Camera camera = {
-        .position = {0, 0, 3.0f},
-        .front = {0, 0, -1.0f},
-        .up = {0, 1.0f, 0},
-
-        .yaw = -90.0f,
-        .pitch = 0.0f,
-
-        .speed = 10.0f,
-        .sensitivity = 0.5f,
-        .fov = 45.0f,
-    };
-    return camera;
-}
-
-static void
-CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
-    xOffset *= camera->sensitivity;
-    yOffset *= camera->sensitivity;
-
-    camera->yaw += xOffset * 1;
-    camera->pitch += yOffset * -1;
-
-    camera->pitch = glm::clamp(camera->pitch, -89.0f, 89.0f);
-
-    f32 yawRad = glm::radians(camera->yaw);
-    f32 pitchRad = glm::radians(camera->pitch);
-
-    glm::vec3 direction = LITERAL(glm::vec3){
-        cosf(yawRad) * cosf(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
-        sinf(pitchRad),
-        sinf(yawRad) * cosf(pitchRad),
-    };
-    camera->front = glm::normalize(direction);
-}
-
+/*
+ * Can't move this function from this file, inner
+ * logic bound to global variable `gSDLKeyState`.
+ */
 static void
 CameraHandleInput(Camera *camera, f32 deltaTime) {
-
     if (gSDLKeyState[SDL_SCANCODE_W]) {
         camera->position += camera->front * camera->speed * deltaTime;
     }
@@ -518,17 +458,6 @@ CameraHandleInput(Camera *camera, f32 deltaTime) {
     }
 }
 
-static glm::mat4
-CameraGetViewMatix(Camera *camera) {
-    return glm::lookAt(camera->position, camera->position + camera->front, camera->up);
-}
-
-static glm::mat4
-CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) {
-    return glm::perspective(
-        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), 0.1f, 100.0f);
-}
-
 static inline Vector2U32
 ConvertBlockTypeToTileCoords(Atlas *atlas, BlockType blockType) {
     Vector2U32 coords = INIT_EMPTY_STRUCT(Vector2U32);
@@ -544,7 +473,7 @@ ConvertBlockTypeToTileCoords(Atlas *atlas, BlockType blockType) {
     return coords;
 }
 
-static AssignTexturesResult
+static void
 AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
     Vector2U32 tileCoords = ConvertBlockTypeToTileCoords(atlas, blockType);
     // ^^^^^^^^^^^^^^^^^^
@@ -570,8 +499,6 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
         face->vertexes[3].uv[0] = texCoords.t + 0;
         face->vertexes[3].uv[1] = texCoords.s + tileUVWidth;
     }
-
-    return ASSIGN_TEXTURES_OK;
 }
 
 static BlockType

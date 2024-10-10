@@ -6,6 +6,7 @@ find_package(imgui REQUIRED)
 enable_language(CXX)
 add_executable(badcraft
   ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/camera.cpp
 )
 
 add_library(imgui_impl

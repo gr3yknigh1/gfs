@@ -128,8 +128,22 @@ GFS_API FileLoadResultCode FileLoadToBufferEx(
 
 GFS_API usize FileGetSize(FileHandle *handle);
 
+typedef enum {
+    FILE_SET_CURSOR_OK,
+    FILE_SET_CURSOR_FAILED,
+    FILE_SET_CURSOR_INVALID_INPUT,
+} FileSetCursorResult;
+
+typedef enum {
+    FILE_CURSOR_ANCHOR_BEGIN,
+    FILE_CURSOR_ANCHOR_CURRENT,
+    FILE_CURSOR_ANCHOR_END,
+} FileCursorAnchor;
+
+FileSetCursorResult FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor);
+
 /*
- * @breaf Opens platforms window.
+ * @breaf Opens window and initializes OpenGL render context.
  * */
 GFS_API Window *WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title);
 

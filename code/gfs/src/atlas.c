@@ -13,7 +13,6 @@ Atlas
 AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, ColorLayout colorLayout) {
     Atlas atlas = INIT_EMPTY_STRUCT(Atlas);
 
-    // XXX
     atlas.picture = ScratchAllocZero(scratch, sizeof(BMPicture));
     ASSERT_NONNULL(atlas.picture);
 
