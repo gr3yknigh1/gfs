@@ -479,18 +479,3 @@ GLMeshMakeEx(
 
     return mesh;
 }
-
-// TODO(gr3yknigh1): Implement printing debug information [2024/09/22]
-#if 0
-    const byte *glVendor = glGetString(GL_VENDOR);
-    const byte *glRenderer = glGetString(GL_RENDERER);
-    const byte *glVersion = glGetString(GL_VERSION);
-    const byte *glExtensions = glGetString(GL_EXTENSIONS);
-    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-    UNUSED(glVendor);
-    UNUSED(glRenderer);
-    UNUSED(glVersion);
-    UNUSED(glExtensions);
-    UNUSED(glShaderLanguage);
-#endif

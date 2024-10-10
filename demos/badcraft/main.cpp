@@ -220,6 +220,17 @@ main(int argc, char *args[]) {
     ImGui_ImplSDL2_InitForOpenGL(window, context);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    const byte *glVendor = glGetString(GL_VENDOR);
+    const byte *glRenderer = glGetString(GL_RENDERER);
+    const byte *glVersion = glGetString(GL_VERSION);
+    const byte *glExtensions = glGetString(GL_EXTENSIONS);
+    const byte *glShaderLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Vendor: %s\n", glVendor);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Renderer: %s, v%s\n", glRenderer, glVersion);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Extentions: %s\n", glExtensions);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Language: %s\n", glShaderLanguage);
+
     GL_CALL(glEnable(GL_BLEND));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_DEPTH_TEST));

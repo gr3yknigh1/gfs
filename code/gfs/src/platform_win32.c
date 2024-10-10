@@ -368,11 +368,6 @@ Win32_OpenGLContextExts_Init(void) {
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
-
-#if 0
-    ReleaseDC(dummyWindowHandle, dummyDeviceContext);
-    DestroyWindow(dummyWindowHandle);
-#endif
 }
 
 static HGLRC
@@ -676,8 +671,8 @@ PoolEvents(Window *window) {
 
             if (dPadRight || dPadLeft || dPadUp || dPadDown) {
 #if 0
-                    vibrationState.wLeftMotorSpeed = 60000;
-                    vibrationState.wRightMotorSpeed = 60000;
+                vibrationState.wLeftMotorSpeed = 60000;
+                vibrationState.wRightMotorSpeed = 60000;
 #endif
             } else {
                 vibrationState.wLeftMotorSpeed = 0;
