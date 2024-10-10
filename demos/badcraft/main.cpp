@@ -60,6 +60,13 @@ typedef struct {
     Vertex vertexes[4];
 } Face;
 
+enum class ChunkState : u32 {
+    NotTouched,
+    GeneratedBlockTypes,
+    GeneratedGeometry,
+    MeshLoaded,
+};
+
 typedef struct {
     Block blocks[CHUNK_MAX_BLOCK_COUNT];
     struct {
@@ -73,6 +80,7 @@ typedef struct {
         u64 count;
     } indexArray;
     Vector3U32 coords;
+    ChunkState state;
 } Chunk;
 
 const static Face FRONT_FACE = LITERAL(Face){{
@@ -266,10 +274,26 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
-    Chunk *chunk = ChunkMake(&runtimeScratch, 0, 0, 0);
-    ChunkGenerateBlocks(chunk);
-    ChunkGenerateGeometry(chunk, &atlas);
-    Mesh *chunkMesh = ChunkPrepareMesh(&runtimeScratch, chunk);
+#define WORLD_CHUNK_X_COUNT EXPAND(3)
+#define WORLD_CHUNK_Y_COUNT EXPAND(2)
+#define WORLD_CHUNK_Z_COUNT EXPAND(3)
+#define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
+
+    Chunk *chunks[WORLD_CHUNK_COUNT];
+    Mesh *chunkMeshes[WORLD_CHUNK_COUNT];
+    for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
+        Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
+
+        chunks[chunkIndex] = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
+        ChunkGenerateBlocks(chunks[chunkIndex]);
+        ChunkGenerateGeometry(chunks[chunkIndex], &atlas);
+        chunkMeshes[chunkIndex] = ChunkPrepareMesh(&runtimeScratch, chunks[chunkIndex]);
+    }
+
+    // Chunk *chunk = ChunkMake(&runtimeScratch, 0, 0, 0);
+    // ChunkGenerateBlocks(chunk);
+    // ChunkGenerateGeometry(chunk, &atlas);
+    // Mesh *chunkMesh = ChunkPrepareMesh(&runtimeScratch, chunk);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -350,7 +374,9 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
         GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
 
-        GLDrawMesh(chunkMesh);
+        for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
+            GLDrawMesh(chunkMeshes[chunkIndex]);
+        }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
@@ -464,6 +490,8 @@ ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z) {
     chunk->coords.y = y;
     chunk->coords.z = z;
 
+    chunk->state = ChunkState::NotTouched;
+
     return chunk;
 }
 
@@ -479,8 +507,10 @@ ChunkGenerateBlocks(Chunk *chunk) {
         blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
         blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
 
-        block->type = GenerateNextBlock(blockRelativePosition);
+        block->type = GenerateNextBlock(blockWorldPosition);
     }
+
+    chunk->state = ChunkState::GeneratedBlockTypes;
 }
 
 static void
@@ -530,6 +560,8 @@ ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
             chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
         }
     }
+
+    chunk->state = ChunkState::GeneratedGeometry;
 }
 
 static Mesh *
