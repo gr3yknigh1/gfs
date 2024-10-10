@@ -27,6 +27,7 @@
 #include <imgui_impl_sdl2.h>
 
 #include <gfs/atlas.h>
+#include <gfs/random.h>
 #include <gfs/macros.h>
 #include <gfs/assert.h>
 #include <gfs/game_state.h>
@@ -503,7 +504,7 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
 
 static BlockType
 GenerateNextBlock(Vector3U32 blockPosition) {
-    if (blockPosition.y <= 13) {
+    if (RandBool()) {
         return BlockType::Stone;
     }
     return BlockType::Nothing;

@@ -46,7 +46,6 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     camera->front = glm::normalize(direction);
 }
 
-
 glm::mat4
 CameraGetViewMatix(Camera *camera) {
     return glm::lookAt(camera->position, camera->position + camera->front, camera->up);

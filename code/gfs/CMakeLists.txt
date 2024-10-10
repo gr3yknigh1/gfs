@@ -10,6 +10,7 @@ function(_gfs_add_library _target_name)
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/macros.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/memory.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/physics.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/random.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/render.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/render_opengl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/static_assert.h
@@ -22,6 +23,7 @@ function(_gfs_add_library _target_name)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/physics.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_win32.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/random.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/render.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/render_opengl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/string.c
