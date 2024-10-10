@@ -455,11 +455,9 @@ static Chunk *
 ChunkMake(Scratch *scratch) {
     Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(scratch, sizeof(Chunk)));
     chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
-    chunk->faceBuffer.data =
-        static_cast<Face *>(ScratchAllocZero(scratch, chunk->faceBuffer.capacity * sizeof(Face)));
+    chunk->faceBuffer.data = static_cast<Face *>(ScratchAllocZero(scratch, chunk->faceBuffer.capacity * sizeof(Face)));
     chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
-    chunk->indexArray.data =
-        static_cast<u32 *>(ScratchAllocZero(scratch, chunk->indexArray.capacity * sizeof(u32)));
+    chunk->indexArray.data = static_cast<u32 *>(ScratchAllocZero(scratch, chunk->indexArray.capacity * sizeof(u32)));
     return chunk;
 }
 
