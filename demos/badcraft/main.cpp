@@ -72,6 +72,7 @@ typedef struct {
         u64 capacity;
         u64 count;
     } indexArray;
+    Vector3U32 coords;
 } Chunk;
 
 const static Face FRONT_FACE = LITERAL(Face){{
@@ -152,7 +153,7 @@ const static u32 RIGHT_FACE_INDEXES[6] = {
     23, 21, 22  // bottom-right
 };
 
-static Chunk *ChunkMake(Scratch *scratch);
+static Chunk *ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z);
 static void ChunkGenerateBlocks(Chunk *chunk);
 static void ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas);
 static Mesh *ChunkPrepareMesh(Scratch *scratch, Chunk *chunk);
@@ -265,7 +266,7 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
-    Chunk *chunk = ChunkMake(&runtimeScratch);
+    Chunk *chunk = ChunkMake(&runtimeScratch, 0, 0, 0);
     ChunkGenerateBlocks(chunk);
     ChunkGenerateGeometry(chunk, &atlas);
     Mesh *chunkMesh = ChunkPrepareMesh(&runtimeScratch, chunk);
@@ -452,12 +453,17 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
 }
 
 static Chunk *
-ChunkMake(Scratch *scratch) {
+ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z) {
     Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(scratch, sizeof(Chunk)));
     chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
     chunk->faceBuffer.data = static_cast<Face *>(ScratchAllocZero(scratch, chunk->faceBuffer.capacity * sizeof(Face)));
     chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
     chunk->indexArray.data = static_cast<u32 *>(ScratchAllocZero(scratch, chunk->indexArray.capacity * sizeof(u32)));
+
+    chunk->coords.x = x;
+    chunk->coords.y = y;
+    chunk->coords.z = z;
+
     return chunk;
 }
 
@@ -465,9 +471,15 @@ static void
 ChunkGenerateBlocks(Chunk *chunk) {
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition =
+        Vector3U32 blockRelativePosition =
             GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
-        block->type = GenerateNextBlock(blockPosition);
+
+        Vector3U32 blockWorldPosition;
+        blockWorldPosition.x = chunk->coords.x * CHUNK_SIDE_SIZE + blockRelativePosition.x;
+        blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
+        blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
+
+        block->type = GenerateNextBlock(blockRelativePosition);
     }
 }
 
@@ -475,8 +487,13 @@ static void
 ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition =
+        Vector3U32 blockRelativePosition =
             GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+
+        Vector3U32 blockWorldPosition;
+        blockWorldPosition.x = chunk->coords.x * CHUNK_SIDE_SIZE + blockRelativePosition.x;
+        blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
+        blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
 
         if (block->type == BlockType::Stone) {
             // Push faces
@@ -506,8 +523,8 @@ ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
             }
 
             MoveFaces(
-                faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
-                static_cast<f32>(blockPosition.z));
+                faces, FACE_PER_BLOCK, static_cast<f32>(blockWorldPosition.x), static_cast<f32>(blockWorldPosition.y),
+                static_cast<f32>(blockWorldPosition.z));
             AssignTextures(faces, FACE_PER_BLOCK, atlas, block->type);
             chunk->faceBuffer.count += FACE_PER_BLOCK;
             chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
