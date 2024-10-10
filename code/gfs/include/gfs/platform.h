@@ -89,13 +89,13 @@ GFS_API bool FileHandleIsValid(FileHandle *handle);
 
 typedef u8 Permissions;
 
-#define PLATFORM_PERMISSION_READ MKFLAG(1)
-#define PLATFORM_PERMISSION_WRITE MKFLAG(2)
-#define PLATFORM_PERMISSION_READ_WRITE (PLATFORM_PERMISSION_READ | PLATFORM_PERMISSION_WRITE)
+#define PERMISSION_READ MKFLAG(1)
+#define PERMISSION_WRITE MKFLAG(2)
+#define PERMISSION_READ_WRITE (PERMISSION_READ | PERMISSION_WRITE)
 
 typedef enum {
-    PLATFORM_FILE_OPEN_OK,
-    PLATFORM_FILE_OPEN_FAILED_TO_OPEN,
+    FILE_OPEN_OK,
+    FILE_OPEN_FAILED_TO_OPEN,
 } FileOpenResultCode;
 
 typedef struct {
@@ -115,9 +115,9 @@ typedef enum {
 GFS_API FileCloseResultCode FileClose(FileHandle *handle);
 
 typedef enum {
-    PLATFORM_FILE_LOAD_OK,
-    PLATFORM_FILE_LOAD_ERR,
-    PLATFORM_FILE_FAILED_TO_READ,
+    FILE_LOAD_OK,
+    FILE_LOAD_ERR,
+    FILE_FAILED_TO_READ,
 } FileLoadResultCode;
 
 GFS_API FileLoadResultCode
@@ -173,8 +173,8 @@ GFS_API usize GetPageSize();
 GFS_API void *MemoryAllocate(usize size);
 
 typedef enum {
-    PLATFORM_MEMORY_FREE_OK,
-    PLATFORM_MEMORY_FREE_ERR,
+    MEMORY_FREE_OK,
+    MEMORY_FREE_ERR,
 } MemoryFreeResultCode;
 
 /*
@@ -199,8 +199,8 @@ GFS_API void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 GFS_API SoundDevice *SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize);
 
 typedef enum {
-    PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK,
-    PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
+    SOUND_DEVICE_GET_CURRENT_POSITION_OK,
+    SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } SoundDeviceGetCurrentPositionResult;
 
 GFS_API SoundDeviceGetCurrentPositionResult

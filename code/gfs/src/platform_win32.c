@@ -182,11 +182,11 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
     FileOpenResult result;
     DWORD desiredAccess = 0;
 
-    if (HASANYBIT(permissions, PLATFORM_PERMISSION_READ)) {
+    if (HASANYBIT(permissions, PERMISSION_READ)) {
         desiredAccess |= GENERIC_READ;
     }
 
-    if (HASANYBIT(permissions, PLATFORM_PERMISSION_WRITE)) {
+    if (HASANYBIT(permissions, PERMISSION_WRITE)) {
         desiredAccess |= GENERIC_WRITE;
     }
 
@@ -198,12 +198,12 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
         CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (win32Handle == INVALID_HANDLE_VALUE) {
-        result.code = PLATFORM_FILE_OPEN_FAILED_TO_OPEN;
+        result.code = FILE_OPEN_FAILED_TO_OPEN;
         result.handle = NULL;
     } else {
         result.handle = ScratchAlloc(allocator, sizeof(FileHandle));
         result.handle->win32Handle = win32Handle;
-        result.code = PLATFORM_FILE_OPEN_OK;
+        result.code = FILE_OPEN_OK;
     }
     return result;
 }
@@ -248,21 +248,21 @@ FileLoadToBufferEx(
         NULL, FILE_BEGIN);
 
     if (setFilePointerResult == INVALID_SET_FILE_POINTER) {
-        return PLATFORM_FILE_FAILED_TO_READ;
+        return FILE_FAILED_TO_READ;
     }
 
     DWORD numberOfBytesRead = 0;
     BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);
 
     if (readFileResult != TRUE) {
-        return PLATFORM_FILE_FAILED_TO_READ;
+        return FILE_FAILED_TO_READ;
     }
 
     if (numberOfBytesLoaded != NULL) {
         *numberOfBytesLoaded = numberOfBytesRead;
     }
 
-    return PLATFORM_FILE_LOAD_OK;
+    return FILE_LOAD_OK;
 }
 
 // XXX: BROKEN!!!!
@@ -736,9 +736,9 @@ MemoryFree(void *data) {
         // around, until we use it again. P.S. Also will be good to try protect
         // buffer after deallocating or other stuff.
         //
-        return PLATFORM_MEMORY_FREE_ERR;
+        return MEMORY_FREE_ERR;
     }
-    return PLATFORM_MEMORY_FREE_OK;
+    return MEMORY_FREE_OK;
 }
 
 typedef enum {
@@ -849,9 +849,9 @@ SoundOutputMake(i32 samplesPerSecond) {
 SoundDeviceGetCurrentPositionResult
 SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor) {
     if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
-        return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
+        return SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
     }
-    return PLATFORM_SOUND_DEVICE_GET_CURRENT_POSITION_OK;
+    return SOUND_DEVICE_GET_CURRENT_POSITION_OK;
 }
 
 void

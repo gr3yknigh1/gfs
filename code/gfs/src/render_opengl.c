@@ -148,7 +148,7 @@ GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType 
     ASSERT_ISTRUE(IsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
 
-    FileOpenResult sourceFileOpenResult = FileOpenEx(sourceFilePath, scratch, PLATFORM_PERMISSION_READ);
+    FileOpenResult sourceFileOpenResult = FileOpenEx(sourceFilePath, scratch, PERMISSION_READ);
     ASSERT_ISOK(sourceFileOpenResult.code);
 
     FileHandle *sourceHandle = sourceFileOpenResult.handle;

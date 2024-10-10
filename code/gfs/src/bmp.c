@@ -11,7 +11,7 @@
 
 BMPictureLoadFromFileRC
 BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {
-    FileOpenResult result = FileOpenEx(filePath, scratch, PLATFORM_PERMISSION_READ);
+    FileOpenResult result = FileOpenEx(filePath, scratch, PERMISSION_READ);
     ASSERT_ISOK(result.code);
 
     FileHandle *fileHandle = result.handle;

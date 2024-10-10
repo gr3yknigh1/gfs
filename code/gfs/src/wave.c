@@ -21,8 +21,8 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     }
 
     ///< Openning handle of assert.
-    FileOpenResult assetOpenResult = FileOpenEx(assetPath, scratchAllocator, PLATFORM_PERMISSION_READ);
-    if (assetOpenResult.code != PLATFORM_FILE_OPEN_OK) {
+    FileOpenResult assetOpenResult = FileOpenEx(assetPath, scratchAllocator, PERMISSION_READ);
+    if (assetOpenResult.code != FILE_OPEN_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_OPEN;
     }
     FileHandle *assetFileHandle = assetOpenResult.handle;
@@ -32,7 +32,7 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     FileLoadResultCode assertHeaderLoadResult = FileLoadToBuffer(
         assetFileHandle, &header, sizeof(header),
         NULL); // TODO(ilya.a): Check how many bytes was loaded [2024/08/31]
-    if (assertHeaderLoadResult != PLATFORM_FILE_LOAD_OK) {
+    if (assertHeaderLoadResult != FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
@@ -51,7 +51,7 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     ASSERT_NONNULL(data);
     FileLoadResultCode assertDataLoadResult =
         FileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
-    if (assertDataLoadResult != PLATFORM_FILE_LOAD_OK) {
+    if (assertDataLoadResult != FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
 
