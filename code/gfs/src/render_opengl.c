@@ -254,20 +254,20 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
 }
 
 static inline GLenum
-OpenGL_ConvertGLTextureColorOrderToOpenGLValues(GLTextureColorOrder order) {
-    if (order == GL_TEXTURE_COLOR_ORDER_BGR) {
+OpenGL_ConvertColorLayoutToOpenGLValues(ColorLayout layout) {
+    if (layout == COLOR_LAYOUT_BGR) {
         return GL_BGR;
     }
 
-    if (order == GL_TEXTURE_COLOR_ORDER_RGBA) {
+    if (layout == COLOR_LAYOUT_RGBA) {
         return GL_RGBA;
     }
 
-    if (order == GL_TEXTURE_COLOR_ORDER_BGRA) {
+    if (layout == COLOR_LAYOUT_BGRA) {
         return GL_BGRA;
     }
 
-    if (order == GL_TEXTURE_COLOR_ORDER_RGB) {
+    if (layout == COLOR_LAYOUT_RGB) {
         return GL_RGB;
     }
 
@@ -275,13 +275,13 @@ OpenGL_ConvertGLTextureColorOrderToOpenGLValues(GLTextureColorOrder order) {
 }
 
 GLTexture
-GLTextureMakeFromBMPicture(const BMPicture *picture, GLTextureColorOrder colorOrder) {
+GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout) {
     GLuint texture;
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
     GL_CALL(glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGB, picture->dibHeader.width, picture->dibHeader.height, 0,
-        OpenGL_ConvertGLTextureColorOrderToOpenGLValues(colorOrder), GL_UNSIGNED_BYTE,
+        OpenGL_ConvertColorLayoutToOpenGLValues(colorLayout), GL_UNSIGNED_BYTE,
         picture->data));
     GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 

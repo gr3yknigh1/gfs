@@ -237,7 +237,7 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    Atlas atlas = AtlasFromFile(&runtimeScratch, "P:\\gfs\\assets\\atlas.bmp", 16, 16, GL_TEXTURE_COLOR_ORDER_BGRA);
+    Atlas atlas = AtlasFromFile(&runtimeScratch, "P:\\gfs\\assets\\atlas.bmp", 16, 16, COLOR_LAYOUT_BGRA);
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");

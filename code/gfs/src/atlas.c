@@ -10,7 +10,7 @@
 #include "gfs/memory.h"
 
 Atlas
-AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, GLTextureColorOrder colorOrder) {
+AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, ColorLayout colorLayout) {
     Atlas atlas = INIT_EMPTY_STRUCT(Atlas);
 
     // XXX
@@ -18,7 +18,7 @@ AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight
     ASSERT_NONNULL(atlas.picture);
 
     ASSERT_ISOK(BMPictureLoadFromFile(atlas.picture, scratch, filePath));
-    atlas.texture = GLTextureMakeFromBMPicture(atlas.picture, colorOrder);
+    atlas.texture = GLTextureMakeFromBMPicture(atlas.picture, colorLayout);
 
     atlas.tileWidth = tileWidth;
     atlas.tileHeight = tileHeight;

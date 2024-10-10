@@ -157,7 +157,7 @@ Entry(void) {
     BMPicture picture = {0};
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
 
-    GLTexture texture = GLTextureMakeFromBMPicture(&picture, GL_TEXTURE_COLOR_ORDER_BGR);
+    GLTexture texture = GLTextureMakeFromBMPicture(&picture, COLOR_LAYOUT_BGR);
 
     GLVertexArray va = GLVertexArrayMake();
     GLVertexBuffer vb = GLVertexBufferMake(vertices, sizeof(vertices));

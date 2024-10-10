@@ -18,7 +18,7 @@ typedef struct {
     u32 tileHeight;
 } Atlas;
 
-GFS_API Atlas AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, GLTextureColorOrder colorOrder);
+GFS_API Atlas AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, ColorLayout colorLayout);
 
 GFS_API u32 AtlasGetXTileCount(Atlas *atlas);
 GFS_API u32 AtlasGetYTileCount(Atlas *atlas);

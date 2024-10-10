@@ -58,11 +58,11 @@ typedef struct {
 } GLVertexBufferLayout;
 
 typedef enum {
-    GL_TEXTURE_COLOR_ORDER_BGR,
-    GL_TEXTURE_COLOR_ORDER_BGRA,
-    GL_TEXTURE_COLOR_ORDER_RGB,
-    GL_TEXTURE_COLOR_ORDER_RGBA,
-} GLTextureColorOrder;
+    COLOR_LAYOUT_BGR,
+    COLOR_LAYOUT_BGRA,
+    COLOR_LAYOUT_RGB,
+    COLOR_LAYOUT_RGBA,
+} ColorLayout;
 
 typedef struct {
     GLVertexArray vertexArray;
@@ -153,7 +153,7 @@ typedef struct {
 
 GFS_API GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
 
-GFS_API GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture, GLTextureColorOrder colorOrder);
+GFS_API GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout);
 
 /*
  * @breaf Returns location of uniform.
