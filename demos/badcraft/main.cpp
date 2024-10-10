@@ -9,7 +9,7 @@
  *   - [ ] Learn and possibly implement instancing rendering
  *   - [X] Implement basic chunk render system
  *   - [ ] Try to use strip rendering
- *   - [ ] Learn and implement texture atlas
+ *   - [X] Learn and implement texture atlas
  *
  * FILE      demos\badcraft\main.cpp
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
@@ -35,11 +35,18 @@
 
 #include "camera.hpp"
 
+#define BLOCK_SIDE_SIZE EXPAND(1)
 #define CHUNK_SIDE_SIZE EXPAND(16)
 #define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
+
+
+#define WORLD_CHUNK_X_COUNT EXPAND(4)
+#define WORLD_CHUNK_Y_COUNT EXPAND(3)
+#define WORLD_CHUNK_Z_COUNT EXPAND(4)
+#define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
 enum class BlockType : u16 {
     Nothing,
@@ -273,11 +280,6 @@ main(int argc, char *args[]) {
     GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
-
-#define WORLD_CHUNK_X_COUNT EXPAND(4)
-#define WORLD_CHUNK_Y_COUNT EXPAND(3)
-#define WORLD_CHUNK_Z_COUNT EXPAND(4)
-#define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
     Chunk *chunks[WORLD_CHUNK_COUNT];
     Mesh *chunkMeshes[WORLD_CHUNK_COUNT];
@@ -534,34 +536,62 @@ ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
             Face *faces = chunk->faceBuffer.data + chunk->faceBuffer.count;
             u32 *indexes = chunk->indexArray.data + chunk->indexArray.count;
 
-            faces[0] = FRONT_FACE;
-            MemoryCopy(indexes + 0 * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            u32 frontBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x, blockWorldPosition.y, blockWorldPosition.z + BLOCK_SIDE_SIZE);
+            u32 backBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x, blockWorldPosition.y, blockWorldPosition.z - BLOCK_SIDE_SIZE);
+            u32 topBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x, blockWorldPosition.y + BLOCK_SIDE_SIZE, blockWorldPosition.z);
+            u32 bottomBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x, blockWorldPosition.y - BLOCK_SIDE_SIZE, blockWorldPosition.z);
+            u32 leftBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x - BLOCK_SIDE_SIZE, blockWorldPosition.y, blockWorldPosition.z);
+            u32 rightBlockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockWorldPosition.x + BLOCK_SIDE_SIZE, blockWorldPosition.y, blockWorldPosition.z);
 
-            faces[1] = BACK_FACE;
-            MemoryCopy(indexes + 1 * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            u16 faceCursor = 0;
 
-            faces[2] = TOP_FACE;
-            MemoryCopy(indexes + 2 * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            if ((chunk->blocks + frontBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = FRONT_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
 
-            faces[3] = BOTTOM_FACE;
-            MemoryCopy(indexes + 3 * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            if ((chunk->blocks + backBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = BACK_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
 
-            faces[4] = LEFT_FACE;
-            MemoryCopy(indexes + 4 * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            if ((chunk->blocks + topBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = TOP_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
 
-            faces[5] = RIGHT_FACE;
-            MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            if ((chunk->blocks + bottomBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = BOTTOM_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
 
-            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
+            if ((chunk->blocks + leftBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = LEFT_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
+
+            if ((chunk->blocks + rightBlockIndex)->type != BlockType::Nothing) {
+                faces[faceCursor] = RIGHT_FACE;
+                MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+                ++faceCursor;
+            }
+
+            // Transforming indexes
+            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * faceCursor /* FACE_PER_BLOCK */; ++indexIndex) {
                 indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
             }
 
             MoveFaces(
-                faces, FACE_PER_BLOCK, static_cast<f32>(blockWorldPosition.x), static_cast<f32>(blockWorldPosition.y),
+                faces, faceCursor /* FACE_PER_BLOCK */, static_cast<f32>(blockWorldPosition.x), static_cast<f32>(blockWorldPosition.y),
                 static_cast<f32>(blockWorldPosition.z));
-            AssignTextures(faces, FACE_PER_BLOCK, atlas, block->type);
-            chunk->faceBuffer.count += FACE_PER_BLOCK;
-            chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
+            AssignTextures(faces, faceCursor /* FACE_PER_BLOCK */, atlas, block->type);
+            chunk->faceBuffer.count += faceCursor /* FACE_PER_BLOCK */;
+            chunk->indexArray.count += INDEXES_PER_FACE * faceCursor /* FACE_PER_BLOCK */;
         }
     }
 
