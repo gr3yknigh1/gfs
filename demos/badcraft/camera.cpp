@@ -39,9 +39,9 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     f32 pitchRad = glm::radians(camera->pitch);
 
     glm::vec3 direction = LITERAL(glm::vec3){
-        cosf(yawRad) * cosf(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
-        sinf(pitchRad),
-        sinf(yawRad) * cosf(pitchRad),
+        glm::cos(yawRad) * glm::cos(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
+        glm::sin(pitchRad),
+        glm::sin(yawRad) * glm::cos(pitchRad),
     };
     camera->front = glm::normalize(direction);
 }

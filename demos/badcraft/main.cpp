@@ -152,9 +152,14 @@ const static u32 RIGHT_FACE_INDEXES[6] = {
     23, 21, 22  // bottom-right
 };
 
+static Chunk *ChunkMake(Scratch *scratch);
+static void ChunkGenerateBlocks(Chunk *chunk);
+static void ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas);
+static Mesh *ChunkPrepareMesh(Scratch *scratch, Chunk *chunk);
+
 static void MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
-static BlockType GenerateNextBlock(Vector3U32 blockPosition);
+static BlockType GenerateNextBlock(Vector3U32 position);
 
 static void AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType);
 
@@ -260,66 +265,10 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
-    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk)));
-    chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
-    chunk->faceBuffer.data =
-        static_cast<Face *>(ScratchAllocZero(&runtimeScratch, chunk->faceBuffer.capacity * sizeof(Face)));
-    chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
-    chunk->indexArray.data =
-        static_cast<u32 *>(ScratchAllocZero(&runtimeScratch, chunk->indexArray.capacity * sizeof(u32)));
-
-    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
-        Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition =
-            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
-        block->type = GenerateNextBlock(blockPosition);
-    }
-
-    // Preparing faces
-    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
-        Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition =
-            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
-
-        if (block->type == BlockType::Stone) {
-            // Push faces
-            Face *faces = chunk->faceBuffer.data + chunk->faceBuffer.count;
-            u32 *indexes = chunk->indexArray.data + chunk->indexArray.count;
-
-            faces[0] = FRONT_FACE;
-            MemoryCopy(indexes + 0 * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            faces[1] = BACK_FACE;
-            MemoryCopy(indexes + 1 * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            faces[2] = TOP_FACE;
-            MemoryCopy(indexes + 2 * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            faces[3] = BOTTOM_FACE;
-            MemoryCopy(indexes + 3 * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            faces[4] = LEFT_FACE;
-            MemoryCopy(indexes + 4 * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            faces[5] = RIGHT_FACE;
-            MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-
-            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
-                indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
-            }
-
-            MoveFaces(
-                faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
-                static_cast<f32>(blockPosition.z));
-            AssignTextures(faces, FACE_PER_BLOCK, &atlas, block->type);
-            chunk->faceBuffer.count += FACE_PER_BLOCK;
-            chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
-        }
-    }
-
-    Mesh *chunkMesh = GLMeshMakeEx(
-        &runtimeScratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face),
-        chunk->indexArray.data, chunk->indexArray.count);
+    Chunk *chunk = ChunkMake(&runtimeScratch);
+    ChunkGenerateBlocks(chunk);
+    ChunkGenerateGeometry(chunk, &atlas);
+    Mesh *chunkMesh = ChunkPrepareMesh(&runtimeScratch, chunk);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -502,10 +451,87 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
     }
 }
 
+static Chunk *
+ChunkMake(Scratch *scratch) {
+    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(scratch, sizeof(Chunk)));
+    chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
+    chunk->faceBuffer.data =
+        static_cast<Face *>(ScratchAllocZero(scratch, chunk->faceBuffer.capacity * sizeof(Face)));
+    chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
+    chunk->indexArray.data =
+        static_cast<u32 *>(ScratchAllocZero(scratch, chunk->indexArray.capacity * sizeof(u32)));
+    return chunk;
+}
+
+static void
+ChunkGenerateBlocks(Chunk *chunk) {
+    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
+        Block *block = chunk->blocks + blockIndex;
+        Vector3U32 blockPosition =
+            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+        block->type = GenerateNextBlock(blockPosition);
+    }
+}
+
+static void
+ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
+    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
+        Block *block = chunk->blocks + blockIndex;
+        Vector3U32 blockPosition =
+            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+
+        if (block->type == BlockType::Stone) {
+            // Push faces
+            Face *faces = chunk->faceBuffer.data + chunk->faceBuffer.count;
+            u32 *indexes = chunk->indexArray.data + chunk->indexArray.count;
+
+            faces[0] = FRONT_FACE;
+            MemoryCopy(indexes + 0 * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[1] = BACK_FACE;
+            MemoryCopy(indexes + 1 * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[2] = TOP_FACE;
+            MemoryCopy(indexes + 2 * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[3] = BOTTOM_FACE;
+            MemoryCopy(indexes + 3 * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[4] = LEFT_FACE;
+            MemoryCopy(indexes + 4 * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            faces[5] = RIGHT_FACE;
+            MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
+                indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
+            }
+
+            MoveFaces(
+                faces, FACE_PER_BLOCK, static_cast<f32>(blockPosition.x), static_cast<f32>(blockPosition.y),
+                static_cast<f32>(blockPosition.z));
+            AssignTextures(faces, FACE_PER_BLOCK, atlas, block->type);
+            chunk->faceBuffer.count += FACE_PER_BLOCK;
+            chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
+        }
+    }
+}
+
+static Mesh *
+ChunkPrepareMesh(Scratch *scratch, Chunk *chunk) {
+    Mesh *mesh = GLMeshMakeEx(
+        scratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face),
+        chunk->indexArray.data, chunk->indexArray.count);
+    return mesh;
+}
+
 static BlockType
-GenerateNextBlock(Vector3U32 blockPosition) {
-    if (RandBool()) {
+GenerateNextBlock(Vector3U32 position) {
+    i32 surfaceMaxY = 8;
+
+    if (position.y < surfaceMaxY) {
         return BlockType::Stone;
     }
+
     return BlockType::Nothing;
 }
