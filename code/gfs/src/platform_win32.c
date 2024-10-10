@@ -265,12 +265,11 @@ FileLoadToBufferEx(
     return FILE_LOAD_OK;
 }
 
-// XXX: BROKEN!!!!
 usize
 FileGetSize(FileHandle *handle) {
-    DWORD highOrderSize = 0;
-    DWORD lowOrderSize = GetFileSize(handle->win32Handle, &highOrderSize);
-    return MAKELONG(lowOrderSize, highOrderSize);
+    LARGE_INTEGER result;
+    ASSERT_NONZERO(GetFileSizeEx(handle->win32Handle, &result));
+    return result.QuadPart;
 }
 
 void
