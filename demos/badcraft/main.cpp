@@ -274,9 +274,9 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
-#define WORLD_CHUNK_X_COUNT EXPAND(3)
-#define WORLD_CHUNK_Y_COUNT EXPAND(2)
-#define WORLD_CHUNK_Z_COUNT EXPAND(3)
+#define WORLD_CHUNK_X_COUNT EXPAND(4)
+#define WORLD_CHUNK_Y_COUNT EXPAND(3)
+#define WORLD_CHUNK_Z_COUNT EXPAND(4)
 #define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
     Chunk *chunks[WORLD_CHUNK_COUNT];
@@ -289,11 +289,6 @@ main(int argc, char *args[]) {
         ChunkGenerateGeometry(chunks[chunkIndex], &atlas);
         chunkMeshes[chunkIndex] = ChunkPrepareMesh(&runtimeScratch, chunks[chunkIndex]);
     }
-
-    // Chunk *chunk = ChunkMake(&runtimeScratch, 0, 0, 0);
-    // ChunkGenerateBlocks(chunk);
-    // ChunkGenerateGeometry(chunk, &atlas);
-    // Mesh *chunkMesh = ChunkPrepareMesh(&runtimeScratch, chunk);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -362,6 +357,15 @@ main(int argc, char *args[]) {
         ImGui::Text("DeltaTime: %.05f", deltaTime);
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
+
+        if (ImGui::CollapsingHeader("Camera Options")) {
+            ImGui::InputFloat("Speed", &camera.speed, 0.01f, 500.0f, "%.3f");
+            ImGui::InputFloat("Sensitivity", &camera.sensitivity, 0.01f, 500.0f, "%.3f");
+            ImGui::InputFloat("FOV", &camera.fov, 20.0f, 180.0f, "%.3f");
+            ImGui::InputFloat("Near plane", &camera.near, 0.01f, 10.0f, "%.3f");
+            ImGui::InputFloat("Far plane", &camera.far, 20, 500.0f, "%.3f");
+        }
+
         ImGui::End();
 
         ImGui::Render();
@@ -574,9 +578,11 @@ ChunkPrepareMesh(Scratch *scratch, Chunk *chunk) {
 
 static BlockType
 GenerateNextBlock(Vector3U32 position) {
-    i32 surfaceMaxY = 8;
+    static f32 frequency = 0.2;
+    static f32 amplitude = 10;
+    f32 surfaceMaxY = glm::sin(position.x * frequency) * amplitude + 20;
 
-    if (position.y < surfaceMaxY) {
+    if (static_cast<f32>(position.y) < surfaceMaxY) {
         return BlockType::Stone;
     }
 

@@ -22,6 +22,9 @@ struct Camera {
     f32 speed;
     f32 sensitivity;
     f32 fov;
+
+    f32 near;
+    f32 far;
 };
 
 Camera CameraMake(void);

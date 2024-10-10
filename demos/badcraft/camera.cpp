@@ -22,6 +22,9 @@ CameraMake(void) {
     camera.sensitivity = 0.5f;
     camera.fov = 45.0f;
 
+    camera.near = 0.1f;
+    camera.far = 100.0f;
+
     return camera;
 }
 
@@ -39,7 +42,7 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
     f32 pitchRad = glm::radians(camera->pitch);
 
     glm::vec3 direction = LITERAL(glm::vec3){
-        glm::cos(yawRad) * glm::cos(pitchRad), // TODO(gr3yknigh1): Change to `glm::*` functions
+        glm::cos(yawRad) * glm::cos(pitchRad),
         glm::sin(pitchRad),
         glm::sin(yawRad) * glm::cos(pitchRad),
     };
@@ -54,5 +57,5 @@ CameraGetViewMatix(Camera *camera) {
 glm::mat4
 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) {
     return glm::perspective(
-        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), 0.1f, 100.0f);
+        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), camera->near, camera->far);
 }
