@@ -36,7 +36,6 @@
 #include <gfs/game_state.h>
 #include <gfs/render_opengl.h>
 
-
 #define CHUNK_SIDE_SIZE EXPAND(16)
 #define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
@@ -110,8 +109,8 @@ const static Face TOP_FACE = LITERAL(Face){{
 }};
 
 const static u32 TOP_FACE_INDEXES[6] = {
-    11, 8, 9,  // top-left
-    9, 10, 11, // bottom-right
+    11, 8,  9,  // top-left
+    9,  10, 11, // bottom-right
 };
 
 const static Face BOTTOM_FACE = LITERAL(Face){{
@@ -284,14 +283,16 @@ main(int argc, char *args[]) {
 
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+        Vector3U32 blockPosition =
+            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
         block->type = GenerateNextBlock(blockPosition);
     }
 
     // Preparing faces
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+        Vector3U32 blockPosition =
+            GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
 
         if (block->type == BlockType::Stone) {
             // Push faces

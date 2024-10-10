@@ -281,8 +281,7 @@ GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout) {
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
     GL_CALL(glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGB, picture->dibHeader.width, picture->dibHeader.height, 0,
-        OpenGL_ConvertColorLayoutToOpenGLValues(colorLayout), GL_UNSIGNED_BYTE,
-        picture->data));
+        OpenGL_ConvertColorLayoutToOpenGLValues(colorLayout), GL_UNSIGNED_BYTE, picture->data));
     GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT));
