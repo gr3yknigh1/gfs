@@ -63,3 +63,8 @@ GetCoordsFrom3DGridArrayOffsetRM(u32 width, u32 height, u32 length, u32 offset) 
 
     return ret;
 }
+
+f32
+MapU32ValueRangeToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax) {
+    return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}

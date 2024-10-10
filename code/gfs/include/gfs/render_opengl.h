@@ -11,6 +11,14 @@
 #include "gfs/memory.h"
 #include "gfs/bmp.h"
 
+typedef union {
+    struct {
+        f32 s;
+        f32 t;
+    };
+    f32 data[2];
+} TexCoords;
+
 typedef u32 GLShaderID;
 typedef u32 GLShaderProgramID;
 typedef u32 GLUniformLocation;

@@ -116,6 +116,7 @@ GFS_API FileCloseResultCode FileClose(FileHandle *handle);
 
 typedef enum {
     PLATFORM_FILE_LOAD_OK,
+    PLATFORM_FILE_LOAD_ERR,
     PLATFORM_FILE_FAILED_TO_READ,
 } FileLoadResultCode;
 

@@ -59,7 +59,7 @@ typedef struct {
     u16 height;
 } RectangleU16;
 
-typedef struct {
+typedef union {
     f32 x;
     f32 y;
     f32 width;
@@ -103,5 +103,7 @@ GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffsetRM(u32 width, u32 height, u32 l
 
 GFS_API bool RectangleU16IsInside(RectangleU16 r, u16 x, u16 y);
 GFS_API bool RectangleU16IsOverlapping(RectangleU16 r);
+
+GFS_API f32 MapU32ValueRangeToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax);
 
 #endif // GFS_PHYSICS_H_INCLUDED

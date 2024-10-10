@@ -1,6 +1,6 @@
 #if !defined(GFS_MEMORY_H_INCLUDED)
 /*
- * FILE      gfs_memory.h
+ * FILE      gfs\code\gfs\include\memory.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */

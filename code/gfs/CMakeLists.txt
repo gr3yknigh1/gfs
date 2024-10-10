@@ -3,6 +3,7 @@ function(_gfs_add_library _target_name)
 
   add_library(${_target_name}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/assert.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/atlas.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/bmp.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/entry.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/game_state.h
@@ -15,6 +16,7 @@ function(_gfs_add_library _target_name)
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/string.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/types.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gfs/wave.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/atlas.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bmp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/game_state.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c

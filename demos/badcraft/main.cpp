@@ -30,16 +30,15 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl2.h>
 
+#include <gfs/atlas.h>
 #include <gfs/macros.h>
 #include <gfs/assert.h>
 #include <gfs/game_state.h>
 #include <gfs/render_opengl.h>
 
-/*
- * @breaf Chunk size in one of dimentions
- */
-#define CHUNK_SIZE EXPAND(16)
-#define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIZE *CHUNK_SIZE *CHUNK_SIZE)
+
+#define CHUNK_SIDE_SIZE EXPAND(16)
+#define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
@@ -170,19 +169,13 @@ typedef struct {
     } indexArray;
 } Chunk;
 
-typedef struct {
-    BMPicture *picture;
-    u32 tileWidth;
-    u32 tileHeight;
-} Atlas;
-
 static Camera CameraMake(void);
 static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
 static glm::mat4 CameraGetViewMatix(Camera *camera);
 static glm::mat4 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight);
 
-static Atlas AtlasMake(BMPicture *picture, u32 tileWidth, u32 tileHeight);
+static BlockType GenerateNextBlock(Vector3U32 blockPosition);
 
 typedef enum {
     ASSIGN_TEXTURES_OK,
@@ -244,10 +237,7 @@ main(int argc, char *args[]) {
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    BMPicture atlasPicture = INIT_EMPTY_STRUCT(BMPicture);
-    ASSERT_ISOK(BMPictureLoadFromFile(&atlasPicture, &runtimeScratch, "P:\\gfs\\assets\\atlas.bmp"));
-    GLTexture atlasTexture = GLTextureMakeFromBMPicture(&atlasPicture, GL_TEXTURE_COLOR_ORDER_BGRA);
-    Atlas atlas = AtlasMake(&atlasPicture, 16, 16);
+    Atlas atlas = AtlasFromFile(&runtimeScratch, "P:\\gfs\\assets\\atlas.bmp", 16, 16, GL_TEXTURE_COLOR_ORDER_BGRA);
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
@@ -282,7 +272,7 @@ main(int argc, char *args[]) {
     GL_CALL(glUseProgram(shader));
     GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
                                            // texture support. [2024/09/22]
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, atlasTexture));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
     Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk)));
     chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
@@ -292,19 +282,16 @@ main(int argc, char *args[]) {
     chunk->indexArray.data =
         static_cast<u32 *>(ScratchAllocZero(&runtimeScratch, chunk->indexArray.capacity * sizeof(u32)));
 
-    // "Generation"
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
-        //if (blockPosition.y == 0) {
-            block->type = BlockType::Stone;
-        //}
+        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
+        block->type = GenerateNextBlock(blockPosition);
     }
 
     // Preparing faces
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
-        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE, blockIndex);
+        Vector3U32 blockPosition = GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
 
         if (block->type == BlockType::Stone) {
             // Push faces
@@ -530,32 +517,19 @@ CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) 
         glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), 0.1f, 100.0f);
 }
 
-static Atlas
-AtlasMake(BMPicture *picture, u32 tileWidth, u32 tileHeight) {
-    Atlas atlas = INIT_EMPTY_STRUCT(Atlas);
-
-    atlas.picture = picture;
-    atlas.tileWidth = tileWidth;
-    atlas.tileHeight = tileHeight;
-
-    return atlas;
-}
-
 static inline Vector2U32
 ConvertBlockTypeToTileCoords(Atlas *atlas, BlockType blockType) {
     Vector2U32 coords = INIT_EMPTY_STRUCT(Vector2U32);
 
-    // TODO: Implement
-
-    coords.x = 1;
-    coords.y = 0;
+    if (blockType == BlockType::Stone) {
+        coords.x = 1;
+        coords.y = 0;
+    } else {
+        coords.x = 0;
+        coords.y = 0;
+    }
 
     return coords;
-}
-
-static inline f32
-MapU32ToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax) {
-    return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
 static AssignTexturesResult
@@ -565,29 +539,33 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
     // TODO(gr3yknigh1): Implement. There might be different textures for different faces. Leaving this for now.
     // [2024/10/09]
 
-    u32 tileXCount = atlas->picture->dibHeader.width / atlas->tileWidth;
-    u32 tileYCount = atlas->picture->dibHeader.height / atlas->tileHeight;
-
-    f32 tileWidthInUV = MapU32ToF32(atlas->tileWidth, 0, atlas->picture->dibHeader.width, 0.0f, 1.0f);
-    f32 tileHeightInUV = MapU32ToF32(atlas->tileHeight, 0, atlas->picture->dibHeader.height, 0.0f, 1.0f);
-
-    f32 textureYCoord = MapU32ToF32(tileCoords.x, 0, tileXCount, 0.0f, 1.0f);
-    f32 textureXCoord = MapU32ToF32(tileCoords.y, 0, tileYCount, 0.0f, 1.0f);
+    f32 tileUVWidth = AtlasGetTileUVWidth(atlas);
+    f32 tileUVHeight = AtlasGetTileUVHeight(atlas);
+    TexCoords texCoords = AtlasTileCoordsToUV(atlas, tileCoords);
 
     for (u32 faceIndex = 0; faceIndex < faceCount; ++faceIndex) {
         Face *face = faces + faceIndex;
 
-        face->vertexes[0].uv[0] = textureYCoord + tileHeightInUV;
-        face->vertexes[0].uv[1] = textureXCoord + tileWidthInUV;
+        face->vertexes[0].uv[0] = texCoords.t + tileUVHeight;
+        face->vertexes[0].uv[1] = texCoords.s + tileUVWidth;
 
-        face->vertexes[1].uv[0] = textureYCoord + tileHeightInUV;
-        face->vertexes[1].uv[1] = textureXCoord + 0;
+        face->vertexes[1].uv[0] = texCoords.t + tileUVHeight;
+        face->vertexes[1].uv[1] = texCoords.s + 0;
 
-        face->vertexes[2].uv[0] = textureYCoord + 0;
-        face->vertexes[2].uv[1] = textureXCoord + 0;
+        face->vertexes[2].uv[0] = texCoords.t + 0;
+        face->vertexes[2].uv[1] = texCoords.s + 0;
 
-        face->vertexes[3].uv[0] = textureYCoord + 0;
-        face->vertexes[3].uv[1] = textureXCoord + tileWidthInUV;
+        face->vertexes[3].uv[0] = texCoords.t + 0;
+        face->vertexes[3].uv[1] = texCoords.s + tileUVWidth;
     }
+
     return ASSIGN_TEXTURES_OK;
+}
+
+static BlockType
+GenerateNextBlock(Vector3U32 blockPosition) {
+    if (blockPosition.y <= 13) {
+        return BlockType::Stone;
+    }
+    return BlockType::Nothing;
 }
