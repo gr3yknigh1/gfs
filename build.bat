@@ -17,6 +17,7 @@
 
 set project_path=%~dp0
 set configuration_path=%project_path%\build
+set build_venv_path=%project_path%\.venv-build"
 
 set build_type=%1
 shift
@@ -39,8 +40,14 @@ if exist %vc2022_bootstrap% (
   )
 )
 
-:: Compiling project...
 pushd %project_path%
+
+:: Preparing virtualenv...
+python -m venv %build_venv_path%
+call %build_venv_path%\Scripts\activate.bat
+python -m pip install -r build-requirements.txt.lock
+
+:: Compiling project...
 
 if "%build_type%" == "Debug" (
   echo I: Building debug
