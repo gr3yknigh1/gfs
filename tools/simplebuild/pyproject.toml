@@ -1,0 +1,19 @@
+[project]
+name = "simplebuild"
+
+version = "0.0.0"
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = [
+    "toml; python_version < '3.11'",
+]
+
+[project.scripts]
+simplebuild = "simplebuild:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
