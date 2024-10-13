@@ -223,7 +223,7 @@ BlockAllocatorAllocZ(BlockAllocator *allocator, usize size) {
 }
 
 void
-BlockAllocatorFree(BlockAllocator *allocator) {
+BlockAllocatorDestroy(BlockAllocator *allocator) {
     ASSERT_NONNULL(allocator);
     ASSERT_NONNULL(allocator->head);
 
@@ -238,4 +238,24 @@ BlockAllocatorFree(BlockAllocator *allocator) {
     }
 
     allocator->head = NULL;
+}
+
+
+Scratch
+TempScratchMake(Scratch *scratch, usize capacity) {
+    Scratch tempScratch = INIT_EMPTY_STRUCT(Scratch);
+    tempScratch.data = ScratchAlloc(scratch, capacity);
+    tempScratch.capacity = capacity;
+    tempScratch.occupied = 0;
+    return tempScratch;
+}
+
+void
+TempScratchClean(Scratch *temp, Scratch *scratch) {
+    ASSERT_EQ(temp->data, ((byte *)scratch->data + scratch->occupied) - temp->capacity);
+    scratch->occupied -= temp->capacity;
+
+    temp->data = NULL;
+    temp->capacity = 0;
+    temp->occupied = 0;
 }

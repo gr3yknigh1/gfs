@@ -41,6 +41,7 @@ GFS_API void *StackAllocatorAlloc(StackAllocator *allocator, usize size);
 
 GFS_API void StackAllocatorPop(StackAllocator *allocator);
 
+
 /*
  * @breaf Scratch Allocator.
  */
@@ -54,6 +55,10 @@ typedef struct {
  * @breaf Initializes scratch allocator.
  * */
 GFS_API Scratch ScratchMake(usize size);
+
+GFS_API Scratch TempScratchMake(Scratch *scratch);
+
+GFS_API void TempScratchClean(Scratch *temp, Scratch *scratch);
 
 /*
  * @breaf Bumps internal counter of allocated memory and returns pointer to
@@ -107,6 +112,6 @@ GFS_API BlockAllocator BlockAllocatorMakeEx(usize size);
 GFS_API void *BlockAllocatorAlloc(BlockAllocator *allocator, usize size);
 GFS_API void *BlockAllocatorAllocZ(BlockAllocator *allocator, usize size);
 
-GFS_API void BlockAllocatorFree(BlockAllocator *allocator);
+GFS_API void BlockAllocatorDestroy(BlockAllocator *allocator);
 
 #endif // GFS_MEMORY_H_INCLUDED
