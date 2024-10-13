@@ -53,7 +53,7 @@ GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
 
     GL_CALL(glGenBuffers(1, &buffer.id));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, buffer.id));
-    GL_CALL(glBufferData(GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, dataBufferSize, dataBuffer, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
 
     return buffer;
 }
@@ -64,7 +64,7 @@ GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
 
     GL_CALL(glGenBuffers(1, &ebo));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, indexBuffer, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, indexBuffer, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
 
     return (GLIndexBuffer)ebo;
 }
@@ -77,7 +77,7 @@ GLElementBufferMake(const u32 *elements, u64 count) {
 
     GL_CALL(glGenBuffers(1, &(eb.id)));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id));
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)elements, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)elements, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id)); // @cleanup
 
     eb.elements = elements;
@@ -157,7 +157,9 @@ GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType 
     usize sourceFileSize = FileGetSize(sourceHandle);
     ASSERT_NONZERO(sourceFileSize);
 
-    void *sourceBuffer = ScratchAllocZero(scratch, sourceFileSize);
+    Scratch tempScratch = TempScratchMake(scratch, sourceFileSize);
+
+    void *sourceBuffer = ScratchAllocZero(&tempScratch, sourceFileSize);
     ASSERT_NONNULL(sourceBuffer);
 
     FileLoadResultCode sourceLoadResult = FileLoadToBuffer(sourceHandle, sourceBuffer, sourceFileSize, NULL);
@@ -165,8 +167,11 @@ GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType 
 
     ASSERT_ISOK(FileClose(sourceHandle));
 
-    // TODO(gr3yknigh1): Free sources after compilation [2024/09/22]
-    return GLCompileShader(scratch, sourceBuffer, shaderType);
+    GLShaderID shaderID = GLCompileShader(scratch, sourceBuffer, shaderType);
+
+    TempScratchClean(&tempScratch, scratch);
+
+    return shaderID;
 }
 
 static GLenum
@@ -204,10 +209,11 @@ GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType
         GL_CALL(glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &compilationLogLength));
 
         if (compilationLogLength > 0) {
-            char8 *compilationInfoLog = ScratchAlloc(scratch, compilationLogLength);
-            GL_CALL(glGetShaderInfoLog(shaderId, GL_INFO_LOG_LENGTH, NULL, compilationInfoLog));
 
+            char8 *compilationInfoLog = ScratchAlloc(scratch, compilationLogLength); // @cleanup XXX
+            GL_CALL(glGetShaderInfoLog(shaderId, GL_INFO_LOG_LENGTH, NULL, compilationInfoLog));
             PutString(compilationInfoLog);
+
         }
 
         ThrowDebugBreak(); // @cleanup Hack
@@ -240,7 +246,7 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
         GL_CALL(glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &linkLogLength));
 
         if (linkLogLength > 0) {
-            char8 *linkInfoLog = ScratchAlloc(scratch, linkLogLength);
+            char8 *linkInfoLog = ScratchAlloc(scratch, linkLogLength);  // @cleanup XXX
             GL_CALL(glGetProgramInfoLog(programID, GL_INFO_LOG_LENGTH, NULL, linkInfoLog));
 
             PutString(linkInfoLog);
@@ -373,7 +379,7 @@ Mesh *
 GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
     ASSERT_EQ(orientation, GL_COUNTER_CLOCK_WISE); // TODO: Implement clockwise mesh.
 
-    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
+    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));  // XXX
 
     // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
     // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented.
@@ -422,7 +428,7 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
     mesh->vertexArray = GLVertexArrayMake();
     mesh->vertexBuffer = GLVertexBufferMake(vertexes, sizeof(vertexes));
 
-    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);  // XXX
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
@@ -468,7 +474,7 @@ GLMeshMakeEx(
     mesh->vertexBuffer = GLVertexBufferMake(vertexBuffer, vertexBufferSize);
 
     // TODO: Customize layout?
-    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);  // XXX
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
