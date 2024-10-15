@@ -62,9 +62,9 @@ typedef struct {
 
 enum class ChunkState : u32 {
     NotTouched,
-    GeneratedBlockTypes,
-    GeneratedGeometry,
-    MeshLoaded,
+    TerrainGenerated,
+    GeometryGenerated,
+    Dirty,
 };
 
 typedef struct {
@@ -164,7 +164,6 @@ const static u32 RIGHT_FACE_INDEXES[6] = {
 static Chunk *ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z);
 static void ChunkGenerateBlocks(Chunk *chunk);
 static void ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas);
-static Mesh *ChunkPrepareMesh(Scratch *scratch, Chunk *chunk);
 
 static void MoveFaces(Face *faces, u32 faceCount, f32 x, f32 y, f32 z);
 static void CameraHandleInput(Camera *camera, f32 deltaTime);
@@ -179,7 +178,7 @@ main(int argc, char *args[]) {
     UNUSED(argc);
     UNUSED(args);
 
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(1000));
+    Scratch runtimeScratch = ScratchMake(MEGABYTES(2000));
 
     SDL_version v = INIT_EMPTY_STRUCT(SDL_version);
     SDL_GetVersion(&v);
@@ -275,20 +274,27 @@ main(int argc, char *args[]) {
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
 #define WORLD_CHUNK_X_COUNT EXPAND(4)
-#define WORLD_CHUNK_Y_COUNT EXPAND(3)
+#define WORLD_CHUNK_Y_COUNT EXPAND(2)
 #define WORLD_CHUNK_Z_COUNT EXPAND(4)
 #define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
     Chunk *chunks[WORLD_CHUNK_COUNT];
-    Mesh *chunkMeshes[WORLD_CHUNK_COUNT];
+
     for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
         Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
-
         chunks[chunkIndex] = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
         ChunkGenerateBlocks(chunks[chunkIndex]);
         ChunkGenerateGeometry(chunks[chunkIndex], &atlas);
-        chunkMeshes[chunkIndex] = ChunkPrepareMesh(&runtimeScratch, chunks[chunkIndex]);
     }
+
+    GLVertexArray chunkVertexArray = GLVertexArrayMake();
+    GLVertexBuffer chunkVertexBuffer = GLVertexBufferMake(NULL, VERTEXES_PER_FACE * FACE_PER_BLOCK * CHUNK_MAX_BLOCK_COUNT);
+    GLVertexBufferLayout chunkVertexBufferLayout = GLVertexBufferLayoutMake(&runtimeScratch);  // XXX
+    GLVertexBufferLayoutPushAttributeF32(&chunkVertexBufferLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&chunkVertexBufferLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&chunkVertexBufferLayout, 2);
+    GLVertexArrayAddBuffer(chunkVertexArray, &chunkVertexBuffer, &chunkVertexBufferLayout);
+    GLElementBuffer chunkElementBuffer = GLElementBufferMake(NULL, INDEXES_PER_FACE * FACE_PER_BLOCK * CHUNK_MAX_BLOCK_COUNT);
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -344,6 +350,7 @@ main(int argc, char *args[]) {
 
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
         GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
+
         // Render
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
@@ -379,7 +386,15 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
 
         for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
-            GLDrawMesh(chunkMeshes[chunkIndex]);
+            Chunk *chunk = chunks[chunkIndex];
+
+            if (chunk->state == ChunkState::Dirty) {
+                ChunkGenerateGeometry(chunk, &atlas);
+            }
+
+            GLVertexBufferSendData(&chunkVertexBuffer, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face));
+            GLElementBufferSendData(&chunkElementBuffer, chunk->indexArray.data, chunk->indexArray.count);
+            GLDrawElements(&chunkElementBuffer, &chunkVertexBuffer, chunkVertexArray);
         }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -513,12 +528,17 @@ ChunkGenerateBlocks(Chunk *chunk) {
 
         block->type = GenerateNextBlock(blockWorldPosition);
     }
-
-    chunk->state = ChunkState::GeneratedBlockTypes;
+    chunk->state = ChunkState::TerrainGenerated;
 }
 
 static void
 ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
+    //MemoryZero(reinterpret_cast<void *>(chunk->faceBuffer.data), sizeof(Face) * chunk->faceBuffer.count);
+    //MemoryZero(reinterpret_cast<void *>(chunk->indexArray.data), sizeof(u32) * chunk->indexArray.count);
+    chunk->faceBuffer.count = 0;
+    chunk->indexArray.count = 0;
+
+
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
         Block *block = chunk->blocks + blockIndex;
         Vector3U32 blockRelativePosition =
@@ -565,15 +585,7 @@ ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
         }
     }
 
-    chunk->state = ChunkState::GeneratedGeometry;
-}
-
-static Mesh *
-ChunkPrepareMesh(Scratch *scratch, Chunk *chunk) {
-    Mesh *mesh = GLMeshMakeEx(
-        scratch, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face),
-        chunk->indexArray.data, chunk->indexArray.count);
-    return mesh;
+    chunk->state = ChunkState::GeometryGenerated;
 }
 
 static BlockType

@@ -45,23 +45,23 @@ typedef struct {
 typedef struct {
     u32 id;
     const u32 *elements;
-    u64 count;
+    u32 count;
 } GLElementBuffer;
 
 typedef struct {
     Scratch *scratch;
 
     GLAttribute *attributes;
-    u64 attributesCount;
+    u32 attributesCount;
 
-    u64 stride;
+    u32 stride;
 } GLVertexBufferLayout;
 
 typedef enum {
-    COLOR_LAYOUT_BGR,
-    COLOR_LAYOUT_BGRA,
     COLOR_LAYOUT_RGB,
     COLOR_LAYOUT_RGBA,
+    COLOR_LAYOUT_BGR,
+    COLOR_LAYOUT_BGRA,
 } ColorLayout;
 
 typedef struct {
@@ -99,6 +99,8 @@ GFS_API void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, 
 
 GFS_API GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
+GFS_API void GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize);
+
 /*
  * @breaf Naive wrapper around element buffer.
  * @deprecated Use GLElementBuffer instead.
@@ -113,6 +115,8 @@ GFS_API GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBuff
  * TODO(gr3yknigh1): Add option for dynamic draw [2024/10/05]
  */
 GFS_API GLElementBuffer GLElementBufferMake(const u32 *indicies, u64 count);
+
+GFS_API void GLElementBufferSendData(GLElementBuffer *buffer, const u32 *indicies, u64 count);
 
 GFS_API GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 

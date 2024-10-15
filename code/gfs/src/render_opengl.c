@@ -29,9 +29,9 @@ GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVerte
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb->id));
 
-    u64 offset = 0;
+    u32 offset = 0;
 
-    for (u64 attributeIndex = 0; attributeIndex < layout->attributesCount; ++attributeIndex) {
+    for (u32 attributeIndex = 0; attributeIndex < layout->attributesCount; ++attributeIndex) {
         GLAttribute *attribute = layout->attributes + attributeIndex;
 
         GL_CALL(glEnableVertexAttribArray(attributeIndex));
@@ -57,6 +57,17 @@ GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
 
     return buffer;
 }
+
+
+void
+GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize) {
+    buffer->data = dataBuffer;
+    buffer->size = dataBufferSize;
+
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, buffer->id));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, buffer->size, buffer->data, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
+}
+
 
 GLIndexBuffer
 GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
@@ -85,6 +96,19 @@ GLElementBufferMake(const u32 *elements, u64 count) {
 
     return eb;
 }
+
+void
+GLElementBufferSendData(GLElementBuffer *buffer, const u32 *indicies, u64 count) {
+    buffer->elements = indicies;
+    buffer->count = count;
+
+    usize elementsBufferSize = sizeof(buffer->elements[0]) * buffer->count;
+
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->id));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)buffer->elements, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
+
+}
+
 
 GLVertexBufferLayout
 GLVertexBufferLayoutMake(Scratch *scratch) {
@@ -127,6 +151,8 @@ GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
 
 void
 GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va) {
+    UNUSED(vb);
+
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb->id));
     GL_CALL(glDrawElements(GL_TRIANGLES, eb->count, GL_UNSIGNED_INT, 0));
@@ -277,7 +303,7 @@ OpenGL_ConvertColorLayoutToOpenGLValues(ColorLayout layout) {
         return GL_RGB;
     }
 
-    return -1;
+    return (GLenum)-1;
 }
 
 GLTexture
@@ -476,8 +502,8 @@ GLMeshMakeEx(
     // TODO: Customize layout?
     mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);  // XXX
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
+    GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
 
     GLVertexArrayAddBuffer(mesh->vertexArray, &mesh->vertexBuffer, &mesh->vertexLayout);
 

@@ -56,7 +56,7 @@ typedef struct {
  * */
 GFS_API Scratch ScratchMake(usize size);
 
-GFS_API Scratch TempScratchMake(Scratch *scratch);
+GFS_API Scratch TempScratchMake(Scratch *scratch, usize capacity);
 
 GFS_API void TempScratchClean(Scratch *temp, Scratch *scratch);
 
