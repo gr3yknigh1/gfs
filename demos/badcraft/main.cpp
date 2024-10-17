@@ -34,12 +34,23 @@
 #include <gfs/render_opengl.h>
 
 #include "camera.hpp"
+#include "gfs/physics.h"
 
+#define BLOCK_SIDE_SIZE EXPAND(1)
 #define CHUNK_SIDE_SIZE EXPAND(16)
 #define CHUNK_MAX_BLOCK_COUNT EXPAND(CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE *CHUNK_SIDE_SIZE)
 #define FACE_PER_BLOCK EXPAND(6)
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
+
+#define WORLD_CHUNK_X_COUNT EXPAND(4)
+#define WORLD_CHUNK_Y_COUNT EXPAND(2)
+#define WORLD_CHUNK_Z_COUNT EXPAND(4)
+#define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
+
+#define WORLD_MAX_X EXPAND(WORLD_CHUNK_X_COUNT * CHUNK_SIDE_SIZE)
+#define WORLD_MAX_Y EXPAND(WORLD_CHUNK_Y_COUNT * CHUNK_SIDE_SIZE)
+#define WORLD_MAX_Z EXPAND(WORLD_CHUNK_Z_COUNT * CHUNK_SIDE_SIZE)
 
 enum class BlockType : u16 {
     Nothing,
@@ -61,27 +72,52 @@ typedef struct {
 } Face;
 
 enum class ChunkState : u32 {
-    NotTouched,
+    NotTouched = 0,
     TerrainGenerated,
+    TerrainUnloaded,
     GeometryGenerated,
+    GeometryUnloaded,
     Dirty,
 };
 
+#define ARRAY(TYPE) \
+    struct { \
+        TYPE *data; \
+        u64 capacity; \
+        u64 count; \
+    }
+
+#define ARRAY_SCRATCH_RESERVE(ARRAYPTR, SCRATCHPTR, COUNT) \
+    do { \
+        (ARRAYPTR)->data = static_cast<decltype((ARRAYPTR->data[0]))>(ScratchAlloc((SCRATCHPTR), sizeof((ARRAYPTR)->data[0]) * (COUNT))); \
+        (ARRAYPTR)->capacity =  sizeof((ARRAYPTR)->data[0]) * (COUNT); \
+        (ARRAYPTR)->count = 0; \
+    } while (0)
+
+
 typedef struct {
-    Block blocks[CHUNK_MAX_BLOCK_COUNT];
-    struct {
-        Face *data;
-        u64 capacity;
-        u64 count;
-    } faceBuffer;
-    struct {
-        u32 *data;
-        u64 capacity;
-        u64 count;
-    } indexArray;
+    ARRAY(Face) faces;
+    ARRAY(u32) indexes;
+} ChunkGeometryData;
+
+
+typedef struct {
+    ARRAY(Block) blocks;
+} ChunkTerrainData;
+
+
+typedef struct {
+    ChunkTerrainData *terrain;
+    ChunkGeometryData *geometry;
     Vector3U32 coords;
     ChunkState state;
 } Chunk;
+
+
+typedef struct {
+    ARRAY(Chunk) chunks;
+} World;
+
 
 const static Face FRONT_FACE = LITERAL(Face){{
     // Position  Colors      UV
@@ -161,7 +197,7 @@ const static u32 RIGHT_FACE_INDEXES[6] = {
     23, 21, 22  // bottom-right
 };
 
-static Chunk *ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z);
+static Chunk ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z);
 static void ChunkGenerateBlocks(Chunk *chunk);
 static void ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas);
 
@@ -178,7 +214,7 @@ main(int argc, char *args[]) {
     UNUSED(argc);
     UNUSED(args);
 
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(2000));
+    Scratch runtimeScratch = ScratchMake(GIGABYTES(1));
 
     SDL_version v = INIT_EMPTY_STRUCT(SDL_version);
     SDL_GetVersion(&v);
@@ -273,18 +309,15 @@ main(int argc, char *args[]) {
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
-#define WORLD_CHUNK_X_COUNT EXPAND(4)
-#define WORLD_CHUNK_Y_COUNT EXPAND(2)
-#define WORLD_CHUNK_Z_COUNT EXPAND(4)
-#define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
-
-    Chunk *chunks[WORLD_CHUNK_COUNT];
+    Chunk *chunks = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk) * WORLD_CHUNK_COUNT));
 
     for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
+        Chunk *chunk = chunks + chunkIndex;
+
         Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
-        chunks[chunkIndex] = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
-        ChunkGenerateBlocks(chunks[chunkIndex]);
-        ChunkGenerateGeometry(chunks[chunkIndex], &atlas);
+        *chunk = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
+        ChunkGenerateBlocks(chunk);
+        ChunkGenerateGeometry(chunk, &atlas);
     }
 
     GLVertexArray chunkVertexArray = GLVertexArrayMake();
@@ -386,15 +419,15 @@ main(int argc, char *args[]) {
         GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
 
         for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
-            Chunk *chunk = chunks[chunkIndex];
+            Chunk *chunk = chunks + chunkIndex;
 
             if (chunk->state == ChunkState::Dirty) {
                 ChunkGenerateGeometry(chunk, &atlas);
             }
 
-            GLVertexBufferSendData(&chunkVertexBuffer, reinterpret_cast<f32 *>(chunk->faceBuffer.data), chunk->faceBuffer.count * sizeof(Face));
-            GLElementBufferSendData(&chunkElementBuffer, chunk->indexArray.data, chunk->indexArray.count);
-            GLDrawElements(&chunkElementBuffer, &chunkVertexBuffer, chunkVertexArray);
+            // GLVertexBufferSendData(&chunkVertexBuffer, reinterpret_cast<f32 *>(chunk->faces.data), chunk->faces.count * sizeof(Face));
+            // GLElementBufferSendData(&chunkElementBuffer, chunk->indexes.data, chunk->indexes.count);
+            // GLDrawElements(&chunkElementBuffer, &chunkVertexBuffer, chunkVertexArray);
         }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -497,19 +530,24 @@ AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType) {
     }
 }
 
-static Chunk *
+static Chunk
 ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z) {
-    Chunk *chunk = static_cast<Chunk *>(ScratchAllocZero(scratch, sizeof(Chunk)));
-    chunk->faceBuffer.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
-    chunk->faceBuffer.data = static_cast<Face *>(ScratchAllocZero(scratch, chunk->faceBuffer.capacity * sizeof(Face)));
-    chunk->indexArray.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
-    chunk->indexArray.data = static_cast<u32 *>(ScratchAllocZero(scratch, chunk->indexArray.capacity * sizeof(u32)));
+    Chunk chunk = INIT_EMPTY_STRUCT(Chunk);
 
-    chunk->coords.x = x;
-    chunk->coords.y = y;
-    chunk->coords.z = z;
+    // ARRAY_SCRATCH_RESERVE(&chunk.faces, scratch, CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK)
+    // chunk.faces.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
+    // chunk.faces.data = static_cast<Face *>(ScratchAllocZero(scratch, chunk.faces.capacity * sizeof(Face)));
 
-    chunk->state = ChunkState::NotTouched;
+    // ARRAY_SCRATCH_RESERVE(&chunk.indexes, scratch, CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE)
+
+    // chunk.indexes.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
+    // chunk.indexes.data = static_cast<u32 *>(ScratchAllocZero(scratch, chunk.indexes.capacity * sizeof(u32)));
+
+    chunk.coords.x = x;
+    chunk.coords.y = y;
+    chunk.coords.z = z;
+
+    chunk.state = ChunkState::NotTouched;
 
     return chunk;
 }
@@ -517,7 +555,7 @@ ChunkMake(Scratch *scratch, u32 x, u32 y, u32 z) {
 static void
 ChunkGenerateBlocks(Chunk *chunk) {
     for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
-        Block *block = chunk->blocks + blockIndex;
+        // Block *block = chunk->blocks + blockIndex;
         Vector3U32 blockRelativePosition =
             GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
 
@@ -526,21 +564,21 @@ ChunkGenerateBlocks(Chunk *chunk) {
         blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
         blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
 
-        block->type = GenerateNextBlock(blockWorldPosition);
+        // block->type = GenerateNextBlock(blockWorldPosition);
     }
     chunk->state = ChunkState::TerrainGenerated;
 }
 
 static void
 ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
-    //MemoryZero(reinterpret_cast<void *>(chunk->faceBuffer.data), sizeof(Face) * chunk->faceBuffer.count);
-    //MemoryZero(reinterpret_cast<void *>(chunk->indexArray.data), sizeof(u32) * chunk->indexArray.count);
-    chunk->faceBuffer.count = 0;
-    chunk->indexArray.count = 0;
+    chunk->geometry->faces.count = 0;
+    chunk->geometry->indexes.count = 0;
 
+    Block *blocks = chunk->terrain->blocks.data;
+    u64 blocksCount = chunk->terrain->blocks.count;
 
-    for (u16 blockIndex = 0; blockIndex < CHUNK_MAX_BLOCK_COUNT; ++blockIndex) {
-        Block *block = chunk->blocks + blockIndex;
+    for (u16 blockIndex = 0; blockIndex < blocksCount; ++blockIndex) {
+        Block *block = blocks + blockIndex;
         Vector3U32 blockRelativePosition =
             GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
 
@@ -549,39 +587,56 @@ ChunkGenerateGeometry(Chunk *chunk, Atlas *atlas) {
         blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
         blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
 
-        if (block->type == BlockType::Stone) {
+        if (block->type != BlockType::Nothing) {
             // Push faces
-            Face *faces = chunk->faceBuffer.data + chunk->faceBuffer.count;
-            u32 *indexes = chunk->indexArray.data + chunk->indexArray.count;
+            Face *faces = chunk->geometry->faces.data + chunk->geometry->faces.count;
+            u32 *indexes = chunk->geometry->indexes.data + chunk->geometry->indexes.count;
 
-            faces[0] = FRONT_FACE;
-            MemoryCopy(indexes + 0 * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            u32 faceCursor = 0;
 
-            faces[1] = BACK_FACE;
-            MemoryCopy(indexes + 1 * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            Vector3U32 frontNeighbourWorldPosition = {
+                .x = blockWorldPosition.x,
+                .y = blockWorldPosition.y,
+                .z = blockWorldPosition.z + BLOCK_SIDE_SIZE,
+            };
+            u16 frontNeighbourIndex = GetOffsetFromCoords3DGridArrayRM(
+                CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, frontNeighbourWorldPosition.x, frontNeighbourWorldPosition.y,
+                frontNeighbourWorldPosition.z);
 
-            faces[2] = TOP_FACE;
-            MemoryCopy(indexes + 2 * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            faces[faceCursor] = FRONT_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
 
-            faces[3] = BOTTOM_FACE;
-            MemoryCopy(indexes + 3 * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            faces[faceCursor] = BACK_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
 
-            faces[4] = LEFT_FACE;
-            MemoryCopy(indexes + 4 * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            faces[faceCursor] = TOP_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
 
-            faces[5] = RIGHT_FACE;
-            MemoryCopy(indexes + 5 * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            faces[faceCursor] = BOTTOM_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
 
-            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * FACE_PER_BLOCK; ++indexIndex) {
-                indexes[indexIndex] += chunk->faceBuffer.count * VERTEXES_PER_FACE;
+            faces[faceCursor] = LEFT_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
+
+            faces[faceCursor] = RIGHT_FACE;
+            MemoryCopy(indexes + faceCursor * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+            ++faceCursor;
+
+            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * faceCursor; ++indexIndex) {
+                indexes[indexIndex] += chunk->geometry->faces.count * VERTEXES_PER_FACE;
             }
 
             MoveFaces(
-                faces, FACE_PER_BLOCK, static_cast<f32>(blockWorldPosition.x), static_cast<f32>(blockWorldPosition.y),
+                faces, faceCursor, static_cast<f32>(blockWorldPosition.x), static_cast<f32>(blockWorldPosition.y),
                 static_cast<f32>(blockWorldPosition.z));
-            AssignTextures(faces, FACE_PER_BLOCK, atlas, block->type);
-            chunk->faceBuffer.count += FACE_PER_BLOCK;
-            chunk->indexArray.count += INDEXES_PER_FACE * FACE_PER_BLOCK;
+            AssignTextures(faces, faceCursor, atlas, block->type);
+            chunk->geometry->faces.count += faceCursor;
+            chunk->geometry->indexes.count += faceCursor * FACE_PER_BLOCK;
         }
     }
 
