@@ -19,14 +19,12 @@
 #include "gfs/macros.h"
 
 typedef struct FileHandle {
-    int descriptor;
+    FILE *file;
 } FileHandle;
 
 bool
 FileHandleIsValid(FileHandle *handle) {
-    // NOTE(gr3yknigh1): Not properly tested. [2024/10/21]
-    bool result = fcntl(handle->descriptor, F_GETFD) != -1;
-    return result;
+    return handle->file != NULL;
 }
 
 FileOpenResult
@@ -36,26 +34,31 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
     result.code = FILE_OPEN_OK;
     result.handle = ScratchAlloc(allocator, sizeof(FileHandle));
 
-    int openFlags = 0;
+    cstring8 openMode = "r";
 
-    if (HASANYBIT(permissions, PERMISSION_READ)) {
-        openFlags |= O_RDONLY;
+    if (permissions == PERMISSION_READ) {
+        openMode = "r";
+    } else if (permissions == PERMISSION_WRITE) {
+        openMode = "w";
+    } else if (permissions == PERMISSION_READ_WRITE) {
+        openMode = "rw";
     }
 
-    if (HASANYBIT(permissions, PERMISSION_WRITE)) {
-        openFlags |= O_WRONLY;
-    }
+    result.handle->file = fopen(filePath, openMode);
 
-    result.handle->descriptor = open(filePath, openFlags);
+    if (result.handle->file == NULL) {
+        result.handle = NULL;
+        result.code = FILE_OPEN_FAILED_TO_OPEN;
+    }
 
     return result;
 }
 
 FileCloseResultCode
 FileClose(FileHandle *handle) {
-    int result = close(handle->descriptor);
+    int result = fclose(handle->file);
 
-    if (result == -1) {
+    if (result == EOF) {
         return FILE_CLOSE_ERR;
     }
 
@@ -77,11 +80,20 @@ FileLoadResultCode
 FileLoadToBufferEx(
     FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
 
-    off_t origOffset = lseek(handle->descriptor, 0, SEEK_CUR);
-    ssize_t bytesReaded = read(handle->descriptor, buffer, numberOfBytesToLoad);
-    lseek(handle->descriptor, origOffset, SEEK_SET);
+    long origOffset = 0;
 
-    if (bytesReaded == -1) {
+    if (loadOffset != 0) {
+        origOffset = ftell(handle->file);
+        fseek(handle->file, loadOffset, SEEK_SET);
+    }
+
+    size_t bytesReaded = fread(buffer, 1, numberOfBytesToLoad, handle->file);
+
+    if (loadOffset != 0) {
+        fseek(handle->file, origOffset, SEEK_SET);
+    }
+
+    if (bytesReaded != numberOfBytesToLoad) {
         return FILE_LOAD_ERR;
     }
 
@@ -96,9 +108,9 @@ usize
 FileGetSize(FileHandle *handle) {
     usize size = 0;
 
-    lseek(handle->descriptor, 0, SEEK_END);
-    size = lseek(handle->descriptor, 0, SEEK_CUR);
-    lseek(handle->descriptor, 0, SEEK_SET);
+    fseek(handle->file, 0, SEEK_END);
+    size = ftell(handle->file);
+    fseek(handle->file, 0, SEEK_SET);
 
     return size;
 }
