@@ -179,7 +179,7 @@ GFS_API void PoolEvents(Window *window);
 /*
  * @breaf Returns platform's pagesize.
  * */
-GFS_API usize GetPageSize();
+GFS_API usize GetPageSize(void);
 
 /*
  * @breaf Allocates memory aligned to platform's default pagesize.
@@ -194,7 +194,7 @@ typedef enum {
 /*
  * @breaf Unmaps memory page.
  * */
-GFS_API MemoryFreeResultCode MemoryFree(void *data);
+GFS_API MemoryFreeResultCode MemoryFree(void *data, usize size);
 
 /*
  * @breaf Checks if path exists in filesystem.

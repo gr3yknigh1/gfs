@@ -29,10 +29,17 @@ function(_gfs_add_library _target_name)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wave.c
   )
 
-  if (MSVC)
+  if (WIN32)
     target_sources(${_target_name}
       PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_win32.c
+    )
+  endif()
+
+  if(UNIX)
+    target_sources(${_target_name}
+      PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_linux.c
     )
   endif()
 

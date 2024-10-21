@@ -33,7 +33,7 @@ RendererMake(Window *window, Color4BGRA clearColor) {
 void
 RendererDestroy(Renderer *renderer) {
     if (renderer->commandQueue.begin != NULL) {
-        ASSERT_ISZERO(MemoryFree(renderer->commandQueue.begin));
+        ASSERT_ISZERO(MemoryFree(renderer->commandQueue.begin, RENDER_COMMAND_CAPACITY));
     }
     renderer->commandQueue.begin = NULL;
     renderer->commandQueue.end = NULL;

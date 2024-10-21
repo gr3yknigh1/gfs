@@ -53,4 +53,9 @@
 #define GFS_NS(S) GFS_##S
 #endif
 
+// TODO(gr3yknigh1): Check attributes and C version. [2024/10/21]
+#if !defined(GFS_NORETURN)
+#define GFS_NORETURN
+#endif
+
 #endif // GFS_MACROS_H_INCLUDED

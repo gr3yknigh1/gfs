@@ -1,5 +1,5 @@
 /*
- * FILE      gfs_platform_win32.c
+ * FILE      code/gfs/src/platform_win32.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
@@ -289,7 +289,7 @@ FileGetSize(FileHandle *handle) {
     return result.QuadPart;
 }
 
-void
+GFS_NORETURN void
 ProcessExit(u32 code) {
     ExitProcess(code);
 }
@@ -739,7 +739,9 @@ MemoryAllocate(usize size) {
 }
 
 MemoryFreeResultCode
-MemoryFree(void *data) {
+MemoryFree(void *data, usize size) {
+    UNUSED(size);
+
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
         //                   ^^^^^^^^^^^^
         // NOTE(ilya.a): Might be more reasonable to use MEM_DECOMMIT instead

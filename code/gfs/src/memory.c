@@ -141,7 +141,7 @@ ScratchDestroy(Scratch *scratch) {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(scratch->data);
 
-    MemoryFree(scratch->data);
+    MemoryFree(scratch->data, scratch->capacity);
 
     scratch->data = NULL;
     scratch->capacity = 0;
@@ -234,7 +234,9 @@ BlockAllocatorDestroy(BlockAllocator *allocator) {
         previousBlock = currentBlock;
         currentBlock = currentBlock->next;
 
-        MemoryFree(previousBlock);
+        MemoryFree(previousBlock, previousBlock->arena.capacity + sizeof(AllocationBlock));
+        //                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // NOTE(gr3yknigh1): This not properly tested [2024/10/21]
     }
 
     allocator->head = NULL;
