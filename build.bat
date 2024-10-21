@@ -51,11 +51,11 @@ python -m pip install -r build-requirements.txt.lock
 
 if "%build_type%" == "Debug" (
   echo I: Building debug
-  conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-release-static-ninja --settings build_type=Debug --settings compiler.runtime_type=Debug
+  conan build . --output-folder %configuration_path% --build=missing --profile %project_path%\conan\msvc-193-x86_64-static-debug
 ) else (
   if "%build_type%" == "Release" (
     echo I: Building release
-    conan build . --output-folder %configuration_path% --build=missing --profile msvc-193-x86_64-release-static-ninja --settings build_type=Release --settings compiler.runtime_type=Release
+    conan build . --output-folder %configuration_path% --build=missing --profile %project_path%\conan\msvc-193-x86_64-static-release
   ) else (
     echo E: Invalid build type: %build_type%
     exit 1

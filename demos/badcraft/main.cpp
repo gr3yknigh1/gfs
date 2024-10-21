@@ -173,6 +173,7 @@ static void AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType b
 
 static const u8 *gSDLKeyState = NULL;
 
+
 int
 main(int argc, char *args[]) {
     UNUSED(argc);
@@ -296,6 +297,8 @@ main(int argc, char *args[]) {
     GLVertexArrayAddBuffer(chunkVertexArray, &chunkVertexBuffer, &chunkVertexBufferLayout);
     GLElementBuffer chunkElementBuffer = GLElementBufferMake(NULL, INDEXES_PER_FACE * FACE_PER_BLOCK * CHUNK_MAX_BLOCK_COUNT);
 
+    bool showFrame = false;
+
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
         currentPerfCounter = SDL_GetPerformanceCounter();
@@ -334,6 +337,16 @@ main(int argc, char *args[]) {
 
         if (gSDLKeyState[SDL_SCANCODE_Q]) {
             GameStateStop();
+        }
+
+        if (gSDLKeyState[SDL_SCANCODE_F]) {
+            showFrame = !showFrame;
+
+            if (showFrame) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
         }
 
         // Toggle mouse...
