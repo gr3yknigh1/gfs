@@ -9,6 +9,6 @@ project(gfs
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/external/glad)
 add_subdirectory(${PROJECT_SOURCE_DIR}/code/gfs)
-add_subdirectory(${PROJECT_SOURCE_DIR}/demos/ffs_3d)
+# add_subdirectory(${PROJECT_SOURCE_DIR}/demos/ffs_3d)
 add_subdirectory(${PROJECT_SOURCE_DIR}/demos/badcraft)
 

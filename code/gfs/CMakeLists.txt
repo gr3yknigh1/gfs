@@ -22,13 +22,19 @@ function(_gfs_add_library _target_name)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/game_state.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/physics.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_win32.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/random.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/render.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/render_opengl.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/string.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/wave.c
   )
+
+  if (MSVC)
+    target_sources(${_target_name}
+      PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform_win32.c
+    )
+  endif()
 
   target_include_directories(${_target_name}
     PUBLIC

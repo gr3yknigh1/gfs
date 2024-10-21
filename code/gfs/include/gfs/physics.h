@@ -94,7 +94,7 @@ GFS_API u32 GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y);
  * @param x Self explanatory
  * @param y Self explanatory
  */
-GFS_API u32 GetOffsetFromCoords3DGridArrayRM(u32 width, u32 height, u32 x, u32 y, u32 z);
+GFS_API u32 GetOffsetFromCoords3DGridArrayRM(u32 width, u32 height, u32 length, u32 x, u32 y, u32 z);
 
 /*
  * @breaf Gets coordinates (x,y,z) from index of flattened 3D array (row-major order).

@@ -5,15 +5,15 @@
  * */
 #include "gfs/render_opengl.h"
 
+#include <stdio.h>
+
+#include <glad/glad.h>
+
 #include "gfs/assert.h"
 #include "gfs/platform.h"
 #include "gfs/memory.h"
 #include "gfs/string.h"
 #include "gfs/types.h"
-
-#include <glad/glad.h>
-
-#include <Windows.h> // wsprintf
 
 GLVertexArray
 GLVertexArrayMake(void) {
@@ -29,7 +29,7 @@ GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVerte
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb->id));
 
-    u32 offset = 0;
+    u64 offset = 0;
 
     for (u32 attributeIndex = 0; attributeIndex < layout->attributesCount; ++attributeIndex) {
         GLAttribute *attribute = layout->attributes + attributeIndex;
@@ -394,7 +394,7 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
     GLenum errorCode = GL_NO_ERROR;
     while ((errorCode = glGetError()) != GL_NO_ERROR) {
         char8 printBuffer[KILOBYTES(1)];
-        wsprintf(
+        sprintf(
             printBuffer, "E: [GL] Error code=%s[%i] - '%s' at %s:%lu\n", GLGetErrorString(errorCode), errorCode,
             expression, sourceFile, sourceLine);
         THROW(printBuffer);

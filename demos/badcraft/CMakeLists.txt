@@ -1,9 +1,10 @@
+
+enable_language(CXX)
+
 find_package(SDL2 REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 
-
-enable_language(CXX)
 add_executable(badcraft
   ${CMAKE_CURRENT_LIST_DIR}/main.cpp
   ${CMAKE_CURRENT_LIST_DIR}/camera.cpp
