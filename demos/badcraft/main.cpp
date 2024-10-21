@@ -230,13 +230,13 @@ main(int argc, char *args[]) {
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+        GLCompileShaderFromFile(&runtimeScratch, "assets/basic.frag.glsl", GL_SHADER_TYPE_FRAG);
     shaderLinkData.fragmentShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+        GLCompileShaderFromFile(&runtimeScratch, "assets/basic.vert.glsl", GL_SHADER_TYPE_VERT);
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    Atlas atlas = AtlasFromFile(&runtimeScratch, "P:\\gfs\\assets\\atlas.bmp", 16, 16, COLOR_LAYOUT_BGRA);
+    Atlas atlas = AtlasFromFile(&runtimeScratch, "assets/atlas.bmp", 16, 16, COLOR_LAYOUT_BGRA);
 
     GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
     GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
