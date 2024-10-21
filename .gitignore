@@ -7,6 +7,9 @@
 *.sublime-*
 !*.sublime-project
 
+## KDevelop
+.kdev4/
+
 ## RemedyBG
 *.rdbg
 
