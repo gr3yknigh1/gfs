@@ -28,17 +28,18 @@ fi
 pushd "$project_path"
 
 # Preparing virtualenv...
-python3 -m venv "$build_venv_path"
-source "$build_venv_path/bin/activate"
-python3 -m pip install -r build-requirements.txt.lock
+# NOTE: Temporarly disable venvs
+#python3 -m venv "$build_venv_path"
+#source "$build_venv_path/bin/activate"
+#python3 -m pip install -r build-requirements.txt.lock
 
 # Compiling project...
 if [ "$build_type" == "Debug" ]; then
   echo "I: Building debug"
-  conan build . --output-folder "$configuration_path" --build=missing --settings build_type=Debug --settings compiler.runtime_type=Debug
+  conan build . --build=missing --profile ./conan/gcc-14-x86_64-static-debug --output-folder="$configuration_path"
 elif [ "$build_type" == "Release" ]; then
   echo "I: Building release"
-  conan build . --output-folder "$configuration_path" --build=missing --settings build_type=Release --settings compiler.runtime_type=Release
+  conan build . --build=missing --profile ./conan/gcc-14-x86_64-static-release --output-folder="$configuration_path"
 else
   echo "E: Invalid build type: $build_type"
   exit 1
