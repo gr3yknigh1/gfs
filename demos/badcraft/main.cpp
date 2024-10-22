@@ -250,9 +250,9 @@ main(int argc, char *args[]) {
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_DEPTH_TEST));
 
-    // GL_CALL(glEnable(GL_CULL_FACE));
-    // GL_CALL(glCullFace(GL_FRONT));
-    // GL_CALL(glFrontFace(GL_CCW));
+    GL_CALL(glEnable(GL_CULL_FACE));
+    GL_CALL(glCullFace(GL_FRONT));
+    GL_CALL(glFrontFace(GL_CCW));
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
@@ -325,6 +325,7 @@ main(int argc, char *args[]) {
     GLElementBuffer chunkElementBuffer = GLElementBufferMake(NULL, INDEXES_PER_FACE * FACE_PER_BLOCK * CHUNK_MAX_BLOCK_COUNT);
 
     bool showFrame = false;
+    bool cullEnabled = true;
 
     while (!GameStateShouldStop()) {
         previousPerfCounter = currentPerfCounter;
@@ -333,6 +334,8 @@ main(int argc, char *args[]) {
         // Might be multiplied by 1000?
         f32 deltaTime = static_cast<f32>(
             (currentPerfCounter - previousPerfCounter) / static_cast<f32>(SDL_GetPerformanceFrequency()));
+
+        std::printf("dt = %.3f\n", deltaTime);
 
         // Input
         SDL_Event event = INIT_EMPTY_STRUCT(SDL_Event);
@@ -436,6 +439,17 @@ main(int argc, char *args[]) {
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
 
+        bool cullEnabledCurrentValue = cullEnabled;
+        ImGui::Checkbox("Enable geometry culling", &cullEnabledCurrentValue);
+        if (cullEnabledCurrentValue != cullEnabled) {
+            cullEnabled = cullEnabledCurrentValue;
+            if (cullEnabled) {
+                GL_CALL(glEnable(GL_CULL_FACE));
+            } else {
+                GL_CALL(glDisable(GL_CULL_FACE));
+            }
+        }
+
         if (ImGui::CollapsingHeader("Camera Options")) {
             ImGui::InputFloat("Speed", &camera.speed, 0.01f, 500.0f, "%.3f");
             ImGui::InputFloat("Sensitivity", &camera.sensitivity, 0.01f, 500.0f, "%.3f");
@@ -445,7 +459,6 @@ main(int argc, char *args[]) {
         }
 
         ImGui::End();
-
         ImGui::Render();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -554,10 +567,12 @@ ChunkMake(Scratch *scratch, f32 x, f32 y, f32 z) {
 
     chunk.faces.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK;
     chunk.faces.data = static_cast<Face *>(ScratchAllocZero(scratch, chunk.faces.capacity * sizeof(Face)));
+    ASSERT_NONNULL(chunk.faces.data);
     chunk.faces.count = 0;
 
     chunk.indexes.capacity = CHUNK_MAX_BLOCK_COUNT * FACE_PER_BLOCK * INDEXES_PER_FACE;
     chunk.indexes.data = static_cast<u32 *>(ScratchAllocZero(scratch, chunk.indexes.capacity * sizeof(u32)));
+    ASSERT_NONNULL(chunk.indexes.data);
     chunk.indexes.count = 0;
 
     chunk.coords.x = x;
