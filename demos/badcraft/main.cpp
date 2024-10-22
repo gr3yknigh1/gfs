@@ -16,6 +16,7 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  */
 #include <cstdio>
+#include <cmath>
 
 #include <SDL2/SDL.h>
 #include <glad/glad.h>
@@ -32,9 +33,9 @@
 #include <gfs/assert.h>
 #include <gfs/game_state.h>
 #include <gfs/render_opengl.h>
+#include <gfs/physics.h>
 
 #include "camera.hpp"
-#include "gfs/physics.h"
 
 #define BLOCK_SIDE_SIZE EXPAND(1)
 #define CHUNK_SIDE_SIZE EXPAND(16)
@@ -43,14 +44,19 @@
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
 
-#define WORLD_CHUNK_X_COUNT EXPAND(4)
-#define WORLD_CHUNK_Y_COUNT EXPAND(2)
-#define WORLD_CHUNK_Z_COUNT EXPAND(4)
+#define WORLD_CHUNK_X_COUNT EXPAND(1)
+#define WORLD_CHUNK_Y_COUNT EXPAND(1)
+#define WORLD_CHUNK_Z_COUNT EXPAND(1)
 #define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
-#define WORLD_MAX_X EXPAND(WORLD_CHUNK_X_COUNT * CHUNK_SIDE_SIZE)
-#define WORLD_MAX_Y EXPAND(WORLD_CHUNK_Y_COUNT * CHUNK_SIDE_SIZE)
-#define WORLD_MAX_Z EXPAND(WORLD_CHUNK_Z_COUNT * CHUNK_SIDE_SIZE)
+#define BLOCK_MIN_X 0
+#define BLOCK_MIN_Y 0
+#define BLOCK_MIN_Z 0
+
+#define BLOCK_MAX_X WORLD_CHUNK_X_COUNT * CHUNK_SIDE_SIZE
+#define BLOCK_MAX_Y WORLD_CHUNK_Y_COUNT * CHUNK_SIDE_SIZE
+#define BLOCK_MAX_Z WORLD_CHUNK_Z_COUNT * CHUNK_SIDE_SIZE
+
 
 enum class BlockType : u16 {
     Nothing,
@@ -68,7 +74,7 @@ typedef struct {
 } Vertex;
 
 typedef struct {
-    Vertex vertexes[4];
+    Vertex vertexes[VERTEXES_PER_FACE];  // 4
 } Face;
 
 enum class ChunkState : u32 {
@@ -102,7 +108,6 @@ typedef struct {
     ARRAY(Chunk) chunks;
 } World;
 
-
 const static Face FRONT_FACE = LITERAL(Face){{
     // Position  Colors      UV
     {{0, 1, 1}, {1, 1, 1}, {0, 1}}, // [00] top-left
@@ -118,67 +123,67 @@ const static u32 FRONT_FACE_INDEXES[6] = {
 
 const static Face BACK_FACE = LITERAL(Face){{
     // Position  Colors     UV
-    {{1, 1, 0}, {1, 1, 1}, {0, 1}}, // [04] top-left
-    {{0, 1, 0}, {1, 1, 1}, {1, 1}}, // [05] top-right
-    {{0, 0, 0}, {1, 1, 1}, {1, 0}}, // [06] bottom-right
-    {{1, 0, 0}, {1, 1, 1}, {0, 0}}  // [07] bottom-left
+    {{1, 1, 0}, {1, 1, 1}, {0, 1}}, // [0] [04] top-left
+    {{0, 1, 0}, {1, 1, 1}, {1, 1}}, // [1] [05] top-right
+    {{0, 0, 0}, {1, 1, 1}, {1, 0}}, // [2] [06] bottom-right
+    {{1, 0, 0}, {1, 1, 1}, {0, 0}}  // [3] [07] bottom-left
 }};
 
 const static u32 BACK_FACE_INDEXES[6] = {
-    4, 5, 6, // top-left
-    6, 7, 4, // bottom-right
+    0, 1, 2, // 4, 5, 6, // top-left
+    2, 3, 0, // 6, 7, 4, // bottom-right
 };
 
 const static Face TOP_FACE = LITERAL(Face){{
     // Position  Colors     UV
-    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [08] top-left
-    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [09] top-right
-    {{1, 1, 1}, {1, 1, 1}, {1, 0}}, // [10] bottom-right
-    {{0, 1, 1}, {1, 1, 1}, {0, 0}}  // [11] bottom-left
+    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [0] [08] top-left
+    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [1] [09] top-right
+    {{1, 1, 1}, {1, 1, 1}, {1, 0}}, // [2] [10] bottom-right
+    {{0, 1, 1}, {1, 1, 1}, {0, 0}}  // [3] [11] bottom-left
 }};
 
 const static u32 TOP_FACE_INDEXES[6] = {
-    11, 8,  9,  // top-left
-    9,  10, 11, // bottom-right
+    3, 0, 1, // 11, 8,  9,  // top-left
+    1, 2, 3, // 9,  10, 11, // bottom-right
 };
 
 const static Face BOTTOM_FACE = LITERAL(Face){{
     // Position  Colors    UV
-    {{0, 0, 1}, {1, 1, 1}, {0, 1}}, // [12] top-left
-    {{1, 0, 1}, {1, 1, 1}, {1, 1}}, // [13] top-right
-    {{1, 0, 0}, {1, 1, 1}, {1, 0}}, // [14] bottom-right
-    {{0, 0, 0}, {1, 1, 1}, {0, 0}}  // [15] bottom-left
+    {{0, 0, 1}, {1, 1, 1}, {0, 1}}, // [0] [12] top-left
+    {{1, 0, 1}, {1, 1, 1}, {1, 1}}, // [1] [13] top-right
+    {{1, 0, 0}, {1, 1, 1}, {1, 0}}, // [2] [14] bottom-right
+    {{0, 0, 0}, {1, 1, 1}, {0, 0}}  // [3] [15] bottom-left
 }};
 
 const static u32 BOTTOM_FACE_INDEXES[6] = {
-    12, 13, 15, // top-left
-    15, 13, 14, // bottom-right
+    0, 1, 3, // 12, 13, 15, // top-left
+    3, 1, 2, // 15, 13, 14, // bottom-right
 };
 
 const static Face LEFT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [16] top-left
-    {{0, 1, 1}, {1, 1, 1}, {1, 1}}, // [17] top-right
-    {{0, 0, 1}, {1, 1, 1}, {0, 0}}, // [18] bottom-right
-    {{0, 0, 0}, {1, 1, 1}, {1, 0}}  // [19] bottom-left
+    {{0, 1, 0}, {1, 1, 1}, {0, 1}}, // [0] [16] top-left
+    {{0, 1, 1}, {1, 1, 1}, {1, 1}}, // [1] [17] top-right
+    {{0, 0, 1}, {1, 1, 1}, {0, 0}}, // [2] [18] bottom-right
+    {{0, 0, 0}, {1, 1, 1}, {1, 0}}  // [3] [19] bottom-left
 }};
 
 const static u32 LEFT_FACE_INDEXES[6] = {
-    19, 16, 17, // top-left
-    17, 18, 19  // bottom-right
+    3, 0, 1, // 19, 16, 17, // top-left
+    1, 2, 3, // 17, 18, 19  // bottom-right
 };
 
 const static Face RIGHT_FACE = LITERAL(Face){{
     // Position  Colors      UV
-    {{1, 1, 1}, {1, 1, 1}, {0, 1}}, // [20] top-left
-    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [21] top-right
-    {{1, 0, 0}, {1, 1, 1}, {0, 0}}, // [22] bottom-right
-    {{1, 0, 1}, {1, 1, 1}, {1, 0}}  // [23] bottom-left
+    {{1, 1, 1}, {1, 1, 1}, {0, 1}}, // [0] [20] top-left
+    {{1, 1, 0}, {1, 1, 1}, {1, 1}}, // [1] [21] top-right
+    {{1, 0, 0}, {1, 1, 1}, {0, 0}}, // [2] [22] bottom-right
+    {{1, 0, 1}, {1, 1, 1}, {1, 0}}  // [3] [23] bottom-left
 }};
 
 const static u32 RIGHT_FACE_INDEXES[6] = {
-    20, 21, 23, // top-left
-    23, 21, 22  // bottom-right
+    0, 1, 3, // 20, 21, 23, // top-left
+    3, 1, 2, // 23, 21, 22  // bottom-right
 };
 
 static Chunk ChunkMake(Scratch *scratch, f32 x, f32 y, f32 z);
@@ -245,9 +250,9 @@ main(int argc, char *args[]) {
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL_CALL(glEnable(GL_DEPTH_TEST));
 
-    GL_CALL(glEnable(GL_CULL_FACE));
-    GL_CALL(glCullFace(GL_FRONT));
-    GL_CALL(glFrontFace(GL_CCW));
+    // GL_CALL(glEnable(GL_CULL_FACE));
+    // GL_CALL(glCullFace(GL_FRONT));
+    // GL_CALL(glFrontFace(GL_CCW));
 
     GLShaderProgramLinkData shaderLinkData = INIT_EMPTY_STRUCT(GLShaderProgramLinkData);
     shaderLinkData.vertexShader =
@@ -390,6 +395,34 @@ main(int argc, char *args[]) {
 
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
 
+        glm::mat4 view = CameraGetViewMatix(&camera);
+        glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
+        glm::mat4 model = glm::identity<glm::mat4>();
+
+        GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
+        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
+        GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
+
+        u32 faceCount = 0;
+        u32 indexesCount = 0;
+        u32 drawCalls = 0;
+
+        for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
+            Chunk *chunk = world.chunks.data + chunkIndex;
+
+            if (chunk->state == ChunkState::Dirty) {
+                ChunkGenerateGeometry(&world, chunk, &atlas);
+            }
+
+            GLVertexBufferSendData(&chunkVertexBuffer, reinterpret_cast<f32 *>(chunk->faces.data), chunk->faces.count * sizeof(Face));
+            GLElementBufferSendData(&chunkElementBuffer, chunk->indexes.data, chunk->indexes.count);
+            GLDrawElements(&chunkElementBuffer, &chunkVertexBuffer, chunkVertexArray);
+
+            faceCount += chunk->faces.count;
+            indexesCount += chunk->indexes.count;
+            ++drawCalls;
+        }
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
@@ -397,6 +430,9 @@ main(int argc, char *args[]) {
         ImGui::Begin("Debug Information");
         ImGui::Text("FPS: %.05f", 1 / deltaTime);
         ImGui::Text("DeltaTime: %.05f", deltaTime);
+        ImGui::Text("Faces count: %u", faceCount);
+        ImGui::Text("Indexes count: %u", indexesCount);
+        ImGui::Text("Draw calls: %u", drawCalls);
         ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
 
@@ -411,26 +447,6 @@ main(int argc, char *args[]) {
         ImGui::End();
 
         ImGui::Render();
-
-        glm::mat4 view = CameraGetViewMatix(&camera);
-        glm::mat4 projection = CameraGetProjectionMatix(&camera, windowWidth, windowHeight);
-        glm::mat4 model = glm::identity<glm::mat4>();
-
-        GLShaderSetUniformM4F32(shader, uniformViewLocation, glm::value_ptr(view));
-        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, glm::value_ptr(projection));
-        GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
-
-        for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
-            Chunk *chunk = world.chunks.data + chunkIndex;
-
-            if (chunk->state == ChunkState::Dirty) {
-                ChunkGenerateGeometry(&world, chunk, &atlas);
-            }
-
-            GLVertexBufferSendData(&chunkVertexBuffer, reinterpret_cast<f32 *>(chunk->faces.data), chunk->faces.count * sizeof(Face));
-            GLElementBufferSendData(&chunkElementBuffer, chunk->indexes.data, chunk->indexes.count);
-            GLDrawElements(&chunkElementBuffer, &chunkVertexBuffer, chunkVertexArray);
-        }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
@@ -570,38 +586,151 @@ ChunkGenerateBlocks(World *world, Chunk *chunk) {
     chunk->state = ChunkState::TerrainGenerated;
 }
 
+
+static inline bool
+IsNothing(const World *world, f32 rx, f32 ry, f32 rz, f32 wx, f32 wy, f32 wz) {
+    // return true;
+    if (wx < BLOCK_MIN_X || wy < BLOCK_MIN_Y || wz < BLOCK_MIN_Z || wx >= BLOCK_MAX_X || wy >= BLOCK_MAX_Y || wz >= BLOCK_MAX_Z) {
+        return true;
+    }
+
+    Vector3F32 chunkCoords;
+    chunkCoords.x = wx / CHUNK_SIDE_SIZE;
+    chunkCoords.y = wy / CHUNK_SIDE_SIZE;
+    chunkCoords.z = wz / CHUNK_SIDE_SIZE;
+
+    i32 chunkIndex = GetOffsetFromCoords3DGridArrayRM(
+        WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkCoords.x, chunkCoords.y, chunkCoords.z);
+    Chunk *chunk = world->chunks.data + chunkIndex;
+
+    if (rx < 0) {
+        rx = CHUNK_SIDE_SIZE + rx;
+    }
+
+    if (ry < 0) {
+        ry = CHUNK_SIDE_SIZE + ry;
+    }
+
+    if (rz < 0) {
+        rz = CHUNK_SIDE_SIZE + rz;
+    }
+
+    i32 blockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, rx, ry, rz);
+
+    Block *block = chunk->blocks + blockIndex;
+    return block->type == BlockType::Nothing;
+}
+
+
+/*
+ * @breaf Emits faces and indices into chunk's geometry buffer.
+ * @param rp Block's relative position
+ * @param wp Block's world position
+ */
 static u32
-EmitGeometryToChunk(World *world, Chunk *chunk, const Block *block) {
+EmitGeometryToChunk(World *world, Chunk *chunk, const Vector3F32 *rp, const Vector3F32 *wp) {
     u32 cursor = 0;
 
-    Face *faces = chunk->faces.data + chunk->faces.count;
-    u32 *indexes = chunk->indexes.data + chunk->indexes.count;
+    Face *facesCursor = chunk->faces.data + chunk->faces.count;
+    u32 *indexesCursor = chunk->indexes.data + chunk->indexes.count;
 
-    faces[cursor] = FRONT_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+    u32 indexes[INDEXES_PER_FACE] = {0};
 
-    faces[cursor] = BACK_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+    // Front
+    if (IsNothing(world, rp->x + 0, rp->y + 0, rp->z + 1, wp->x + 0, wp->y + 0, wp->z + 1)) {
+        facesCursor[cursor] = FRONT_FACE;
 
-    faces[cursor] = TOP_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+        MemoryCopy(indexes, FRONT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
 
-    faces[cursor] = BOTTOM_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
 
-    faces[cursor] = LEFT_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+    // Back
+    if (IsNothing(world, rp->x + 0, rp->y + 0, rp->z - 1, wp->x + 0, wp->y + 0, wp->z - 1)) {
+        facesCursor[cursor] = BACK_FACE;
 
-    faces[cursor] = RIGHT_FACE;
-    MemoryCopy(indexes + cursor * INDEXES_PER_FACE, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
-    ++cursor;
+        MemoryCopy(indexes, BACK_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
+
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
+
+    // Top
+    if (IsNothing(world, rp->x + 0, rp->y + 1, rp->z + 0, wp->x + 0, wp->y + 1, wp->z + 0)) {
+        facesCursor[cursor] = TOP_FACE;
+
+        MemoryCopy(indexes, TOP_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
+
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
+
+    // Bottom
+    if (IsNothing(world, rp->x + 0, rp->y - 1, rp->z + 0, wp->x + 0, wp->y - 1, wp->z + 0)) {
+        facesCursor[cursor] = BOTTOM_FACE;
+
+        MemoryCopy(indexes, BOTTOM_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
+
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
+
+    // Left
+    if (IsNothing(world, rp->x - 1, rp->y + 0, rp->z + 0, wp->x - 1, wp->y + 0, wp->z + 0)) {
+        facesCursor[cursor] = LEFT_FACE;
+
+        u32 indexes[INDEXES_PER_FACE] = {0};
+        MemoryCopy(indexes, LEFT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
+
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
+
+    // Right
+    if (IsNothing(world, rp->x + 1, rp->y + 0, rp->z + 0, wp->x + 1, wp->y + 0, wp->z + 0)) {
+        facesCursor[cursor] = RIGHT_FACE;
+
+        u32 indexes[INDEXES_PER_FACE] = {0};
+        MemoryCopy(indexes, RIGHT_FACE_INDEXES, INDEXES_PER_FACE * sizeof(u32));
+
+        for (u16 indexIndex = 0; indexIndex < INDEXES_PER_FACE; ++indexIndex) {
+            indexes[indexIndex] += cursor * VERTEXES_PER_FACE;
+        }
+
+        MemoryCopy(indexesCursor + cursor * INDEXES_PER_FACE, indexes, INDEXES_PER_FACE * sizeof(u32));
+        ++cursor;
+    }
 
     return cursor;
+}
+
+static inline Vector3F32
+Vector3U32ConvertToVector3F32(const Vector3U32 *v) {
+    Vector3F32 ret;
+    ret.x = static_cast<f32>(v->x);
+    ret.y = static_cast<f32>(v->y);
+    ret.z = static_cast<f32>(v->z);
+    return ret;
 }
 
 static void
@@ -616,24 +745,26 @@ ChunkGenerateGeometry(World *world, Chunk *chunk, Atlas *atlas) {
         Block *block = blocks + blockIndex;
 
         if (block->type != BlockType::Nothing) {
-            Vector3U32 blockRelativePosition =
+            Vector3U32 blockRelativePositionInd =
                 GetCoordsFrom3DGridArrayOffsetRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, blockIndex);
-            Vector3F32 blockWorldPosition = INIT_EMPTY_STRUCT(Vector3F32);
-            blockWorldPosition.x = chunk->coords.x * CHUNK_SIDE_SIZE + blockRelativePosition.x;
-            blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePosition.y;
-            blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePosition.z;
+            Vector3F32 blockRelativePosition = Vector3U32ConvertToVector3F32(&blockRelativePositionInd);
 
-            u32 cursor = EmitGeometryToChunk(world, chunk, block);
+            Vector3F32 blockWorldPosition = INIT_EMPTY_STRUCT(Vector3F32);
+            blockWorldPosition.x = chunk->coords.x * CHUNK_SIDE_SIZE + blockRelativePositionInd.x;
+            blockWorldPosition.y = chunk->coords.y * CHUNK_SIDE_SIZE + blockRelativePositionInd.y;
+            blockWorldPosition.z = chunk->coords.z * CHUNK_SIDE_SIZE + blockRelativePositionInd.z;
+
+            u32 facesEmmited = EmitGeometryToChunk(world, chunk, &blockRelativePosition, &blockWorldPosition);
 
             // Normalize geometry
-            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * cursor; ++indexIndex) {
+            for (u32 indexIndex = 0; indexIndex < INDEXES_PER_FACE * facesEmmited; ++indexIndex) {
                 (chunk->indexes.data + chunk->indexes.count)[indexIndex] += chunk->faces.count * VERTEXES_PER_FACE;
             }
 
-            MoveFaces(chunk->faces.data + chunk->faces.count, cursor, blockWorldPosition.x, blockWorldPosition.y, blockWorldPosition.z);
-            AssignTextures(chunk->faces.data + chunk->faces.count, cursor, atlas, block->type);
-            chunk->faces.count += cursor;
-            chunk->indexes.count += cursor * FACE_PER_BLOCK;
+            MoveFaces(chunk->faces.data + chunk->faces.count, facesEmmited, blockWorldPosition.x, blockWorldPosition.y, blockWorldPosition.z);
+            AssignTextures(chunk->faces.data + chunk->faces.count, facesEmmited, atlas, block->type);
+            chunk->faces.count += facesEmmited;
+            chunk->indexes.count += facesEmmited * INDEXES_PER_FACE;
         }
     }
 

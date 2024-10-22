@@ -46,14 +46,15 @@ GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y) {
  *
  */
 
-u32
-GetOffsetFromCoords3DGridArrayRM(u32 width, u32 height, u32 length, u32 x, u32 y, u32 z) {
+i32
+GetOffsetFromCoords3DGridArrayRM(i32 width, i32 height, i32 length, i32 x, i32 y, i32 z) {
     UNUSED(width);
-    return ((x * height + y) * length) + z;
+    i32 ret = ((x * height + y) * length) + z;
+    return ret;
 }
 
 Vector3U32
-GetCoordsFrom3DGridArrayOffsetRM(u32 width, u32 height, u32 length, u32 offset) {
+GetCoordsFrom3DGridArrayOffsetRM(i32 width, i32 height, i32 length, i32 offset) {
     UNUSED(width);
 
     Vector3U32 ret;

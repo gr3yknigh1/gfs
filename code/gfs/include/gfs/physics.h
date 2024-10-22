@@ -94,12 +94,12 @@ GFS_API u32 GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y);
  * @param x Self explanatory
  * @param y Self explanatory
  */
-GFS_API u32 GetOffsetFromCoords3DGridArrayRM(u32 width, u32 height, u32 length, u32 x, u32 y, u32 z);
+GFS_API i32 GetOffsetFromCoords3DGridArrayRM(i32 width, i32 height, i32 length, i32 x, i32 y, i32 z);
 
 /*
  * @breaf Gets coordinates (x,y,z) from index of flattened 3D array (row-major order).
  */
-GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffsetRM(u32 width, u32 height, u32 length, u32 offset);
+GFS_API Vector3U32 GetCoordsFrom3DGridArrayOffsetRM(i32 width, i32 height, i32 length, i32 offset);
 
 GFS_API bool RectangleU16IsInside(RectangleU16 r, u16 x, u16 y);
 GFS_API bool RectangleU16IsOverlapping(RectangleU16 r);
