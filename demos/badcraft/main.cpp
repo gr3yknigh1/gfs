@@ -392,10 +392,23 @@ main(int argc, char *args[]) {
         CameraHandleInput(&camera, deltaTime);
 
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-        GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
+
+        {
+            // TODO(gr3yknigh1): This ugly code breaks FPS counter in UI. Shall fix it later, because ~I am lazy~
+            // I need to work on more important stuff [2024/10/22]
+            static i32 targetFPS = 60;
+            static i32 lastTicks = SDL_GetTicks();
+
+            if (SDL_GetTicks() - lastTicks < 1000 / targetFPS) {
+                continue;
+            }
+
+            lastTicks = SDL_GetTicks();
+        }
 
         // Render
 
+        GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
         GLClear(0, 0, 0, 1); // TODO: Map from 0..255 to 0..1
 
         glm::mat4 view = CameraGetViewMatix(&camera);
