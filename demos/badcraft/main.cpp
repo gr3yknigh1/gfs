@@ -44,9 +44,9 @@
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
 
-#define WORLD_CHUNK_X_COUNT EXPAND(1)
-#define WORLD_CHUNK_Y_COUNT EXPAND(1)
-#define WORLD_CHUNK_Z_COUNT EXPAND(1)
+#define WORLD_CHUNK_X_COUNT EXPAND(6)
+#define WORLD_CHUNK_Y_COUNT EXPAND(6)
+#define WORLD_CHUNK_Z_COUNT EXPAND(6)
 #define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
 #define BLOCK_MIN_X 0
@@ -334,8 +334,6 @@ main(int argc, char *args[]) {
         // Might be multiplied by 1000?
         f32 deltaTime = static_cast<f32>(
             (currentPerfCounter - previousPerfCounter) / static_cast<f32>(SDL_GetPerformanceFrequency()));
-
-        std::printf("dt = %.3f\n", deltaTime);
 
         // Input
         SDL_Event event = INIT_EMPTY_STRUCT(SDL_Event);
