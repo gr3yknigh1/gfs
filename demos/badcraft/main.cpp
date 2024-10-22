@@ -65,6 +65,7 @@ enum class BlockType : u16 {
 
 typedef struct {
     BlockType type;
+    u32 faceEmitted;
 } Block;
 
 typedef struct {
@@ -310,9 +311,14 @@ main(int argc, char *args[]) {
         Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
         *chunk = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
         ChunkGenerateBlocks(&world, chunk);
-        ChunkGenerateGeometry(&world, chunk, &atlas);
-
         ++world.chunks.count;
+    }
+
+    // NOTE(gr3yknigh1): Should do second pass, because on edges of chunks geometry generates with
+    // unculled faces, cause terrain generation does not have completed yet.
+    for (u32 chunkIndex = 0; chunkIndex < world.chunks.count; ++chunkIndex) {
+        Chunk *chunk = world.chunks.data + chunkIndex;
+        ChunkGenerateGeometry(&world, chunk, &atlas);
     }
 
     GLVertexArray chunkVertexArray = GLVertexArrayMake();
@@ -365,6 +371,10 @@ main(int argc, char *args[]) {
 
         if (gSDLKeyState[SDL_SCANCODE_Q]) {
             GameStateStop();
+        }
+
+        if (gSDLKeyState[SDL_SCANCODE_SPACE]) {
+            // Block selectiing picking...
         }
 
         if (gSDLKeyState[SDL_SCANCODE_F]) {
@@ -441,13 +451,12 @@ main(int argc, char *args[]) {
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Debug Information");
+        ImGui::Begin("Debug menu");
         ImGui::Text("FPS: %.05f", 1 / deltaTime);
         ImGui::Text("DeltaTime: %.05f", deltaTime);
         ImGui::Text("Faces count: %u", faceCount);
         ImGui::Text("Indexes count: %u", indexesCount);
         ImGui::Text("Draw calls: %u", drawCalls);
-        ImGui::Text("Camera position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
         ImGui::Text("Mouse offset: [%.3f %.3f]", mouseXOffset, mouseYOffset);
 
         bool cullEnabledCurrentValue = cullEnabled;
@@ -461,12 +470,15 @@ main(int argc, char *args[]) {
             }
         }
 
-        if (ImGui::CollapsingHeader("Camera Options")) {
+        if (ImGui::CollapsingHeader("Camera menu")) {
             ImGui::InputFloat("Speed", &camera.speed, 0.01f, 500.0f, "%.3f");
             ImGui::InputFloat("Sensitivity", &camera.sensitivity, 0.01f, 500.0f, "%.3f");
             ImGui::InputFloat("FOV", &camera.fov, 20.0f, 180.0f, "%.3f");
             ImGui::InputFloat("Near plane", &camera.near, 0.01f, 10.0f, "%.3f");
             ImGui::InputFloat("Far plane", &camera.far, 20, 500.0f, "%.3f");
+            ImGui::Text("Position: [%.3f %.3f %.3f]", camera.position.x, camera.position.y, camera.position.z);
+            ImGui::Text("Front: [%.3f %.3f %.3f]", camera.front.x, camera.front.y, camera.front.z);
+            ImGui::Text("Up: [%.3f %.3f %.3f]", camera.up.x, camera.up.y, camera.up.z);
         }
 
         ImGui::End();
@@ -615,7 +627,6 @@ ChunkGenerateBlocks(World *world, Chunk *chunk) {
 
 static inline bool
 IsNothing(const World *world, f32 rx, f32 ry, f32 rz, f32 wx, f32 wy, f32 wz) {
-    // return true;
     if (wx < BLOCK_MIN_X || wy < BLOCK_MIN_Y || wz < BLOCK_MIN_Z || wx >= BLOCK_MAX_X || wy >= BLOCK_MAX_Y || wz >= BLOCK_MAX_Z) {
         return true;
     }
@@ -633,12 +644,24 @@ IsNothing(const World *world, f32 rx, f32 ry, f32 rz, f32 wx, f32 wy, f32 wz) {
         rx = CHUNK_SIDE_SIZE + rx;
     }
 
+    if (rx >= CHUNK_SIDE_SIZE) {
+        rx = rx - CHUNK_SIDE_SIZE;
+    }
+
     if (ry < 0) {
         ry = CHUNK_SIDE_SIZE + ry;
     }
 
+    if (ry >= CHUNK_SIDE_SIZE) {
+        ry = ry - CHUNK_SIDE_SIZE;
+    }
+
     if (rz < 0) {
         rz = CHUNK_SIDE_SIZE + rz;
+    }
+
+    if (rz >= CHUNK_SIDE_SIZE) {
+        rz = rz - CHUNK_SIDE_SIZE;
     }
 
     i32 blockIndex = GetOffsetFromCoords3DGridArrayRM(CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, rx, ry, rz);
