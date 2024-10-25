@@ -44,9 +44,9 @@
 #define INDEXES_PER_FACE EXPAND(6)
 #define VERTEXES_PER_FACE EXPAND(4)
 
-#define WORLD_CHUNK_X_COUNT EXPAND(6)
-#define WORLD_CHUNK_Y_COUNT EXPAND(6)
-#define WORLD_CHUNK_Z_COUNT EXPAND(6)
+#define WORLD_CHUNK_X_COUNT EXPAND(1)
+#define WORLD_CHUNK_Y_COUNT EXPAND(1)
+#define WORLD_CHUNK_Z_COUNT EXPAND(1)
 #define WORLD_CHUNK_COUNT EXPAND(WORLD_CHUNK_X_COUNT * WORLD_CHUNK_Y_COUNT * WORLD_CHUNK_Z_COUNT)
 
 #define BLOCK_MIN_X 0
@@ -197,7 +197,11 @@ static BlockType GenerateNextBlock(f32 x, f32 y, f32 z);
 
 static void AssignTextures(Face *faces, u32 faceCount, Atlas *atlas, BlockType blockType);
 
+static bool IsPointInWorld(f32 x, f32 y, f32 z);
+
 static const u8 *gSDLKeyState = NULL;
+
+static void WorldReset(Scratch *scratch, World *world, Atlas *atlas);
 
 
 int
@@ -301,25 +305,7 @@ main(int argc, char *args[]) {
     GL_CALL(glBindTexture(GL_TEXTURE_2D, atlas.texture));
 
     World world = INIT_EMPTY_STRUCT(World);
-    world.chunks.capacity = WORLD_CHUNK_COUNT;
-    world.chunks.count = 0;
-    world.chunks.data = static_cast<Chunk *>(ScratchAllocZero(&runtimeScratch, sizeof(Chunk) * world.chunks.capacity));
-
-    for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
-        Chunk *chunk = world.chunks.data + chunkIndex;
-
-        Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
-        *chunk = ChunkMake(&runtimeScratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
-        ChunkGenerateBlocks(&world, chunk);
-        ++world.chunks.count;
-    }
-
-    // NOTE(gr3yknigh1): Should do second pass, because on edges of chunks geometry generates with
-    // unculled faces, cause terrain generation does not have completed yet.
-    for (u32 chunkIndex = 0; chunkIndex < world.chunks.count; ++chunkIndex) {
-        Chunk *chunk = world.chunks.data + chunkIndex;
-        ChunkGenerateGeometry(&world, chunk, &atlas);
-    }
+    WorldReset(&runtimeScratch, &world, &atlas);
 
     GLVertexArray chunkVertexArray = GLVertexArrayMake();
     GLVertexBuffer chunkVertexBuffer = GLVertexBufferMake(NULL, VERTEXES_PER_FACE * FACE_PER_BLOCK * CHUNK_MAX_BLOCK_COUNT);
@@ -373,8 +359,8 @@ main(int argc, char *args[]) {
             GameStateStop();
         }
 
-        if (gSDLKeyState[SDL_SCANCODE_SPACE]) {
-            // Block selectiing picking...
+        if (gSDLKeyState[SDL_SCANCODE_R]) {
+            WorldReset(&runtimeScratch, &world, &atlas);
         }
 
         if (gSDLKeyState[SDL_SCANCODE_F]) {
@@ -399,8 +385,60 @@ main(int argc, char *args[]) {
         CameraRotate(&camera, mouseXOffset, mouseYOffset);
         CameraHandleInput(&camera, deltaTime);
 
+
+        if (gSDLKeyState[SDL_SCANCODE_SPACE]) {
+            // Block selectiing picking...
+            Vector3F32 p = INIT_EMPTY_STRUCT(Vector3F32);
+            p.x = camera.position.x + (camera.front.x);
+            p.y = camera.position.y + (camera.front.y);
+            p.z = camera.position.z + (camera.front.z);
+
+            if (IsPointInWorld(p.x, p.y, p.z)) {
+                Vector3F32 chunkCoords;
+                chunkCoords.x = p.x / CHUNK_SIDE_SIZE;
+                chunkCoords.y = p.y / CHUNK_SIDE_SIZE;
+                chunkCoords.z = p.z / CHUNK_SIDE_SIZE;
+
+                i32 chunkIndex = GetOffsetFromCoords3DGridArrayRM(
+                    WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT,
+                    chunkCoords.x, chunkCoords.y, chunkCoords.z);
+
+                Chunk *chunk = world.chunks.data + chunkIndex;
+
+                Vector3F32 relPosition;
+                relPosition.x = p.x; // - CHUNK_SIDE_SIZE * chunkCoords.x;
+                relPosition.y = p.y; // - CHUNK_SIDE_SIZE * chunkCoords.y;
+                relPosition.z = p.z; // - CHUNK_SIDE_SIZE * chunkCoords.z;
+
+                i32 blockIndex = GetOffsetFromCoords3DGridArrayRM(
+                    CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE, CHUNK_SIDE_SIZE,
+                    relPosition.x, relPosition.y, relPosition.z);
+
+                Block *block = chunk->blocks + blockIndex;
+
+                if (block->type != BlockType::Nothing) {
+                    block->type = BlockType::Nothing;
+                    chunk->state = ChunkState::Dirty;
+                }
+            }
+        }
+
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
+    //
+    // NOTE(gr3yknigh1): This is probably the most strage thing in this project. My driver essensialy ddos-ed
+    // because of speed we sended the geometry and the drawcalls we maked every frame so my screen might go
+    // dark and all processies which used GPU were killed. Moreover, game just stopped to update the screen, it
+    // still responded to input, but render just doesn't work. Later I just found Lenovo's app which updated all
+    // of the stuff, related to graphics, so I never had this problem again.
+    //
+    // TODO(gr3yknigh1): We should add back FPS limiter, but for now, let's leave it, cause I don't want to spend
+    // time on in now.
+    //
+    // [2024/10/25]
+    //
+
+#if 1
         {
             // TODO(gr3yknigh1): This ugly code breaks FPS counter in UI. Shall fix it later, because ~I am lazy~
             // I need to work on more important stuff [2024/10/22]
@@ -413,6 +451,7 @@ main(int argc, char *args[]) {
 
             lastTicks = SDL_GetTicks();
         }
+#endif
 
         // Render
 
@@ -496,6 +535,38 @@ main(int argc, char *args[]) {
     ScratchDestroy(&runtimeScratch);
 
     return 0;
+}
+
+static void
+WorldReset(Scratch *scratch, World *world, Atlas *atlas) {
+    world->chunks.capacity = WORLD_CHUNK_COUNT;
+    world->chunks.count = 0;
+    world->chunks.data = static_cast<Chunk *>(ScratchAllocZero(scratch, sizeof(Chunk) * world->chunks.capacity));
+
+    for (u32 chunkIndex = 0; chunkIndex < WORLD_CHUNK_COUNT; ++chunkIndex) {
+        Chunk *chunk = world->chunks.data + chunkIndex;
+
+        Vector3U32 chunkCoords = GetCoordsFrom3DGridArrayOffsetRM(WORLD_CHUNK_X_COUNT, WORLD_CHUNK_Y_COUNT, WORLD_CHUNK_Z_COUNT, chunkIndex);
+        *chunk = ChunkMake(scratch, chunkCoords.x, chunkCoords.y, chunkCoords.z);
+        ChunkGenerateBlocks(world, chunk);
+        ++world->chunks.count;
+    }
+
+    // NOTE(gr3yknigh1): Should do second pass, because on edges of chunks geometry generates with
+    // unculled faces, cause terrain generation does not have completed yet.
+    for (u32 chunkIndex = 0; chunkIndex < world->chunks.count; ++chunkIndex) {
+        Chunk *chunk = world->chunks.data + chunkIndex;
+        ChunkGenerateGeometry(world, chunk, atlas);
+    }
+}
+
+
+static bool
+IsPointInWorld(f32 x, f32 y, f32 z) {
+    if (x < BLOCK_MIN_X || y < BLOCK_MIN_Y || z < BLOCK_MIN_Z || x >= BLOCK_MAX_X || y >= BLOCK_MAX_Y || z >= BLOCK_MAX_Z) {
+        return false;
+    }
+    return true;
 }
 
 static inline void
@@ -627,6 +698,7 @@ ChunkGenerateBlocks(World *world, Chunk *chunk) {
 
 static inline bool
 IsNothing(const World *world, f32 rx, f32 ry, f32 rz, f32 wx, f32 wy, f32 wz) {
+    // TODO: Use `IsPointInWorld`
     if (wx < BLOCK_MIN_X || wy < BLOCK_MIN_Y || wz < BLOCK_MIN_Z || wx >= BLOCK_MAX_X || wy >= BLOCK_MAX_Y || wz >= BLOCK_MAX_Z) {
         return true;
     }
