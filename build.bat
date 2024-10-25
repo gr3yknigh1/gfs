@@ -43,9 +43,11 @@ if exist %vc2022_bootstrap% (
 pushd %project_path%
 
 :: Preparing virtualenv...
-python -m venv %build_venv_path%
-call %build_venv_path%\Scripts\activate.bat
-python -m pip install -r build-requirements.txt.lock
+:: NOTE(gr3yknigh1): Uncomment code below this if you need to make separate virtual
+:: environment for build. [2024/10/25]
+:: python -m venv %build_venv_path%
+:: call %build_venv_path%\Scripts\activate.bat
+:: python -m pip install -r build-requirements.txt.lock
 
 :: Compiling project...
 
