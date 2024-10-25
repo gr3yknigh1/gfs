@@ -425,20 +425,19 @@ main(int argc, char *args[]) {
 
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
 
-    //
-    // NOTE(gr3yknigh1): This is probably the most strage thing in this project. My driver essensialy ddos-ed
-    // because of speed we sended the geometry and the drawcalls we maked every frame so my screen might go
-    // dark and all processies which used GPU were killed. Moreover, game just stopped to update the screen, it
-    // still responded to input, but render just doesn't work. Later I just found Lenovo's app which updated all
-    // of the stuff, related to graphics, so I never had this problem again.
-    //
-    // TODO(gr3yknigh1): We should add back FPS limiter, but for now, let's leave it, cause I don't want to spend
-    // time on in now.
-    //
-    // [2024/10/25]
-    //
-
 #if 1
+        //
+        // NOTE(gr3yknigh1): This is probably the most strage thing in this project. My driver essensialy ddos-ed
+        // because of speed we sended the geometry and the drawcalls we maked every frame so my screen might go
+        // dark and all processies which used GPU were killed. Moreover, game just stopped to update the screen, it
+        // still responded to input, but render just doesn't work. Later I just found Lenovo's app which updated all
+        // of the stuff, related to graphics, so I never had this problem again.
+        //
+        // TODO(gr3yknigh1): We should add back FPS limiter, but for now, let's leave it, cause I don't want to spend
+        // time on in now.
+        //
+        // [2024/10/25]
+        //
         {
             // TODO(gr3yknigh1): This ugly code breaks FPS counter in UI. Shall fix it later, because ~I am lazy~
             // I need to work on more important stuff [2024/10/22]
