@@ -5,6 +5,13 @@
 I am making this project during me watching
 [Handmade Hero series](https://handmadehero.org/). Check this out.
 
+## Screenshots (badcraft Demo)
+
+![Screenshot_00](/.github/screenshot_00.png)
+![Screenshot_01](/.github/screenshot_01.png)
+![Screenshot_02](/.github/screenshot_02.png)
+![Screenshot_03](/.github/screenshot_03.png)
+
 ## How to build?
 
 ### Requirements
