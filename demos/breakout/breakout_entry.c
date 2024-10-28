@@ -6,6 +6,7 @@
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
 
+#include <stdlib.h> // malloc, free
 #include <stdio.h>
 #include <math.h> // sinf cosf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]
@@ -29,6 +30,13 @@
 
 #include "breakout_render.h"
 #include "breakout_sound.h"
+
+static void GenerateTileGrid(
+    Vector2F32 *tilePositions,
+    f32 gridXPosition, f32 gridYPosition,
+    u32 gridWidth, u32 gridHeight,
+    u32 tileWidth, u32 tileHeight,
+    f32 tileXPadding, f32 tileYPadding);
 
 void
 Entry(int argc, char *argv[])
@@ -65,14 +73,29 @@ Entry(int argc, char *argv[])
 
     Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
-    f32 dt = 0.0f;
+    f32 dt = 0.0f;  // XXX
     u64 lastCycleCount = __rdtsc();
 
-    bool isFirstMainloopIteration = true;
-    i32 lastMouseXPosition = 0;
-    i32 lastMouseYPosition = 0;
-
     DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
+
+    f32 ballWidth = 10;
+    f32 ballHeight = 10;
+    f32 ballXPosition = windowRect.width / 2 - ballWidth / 2;
+    f32 ballYPosition = windowRect.height / 3 - ballHeight / 3;
+
+    f32 tileWidth = 120;
+    f32 tileHeight = 30;
+    f32 gridXPadding = 5;
+    f32 gridYPadding = 5;
+    u32 gridXTileCount = 6, gridYTileCount = 3;
+    u32 gridTileCount = gridXTileCount * gridYTileCount;
+    f32 gridWidth = gridXTileCount * tileWidth + (gridXPadding * (gridXTileCount - 1));
+    f32 gridHeight = gridYTileCount * tileHeight + (gridYPadding * (gridYTileCount - 1));
+    f32 gridXPosition = windowRect.width / 2 - gridWidth / 2;
+    f32 gridYPosition = (f32)windowRect.height / 2;
+    Vector2F32 *tilePositions = malloc(sizeof(Vector2F32) * gridTileCount);
+
+    GenerateTileGrid(tilePositions, gridXPosition, gridYPosition, gridXTileCount, gridYTileCount, tileWidth, tileHeight, gridXPadding, gridYPadding);
 
     f32 playerWidth = 100;
     f32 playerHeight = 20;
@@ -80,16 +103,10 @@ Entry(int argc, char *argv[])
     f32 playerYPosition = 30;
     f32 playerSpeed = 3;
 
+    bool doRenderGridBackground = false;
+
     while (!GameStateShouldStop()) {
         PoolEvents(window);
-
-        windowRect = WindowGetRectangle(window);
-        Vector2I32 mousePosition = GetMousePosition(window);
-
-        if (isFirstMainloopIteration) {
-            lastMouseXPosition = mousePosition.x;
-            lastMouseYPosition = mousePosition.y;
-        }
 
         if (IsKeyDown(KEY_A)) {
             playerXPosition -= playerSpeed;
@@ -99,16 +116,23 @@ Entry(int argc, char *argv[])
             playerXPosition += playerSpeed;
         }
 
-        f32 mouseXOffset = (f32)mousePosition.x - lastMouseXPosition;
-        f32 mouseYOffset = (f32)lastMouseYPosition - mousePosition.y;
-
-        lastMouseXPosition = mousePosition.x;
-        lastMouseYPosition = mousePosition.y;
-
         DrawBegin(&drawContext);
         DrawClear(&drawContext, 0, 0, 0);
 
+        for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
+            for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
+                u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
+                Vector2F32 *tilePosition = tilePositions + tileIndex;
+
+                DrawRectangle(&drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
+            }
+        }
+
+        if (doRenderGridBackground) DrawRectangle(&drawContext, gridXPosition, gridYPosition, gridWidth, gridHeight, 1, 0, COLOR4RGBA_BLUE);
+
         DrawRectangle(&drawContext, playerXPosition, playerYPosition, playerWidth, playerHeight, 1, 0, COLOR4RGBA_RED);
+
+        DrawRectangle(&drawContext, ballXPosition, ballYPosition, ballWidth, ballHeight, 1, 0, COLOR4RGBA_WHITE);
 
         DrawEnd(&drawContext);
 
@@ -135,20 +159,36 @@ Entry(int argc, char *argv[])
             char8 printBuffer[KILOBYTES(1)];
             sprintf(
                 printBuffer,
-                "%llums/f | %lluf/s | %llumc/f || mouse x=%d y=%d || camera yaw=%.3f pitch=%.3f || mouseOffset=[%.3f "
-                "%.3f] || lastPos=[%d %d]\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, mousePosition.x, mousePosition.y, camera.yaw,
-                camera.pitch, mouseXOffset, mouseYOffset, lastMouseXPosition, lastMouseYPosition);
+                "%llums/f | %lluf/s | %llumc/f || camera yaw=%.3f pitch=%.3f\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, camera.yaw,
+                camera.pitch);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
-        }
-
-        if (isFirstMainloopIteration) {
-            isFirstMainloopIteration = false;
         }
     }
 
     WindowClose(window);
     ScratchDestroy(&runtimeScratch);
+
+    free(tilePositions);
+}
+
+static void
+GenerateTileGrid(
+    Vector2F32 *tilePositions,
+    f32 gridXPosition, f32 gridYPosition,
+    u32 xTileCount, u32 yTileCount,
+    u32 tileWidth, u32 tileHeight,
+    f32 tileXPadding, f32 tileYPadding)
+{
+    for (u32 xTileIndex = 0; xTileIndex < xTileCount; ++xTileIndex) {
+        for (u32 yTileIndex = 0; yTileIndex < yTileCount; ++yTileIndex) {
+            u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(xTileCount, xTileIndex, yTileIndex);
+            Vector2F32 *tilePosition = tilePositions + tileIndex;
+
+            tilePosition->x = gridXPosition + xTileIndex * (tileWidth + tileXPadding);
+            tilePosition->y = gridYPosition + yTileIndex * (tileHeight + tileYPadding);
+        }
+    }
 }
