@@ -542,15 +542,31 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
 
 #if !defined(GFS_NOENTRY)
 
+#if defined(WIN32)
+
 int WINAPI
-WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode) {
+WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode)
+{
     UNUSED(instance);
     UNUSED(commandLine);
     UNUSED(showMode);
     UNUSED(prevInstance);
-    Entry();
+    Entry(__argc, __argv);
+    //    ^^^^^^^^^^^^^^
+    // NOTE(gr3yknigh1): Reference - https://learn.microsoft.com/en-us/cpp/c-runtime-library/argc-argv-wargv?view=msvc-170&redirectedfrom=MSDN
+    // [2024/10/28]
     return 0;
 }
+
+#else
+
+int
+main(int argc, char *argv[])
+{
+    Entry(argc, argv);
+}
+
+#endif // defined(WIN32)
 
 #endif
 

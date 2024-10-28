@@ -47,6 +47,9 @@
     LITERAL(X) { 0 }
 #endif
 
+// @cleanup Replace `INIT_EMPTY_STRUCT` with `EMPTY_STRUCT`.
+#define EMPTY_STRUCT INIT_EMPTY_STRUCT
+
 #if defined(__cplusplus)
 #define GFS_NS(S) GFS::S
 #else
