@@ -16,12 +16,6 @@
 
 #include <glad/glad.h>
 
-#include <cglm/cglm.h>
-#include <cglm/vec3.h>
-#include <cglm/mat4.h>
-#include <cglm/affine.h>
-
-
 #include <gfs/entry.h>
 #include <gfs/game_state.h>
 #include <gfs/platform.h>
@@ -29,47 +23,12 @@
 #include <gfs/assert.h>
 #include <gfs/render.h>
 #include <gfs/types.h>
-#include <gfs/wave.h>
 #include <gfs/render_opengl.h>
 #include <gfs/bmp.h>
 #include <gfs/string.h>
 
-#define PI32 3.14159265358979323846f
-
-typedef enum {
-    CAMERA_VIEW_MODE_PERSPECTIVE,
-    CAMERA_VIEW_MODE_ORTHOGONAL,
-} CameraViewMode;
-
-typedef struct {
-    vec3 position;
-    vec3 front;
-    vec3 up;
-
-    f32 yaw;
-    f32 pitch;
-
-    f32 speed;
-    f32 sensitivity;
-    f32 fov;
-
-    f32 near;
-    f32 far;
-
-    CameraViewMode viewMode;
-
-    Window *window;
-} Camera;
-
-static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
-static void GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite);
-
-static Camera CameraMake(Window *window, f32 near, f32 far, CameraViewMode viewMode);
-static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
-static void CameraHandleInput(Camera *camera);
-static void CameraGetViewMatix(Camera *camera, mat4 *view);
-static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
+#include "render.h"
+#include "sound.h"
 
 void
 Entry(int argc, char *argv[])
@@ -141,7 +100,7 @@ Entry(int argc, char *argv[])
     GLUniformLocation uniformModelLocation = GLShaderFindUniformLocation(shader, "u_Model");
     GLUniformLocation uniformProjectionLocation = GLShaderFindUniformLocation(shader, "u_Projection");
 
-    Camera camera = CameraMake(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
+    Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
     f32 dt = 0.0f;
     u64 lastCycleCount = __rdtsc();
@@ -172,8 +131,8 @@ Entry(int argc, char *argv[])
         lastMouseXPosition = mousePosition.x;
         lastMouseYPosition = mousePosition.y;
 
-        // CameraRotate(&camera, mouseXOffset, mouseYOffset);
-        // CameraHandleInput(&camera);
+        // Camera_Rotate(&camera, mouseXOffset, mouseYOffset);
+        // Camera_HandleInput(&camera);
 
         GLClearEx(0, 0, 0, 1, GL_CLEAR); // TODO: Map from 0..255 to 0..1
 
@@ -190,7 +149,7 @@ Entry(int argc, char *argv[])
         glm_scale(model, spriteSize);
 
         mat4 projection = {0};
-        CameraGetProjectionMatix(&camera, &projection);
+        Camera_GetProjectionMatix(&camera, &projection);
 
         GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
         GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
@@ -258,196 +217,4 @@ Entry(int argc, char *argv[])
     WindowClose(window);
     SoundDeviceClose(soundDevice);
     ScratchDestroy(&runtimeScratch);
-}
-
-static void
-GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
-{
-    ASSERT_NONNULL(device);
-    ASSERT_NONNULL(output);
-
-    void *region0, *region1;
-    u32 region0Size, region1Size;
-
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
-
-    u32 region0SampleCount = region0Size / output->bytesPerSample;
-    i16 *sampleOut = (i16 *)region0;
-    for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * output->toneVolume);
-        *sampleOut++ = sampleValue;
-        *sampleOut++ = sampleValue;
-        ++output->runningSampleIndex;
-    }
-
-    u32 region2SampleCount = region1Size / output->bytesPerSample;
-    sampleOut = (i16 *)region1;
-    for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
-        i16 sampleValue = (i16)(sineValue * output->toneVolume);
-        *sampleOut++ = sampleValue;
-        *sampleOut++ = sampleValue;
-        ++output->runningSampleIndex;
-    }
-
-    SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
-}
-
-static void
-GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite)
-{
-    ASSERT_NONNULL(device);
-    ASSERT_NONNULL(output);
-    ASSERT_NONNULL(waveAsset);
-
-    void *region0, *region1;
-    u32 region0Size, region1Size;
-    byte *sampleOut;
-
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
-
-    u32 region0SampleCount = region0Size / output->bytesPerSample;
-    sampleOut = (byte *)region0;
-    for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
-            output->bytesPerSample);
-        sampleOut += output->bytesPerSample;
-        output->runningSampleIndex++;
-    }
-
-    u32 region1SampleCount = region1Size / output->bytesPerSample;
-    sampleOut = (byte *)region1;
-    for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
-        MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
-            output->bytesPerSample);
-        sampleOut += output->bytesPerSample;
-        output->runningSampleIndex++;
-    }
-
-    SoundDeviceUnlockBuffer(device, region0, region0Size, region1, region1Size);
-}
-
-static Camera
-CameraMake(Window *window, f32 near, f32 far, CameraViewMode viewMode)
-{
-    Camera camera = EMPTY_STRUCT(Camera);
-
-    camera.position[0] = 0;
-    camera.position[1] = 0;
-    camera.position[2] = 3.0f;
-
-    camera.front[0] = 0;
-    camera.front[1] = 0;
-    camera.front[2] = -1.0f;
-
-    camera.up[0] = 0;
-    camera.up[1] = 1.0f;
-    camera.up[2] = 0;
-
-    camera.yaw = -90.0f;
-
-    camera.pitch = 0.0f;
-    camera.speed = 0.05f;
-
-    camera.sensitivity = 0.1f;
-    camera.fov = 45.0f;
-
-    camera.near = near;
-    camera.far = far;
-
-    camera.viewMode = viewMode;
-    camera.window = window;
-    return camera;
-}
-
-static void
-CameraRotate(Camera *camera, f32 xOffset, f32 yOffset)
-{
-    xOffset *= camera->sensitivity;
-    yOffset *= camera->sensitivity;
-
-    camera->yaw += xOffset;
-    camera->pitch += yOffset;
-
-    camera->pitch = glm_clamp(camera->pitch, -89.0f, 89.0f);
-
-    vec3 direction = {0};
-
-    f32 yawRad = glm_rad(camera->yaw);
-    f32 pitchRad = glm_rad(camera->pitch);
-    direction[0] = cosf(yawRad) * cosf(pitchRad);
-    direction[1] = sinf(pitchRad);
-    direction[2] = sinf(yawRad) * cosf(pitchRad);
-
-    glm_normalize_to(direction, camera->front);
-}
-
-static void
-CameraHandleInput(Camera *camera)
-{
-    if (IsKeyDown(KEY_W)) {
-        vec3 v = {0};
-        glm_vec3_fill(v, camera->speed);
-
-        glm_vec3_mul(v, camera->front, v);
-        glm_vec3_add(camera->position, v, camera->position);
-    }
-
-    if (IsKeyDown(KEY_S)) {
-        vec3 v = {0};
-        glm_vec3_fill(v, camera->speed);
-
-        glm_vec3_mul(v, camera->front, v);
-        glm_vec3_sub(camera->position, v, camera->position);
-    }
-
-    if (IsKeyDown(KEY_A)) {
-        vec3 v = {0};
-        glm_vec3_fill(v, camera->speed);
-
-        vec3 cameraDirection = {0};
-        glm_vec3_cross(camera->front, camera->up, cameraDirection);
-        glm_vec3_normalize(cameraDirection);
-        glm_vec3_mul(cameraDirection, v, cameraDirection);
-
-        glm_vec3_sub(camera->position, cameraDirection, camera->position);
-    }
-
-    if (IsKeyDown(KEY_D)) {
-        vec3 v = {0};
-        glm_vec3_fill(v, camera->speed);
-
-        vec3 cameraDirection = {0};
-        glm_vec3_cross(camera->front, camera->up, cameraDirection);
-        glm_vec3_normalize(cameraDirection);
-        glm_vec3_mul(cameraDirection, v, cameraDirection);
-
-        glm_vec3_add(camera->position, cameraDirection, camera->position);
-    }
-}
-
-static void
-CameraGetProjectionMatix(Camera *camera, mat4 *projection)
-{
-    RectangleI32 windowRect = WindowGetRectangle(camera->window);
-
-    if (camera->viewMode == CAMERA_VIEW_MODE_PERSPECTIVE) {
-        glm_perspective(
-            glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height,
-            //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-            // NOTE(gr3yknigh1): Viewport width and height (not the window).
-            // [2024/09/22]
-            camera->near, camera->far, *projection);
-    } else if (camera->viewMode == CAMERA_VIEW_MODE_ORTHOGONAL) {
-        glm_ortho(
-            0, (f32)windowRect.width, 0, (f32)windowRect.height, camera->near, camera->far, *projection);
-    } else {
-        ASSERT_ISTRUE(false);
-    }
 }
