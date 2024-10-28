@@ -623,7 +623,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
     window->windowHandle = CreateWindowExA(
-        0, window->windowClass.lpszClassName, copiedTitle, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        0, window->windowClass.lpszClassName, copiedTitle,
+        WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
         CW_USEDEFAULT, // int x
         CW_USEDEFAULT, // int y
         width,         // int width

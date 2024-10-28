@@ -26,6 +26,18 @@ typedef struct {
     u8 a;
 } Color4RGBA;
 
+typedef struct {
+    u8 r;
+    u8 g;
+    u8 b;
+} Color3RGB;
+
+const extern Color4RGBA COLOR4RGBA_WHITE;
+const extern Color4RGBA COLOR4RGBA_BLACK;
+const extern Color4RGBA COLOR4RGBA_RED;
+const extern Color4RGBA COLOR4RGBA_GREEN;
+const extern Color4RGBA COLOR4RGBA_BLUE;
+
 #if 0
 
 /*

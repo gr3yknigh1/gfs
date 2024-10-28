@@ -74,6 +74,12 @@ Entry(int argc, char *argv[])
 
     DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
+    f32 playerWidth = 100;
+    f32 playerHeight = 20;
+    f32 playerXPosition = windowRect.width / 2 - playerWidth / 2;
+    f32 playerYPosition = 30;
+    f32 playerSpeed = 3;
+
     while (!GameStateShouldStop()) {
         PoolEvents(window);
 
@@ -85,23 +91,24 @@ Entry(int argc, char *argv[])
             lastMouseYPosition = mousePosition.y;
         }
 
+        if (IsKeyDown(KEY_A)) {
+            playerXPosition -= playerSpeed;
+        }
+
+        if (IsKeyDown(KEY_D)) {
+            playerXPosition += playerSpeed;
+        }
+
         f32 mouseXOffset = (f32)mousePosition.x - lastMouseXPosition;
         f32 mouseYOffset = (f32)lastMouseYPosition - mousePosition.y;
 
         lastMouseXPosition = mousePosition.x;
         lastMouseYPosition = mousePosition.y;
 
-        // Camera_Rotate(&camera, mouseXOffset, mouseYOffset);
-        // Camera_HandleInput(&camera);
-
         DrawBegin(&drawContext);
         DrawClear(&drawContext, 0, 0, 0);
 
-        Color4RGBA whiteColor = EMPTY_STRUCT(Color4RGBA);
-        whiteColor.r = 1;
-        whiteColor.g = 1;
-        whiteColor.b = 1;
-        DrawRectangle(&drawContext, 0, 0, 500, 500, 1, 0, whiteColor);
+        DrawRectangle(&drawContext, playerXPosition, playerYPosition, playerWidth, playerHeight, 1, 0, COLOR4RGBA_RED);
 
         DrawEnd(&drawContext);
 

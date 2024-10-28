@@ -139,6 +139,55 @@ Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
     }
 }
 
+typedef struct {
+    f32 position[2];
+    f32 color[3];
+} Vertex;
+
+// static const Vertex RECTANGLE_VERTEXES[] = {
+//     { { 1, 1 }, { 1, 1, 1 } }, // top-right
+//     { { 1, 0 }, { 1, 1, 1 } }, // bottom-right
+//     { { 0, 0 }, { 1, 1, 1 } }, // bottom-left
+//     { { 0, 1 }, { 1, 1, 1 } }, // top-left
+// };
+
+static void
+GenerateRectangleVertexes(Vertex *vertexes, f32 x, f32 y, f32 width, f32 height, Color3RGB color)
+{
+    // top-right
+    vertexes[0].position[0] = x + width;
+    vertexes[0].position[1] = y + height;
+
+    vertexes[0].color[0] = color.r;
+    vertexes[0].color[1] = color.g;
+    vertexes[0].color[2] = color.b;
+
+    // bottom-right
+    vertexes[1].position[0] = x + width;
+    vertexes[1].position[1] = y;
+
+    vertexes[1].color[0] = color.r;
+    vertexes[1].color[1] = color.g;
+    vertexes[1].color[2] = color.b;
+
+    // bottom-left
+    vertexes[2].position[0] = x;
+    vertexes[2].position[1] = y;
+
+    vertexes[2].color[0] = color.r;
+    vertexes[2].color[1] = color.g;
+    vertexes[2].color[2] = color.b;
+
+    // top-left
+    vertexes[3].position[0] = x;
+    vertexes[3].position[1] = y + height;
+
+    vertexes[3].color[0] = color.r;
+    vertexes[3].color[1] = color.g;
+    vertexes[3].color[2] = color.b;
+}
+
+static const u32 RECTANGLE_INDICIES[] = {0, 1, 2, 0, 2, 3};
 
 DrawContext
 DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
@@ -151,24 +200,22 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     context.glInfo.uniformLocationModel = GLShaderFindUniformLocation(shader, "u_Model");
     context.glInfo.uniformLocationProjection = GLShaderFindUniformLocation(shader, "u_Projection");
 
-    static const f32 vertices[] = {
-        // positions   // colors           // texture coords
-        1,  1,  0,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-        1,  0,  0,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        0,  0,  0,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        0,  1,  0,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-    };
-
-    static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
+    // static const f32 vertices[] = {
+    //     // positions   // colors
+    //     1,  1,         1.0f, 0.0f, 0.0f, // top right
+    //     1,  0,         0.0f, 1.0f, 0.0f, // bottom right
+    //     0,  0,         0.0f, 0.0f, 1.0f, // bottom left
+    //     0,  1,         1.0f, 1.0f, 0.0f  // top left
+    // };
+    // static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
 
     context.glInfo.va = GLVertexArrayMake();
-    context.glInfo.vb = GLVertexBufferMake(vertices, sizeof(vertices));
-    context.glInfo.eb = GLElementBufferMake(indicies, STATIC_ARRAY_LENGTH(indicies));
+    context.glInfo.vb = GLVertexBufferMake(NULL /* RECTANGLE_VERTEXES */, 0 /* sizeof(vertices) */);
+    context.glInfo.eb = GLElementBufferMake(NULL /* indicies */, 0 /* STATIC_ARRAY_LENGTH(indicies) */);
 
     context.glInfo.vbLayout = GLVertexBufferLayoutMake(scratch);
-    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 2);
+    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
     GLVertexArrayAddBuffer(
         context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
 
@@ -206,14 +253,22 @@ DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 sca
     UNUSED(rotate);
     UNUSED(scale);
 
+    Vertex vertexes[4] = {};
+    Color3RGB rectangleColor = { color.r, color.g, color.b };
+    GenerateRectangleVertexes(vertexes, x, y, width, height, rectangleColor);
+    static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
+
+    GLVertexBufferSendData(&context->glInfo.vb, vertexes, sizeof(Vertex) * 4);
+    GLElementBufferSendData(&context->glInfo.eb, indicies, STATIC_ARRAY_LENGTH(indicies));
+
     mat4 model = {0};
     glm_mat4_copy(GLM_MAT4_IDENTITY, model);
 
-    vec3 position = { x, y, 0 };
-    glm_translate(model, position);
+    // vec3 position = { x, y, 0 };
+    // glm_translate(model, position);
 
-    vec3 size = { width, height, 0 };
-    glm_scale(model, size);
+    // vec3 size = { width, height, 0 };
+    // glm_scale(model, size);
 
     mat4 projection = {0};
     Camera_GetProjectionMatix(context->camera, &projection);
