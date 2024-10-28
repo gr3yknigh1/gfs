@@ -45,19 +45,6 @@ Entry(int argc, char *argv[])
     // SetMouseVisibility(MOUSEVISIBILITYSTATE_HIDDEN);
     SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
 
-    GL_CALL(glEnable(GL_BLEND));
-    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    // GL_CALL(glEnable(GL_DEPTH_TEST));
-    // GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-
-    SoundOutput soundOutput = SoundOutputMake(48000);
-    SoundDevice *soundDevice =
-        SoundDeviceOpen(&runtimeScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
-
-    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample);
-
-    SoundDevicePlay(soundDevice);
-
     LARGE_INTEGER performanceCounterFrequency = {0};
     ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
 
@@ -65,18 +52,16 @@ Entry(int argc, char *argv[])
     ASSERT_NONZERO(QueryPerformanceCounter(&lastCounter));
 
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
-    GLShaderProgramLinkData shaderLinkData = {0};
-    shaderLinkData.vertexShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\sprite.frag.glsl", GL_SHADER_TYPE_FRAG);
-    shaderLinkData.fragmentShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\sprite.vert.glsl", GL_SHADER_TYPE_VERT);
-    GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
-    ASSERT_NONZERO(shader);
-
-    BMPicture picture = {0};
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
-
-    GLTexture texture = GLTextureMakeFromBMPicture(&picture, COLOR_LAYOUT_BGR);
+    GLShaderProgramID shader = 0;
+    {
+        GLShaderProgramLinkData shaderLinkData = {0};
+        shaderLinkData.vertexShader =
+            GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
+        shaderLinkData.fragmentShader =
+            GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+        shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
+        ASSERT_NONZERO(shader);
+    }
 
     Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
@@ -86,12 +71,6 @@ Entry(int argc, char *argv[])
     bool isFirstMainloopIteration = true;
     i32 lastMouseXPosition = 0;
     i32 lastMouseYPosition = 0;
-
-    GL_CALL(glUseProgram(shader));
-    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
-                                           // texture support. [2024/09/22]
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
-
 
     DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
@@ -124,50 +103,9 @@ Entry(int argc, char *argv[])
         whiteColor.b = 1;
         DrawRectangle(&drawContext, 0, 0, 500, 500, 1, 0, whiteColor);
 
-        //static f32 spriteXPosition = 0, spriteYPosition = 0;
-        //f32 spriteWidth = picture.dibHeader.width, spriteHeight = picture.dibHeader.height;
-
-        //mat4 model = {0};
-        //glm_mat4_copy(GLM_MAT4_IDENTITY, model);
-
-        //vec3 spritePosition = { spriteXPosition, spriteYPosition, 0 };
-        //glm_translate(model, spritePosition);
-
-        //vec3 spriteSize = { spriteWidth, spriteHeight, 0 };
-        //glm_scale(model, spriteSize);
-
-        //mat4 projection = {0};
-        //Camera_GetProjectionMatix(&camera, &projection);
-
-        //GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
-        //GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
-
-        //GLDrawElements(&eb, &vb, va);
-
         DrawEnd(&drawContext);
 
         WindowUpdate(window);
-
-        ///< Playing sound
-        u32 playCursor = 0;
-        u32 writeCursor = 0;
-
-        ASSERT_ISOK(SoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
-        u32 targetCursor =
-            (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) % soundOutput.audioBufferSize;
-        u32 bytesToWrite = 0;
-
-        if (byteToLock > targetCursor) {
-            bytesToWrite = soundOutput.audioBufferSize - byteToLock;
-            bytesToWrite += targetCursor;
-        } else {
-            bytesToWrite = targetCursor - byteToLock;
-        }
-
-        if (bytesToWrite > 0) {
-            GameFillSoundBuffer(soundDevice, &soundOutput, byteToLock, bytesToWrite);
-        }
 
         ///< Perfomance
         {
@@ -205,6 +143,5 @@ Entry(int argc, char *argv[])
     }
 
     WindowClose(window);
-    SoundDeviceClose(soundDevice);
     ScratchDestroy(&runtimeScratch);
 }

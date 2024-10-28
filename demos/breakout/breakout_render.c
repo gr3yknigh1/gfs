@@ -172,6 +172,14 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     GLVertexArrayAddBuffer(
         context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
 
+    GL_CALL(glUseProgram(shader));
+
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
+
     return context;
 }
 
@@ -187,7 +195,7 @@ void
 DrawClear(DrawContext *context, f32 r, f32 g, f32 b)
 {
     UNUSED(context);
-    GLClearEx(r, g, b, 1, GL_CLEAR);
+    GLClearEx(r, g, b, 1, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
