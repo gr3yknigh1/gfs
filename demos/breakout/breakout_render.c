@@ -1,10 +1,11 @@
 /*
- * FILE      demos\breakout\render.c
+ * FILE      demos\breakout\breakout_render.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
+#include "breakout_render.h"
 
-#include "render.h"
+#include <glad/glad.h>
 
 #include <cglm/cglm.h>
 #include <cglm/vec3.h>
@@ -14,6 +15,7 @@
 #include <gfs/macros.h>
 #include <gfs/types.h>
 #include <gfs/assert.h>
+
 
 Camera
 Camera_Make(Window *window, f32 near, f32 far, CameraViewMode viewMode)
@@ -48,6 +50,7 @@ Camera_Make(Window *window, f32 near, f32 far, CameraViewMode viewMode)
     return camera;
 }
 
+
 void
 Camera_Rotate(Camera *camera, f32 xOffset, f32 yOffset)
 {
@@ -69,6 +72,7 @@ Camera_Rotate(Camera *camera, f32 xOffset, f32 yOffset)
 
     glm_normalize_to(direction, camera->front);
 }
+
 
 void
 Camera_HandleInput(Camera *camera)
@@ -114,6 +118,7 @@ Camera_HandleInput(Camera *camera)
     }
 }
 
+
 void
 Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
 {
@@ -132,4 +137,88 @@ Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
     } else {
         ASSERT_ISTRUE(false);
     }
+}
+
+
+DrawContext
+DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
+{
+    DrawContext context = EMPTY_STRUCT(DrawContext);
+
+    context.camera = camera;
+    context.shader = shader;
+
+    context.glInfo.uniformLocationModel = GLShaderFindUniformLocation(shader, "u_Model");
+    context.glInfo.uniformLocationProjection = GLShaderFindUniformLocation(shader, "u_Projection");
+
+    static const f32 vertices[] = {
+        // positions   // colors           // texture coords
+        1,  1,  0,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+        1,  0,  0,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        0,  0,  0,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        0,  1,  0,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+    };
+
+    static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
+
+    context.glInfo.va = GLVertexArrayMake();
+    context.glInfo.vb = GLVertexBufferMake(vertices, sizeof(vertices));
+    context.glInfo.eb = GLElementBufferMake(indicies, STATIC_ARRAY_LENGTH(indicies));
+
+    context.glInfo.vbLayout = GLVertexBufferLayoutMake(scratch);
+    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
+    GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 2);
+    GLVertexArrayAddBuffer(
+        context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
+
+    return context;
+}
+
+
+void
+DrawBegin(DrawContext *context)
+{
+    UNUSED(context);
+}
+
+
+void
+DrawClear(DrawContext *context, f32 r, f32 g, f32 b)
+{
+    UNUSED(context);
+    GLClearEx(r, g, b, 1, GL_CLEAR);
+}
+
+
+void
+DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale, f32 rotate, Color4RGBA color)
+{
+    UNUSED(color);
+    UNUSED(rotate);
+    UNUSED(scale);
+
+    mat4 model = {0};
+    glm_mat4_copy(GLM_MAT4_IDENTITY, model);
+
+    vec3 position = { x, y, 0 };
+    glm_translate(model, position);
+
+    vec3 size = { width, height, 0 };
+    glm_scale(model, size);
+
+    mat4 projection = {0};
+    Camera_GetProjectionMatix(context->camera, &projection);
+
+    GLShaderSetUniformM4F32(context->shader, context->glInfo.uniformLocationModel, (f32 *)model);
+    GLShaderSetUniformM4F32(context->shader, context->glInfo.uniformLocationProjection, (f32 *)projection);
+
+    GLDrawElements(&context->glInfo.eb, &context->glInfo.vb, context->glInfo.va);
+}
+
+
+void
+DrawEnd(DrawContext *context)
+{
+    UNUSED(context);
 }

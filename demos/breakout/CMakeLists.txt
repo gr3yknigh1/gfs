@@ -3,9 +3,9 @@ find_package(cglm REQUIRED)
 
 add_executable(breakout
   WIN32   # XXX
-  ${CMAKE_CURRENT_SOURCE_DIR}/mainloop.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/render.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/sound.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/breakout_entry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/breakout_render.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/breakout_sound.c
 )
 
 target_link_libraries(breakout

@@ -12,8 +12,6 @@
 #include <glad/glad.h>
 
 #include <stdio.h>
-#include <math.h> // sinf cosf
-                  // TODO(ilya.a): Replace with custom code [2024/06/08]
 
 #include <cglm/cglm.h>
 #include <cglm/vec3.h>
@@ -61,7 +59,10 @@ static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
 static f32 ClampF32(f32 value, f32 min, f32 max);
 
 void
-Entry(void) {
+Entry(int argc, char *argv[]) {
+    UNUSED(argc);
+    UNUSED(argv);
+
     Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "GameFromScratch");

@@ -1,7 +1,7 @@
 /*
  * Breakout Game.
  *
- * FILE      demos\breakout\mainloop.c
+ * FILE      demos\breakout\breakout_entry.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
@@ -27,12 +27,15 @@
 #include <gfs/bmp.h>
 #include <gfs/string.h>
 
-#include "render.h"
-#include "sound.h"
+#include "breakout_render.h"
+#include "breakout_sound.h"
 
 void
 Entry(int argc, char *argv[])
 {
+    UNUSED(argc);
+    UNUSED(argv);
+
     Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "Breakout");
@@ -70,35 +73,10 @@ Entry(int argc, char *argv[])
     GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
-    static const f32 vertices[] = {
-        // positions   // colors           // texture coords
-        1,  1,  0,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-        1,  0,  0,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        0,  0,  0,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        0,  1,  0,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-    };
-
-    static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
-
-
     BMPicture picture = {0};
     ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture, COLOR_LAYOUT_BGR);
-
-    GLVertexArray va = GLVertexArrayMake();
-    GLVertexBuffer vb = GLVertexBufferMake(vertices, sizeof(vertices));
-    GLElementBuffer eb = GLElementBufferMake(indicies, STATIC_ARRAY_LENGTH(indicies));
-
-    GLVertexBufferLayout vbLayout = GLVertexBufferLayoutMake(&runtimeScratch);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 3);
-    GLVertexBufferLayoutPushAttributeF32(&vbLayout, 2);
-
-    GLVertexArrayAddBuffer(va, &vb, &vbLayout);
-
-    GLUniformLocation uniformModelLocation = GLShaderFindUniformLocation(shader, "u_Model");
-    GLUniformLocation uniformProjectionLocation = GLShaderFindUniformLocation(shader, "u_Projection");
 
     Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
@@ -113,6 +91,9 @@ Entry(int argc, char *argv[])
     GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
                                            // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
+
+
+    DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
     while (!GameStateShouldStop()) {
         PoolEvents(window);
@@ -134,27 +115,36 @@ Entry(int argc, char *argv[])
         // Camera_Rotate(&camera, mouseXOffset, mouseYOffset);
         // Camera_HandleInput(&camera);
 
-        GLClearEx(0, 0, 0, 1, GL_CLEAR); // TODO: Map from 0..255 to 0..1
+        DrawBegin(&drawContext);
+        DrawClear(&drawContext, 0, 0, 0);
 
-        static f32 spriteXPosition = 0, spriteYPosition = 0;
-        f32 spriteWidth = picture.dibHeader.width, spriteHeight = picture.dibHeader.height;
+        Color4RGBA whiteColor = EMPTY_STRUCT(Color4RGBA);
+        whiteColor.r = 1;
+        whiteColor.g = 1;
+        whiteColor.b = 1;
+        DrawRectangle(&drawContext, 0, 0, 500, 500, 1, 0, whiteColor);
 
-        mat4 model = {0};
-        glm_mat4_copy(GLM_MAT4_IDENTITY, model);
+        //static f32 spriteXPosition = 0, spriteYPosition = 0;
+        //f32 spriteWidth = picture.dibHeader.width, spriteHeight = picture.dibHeader.height;
 
-        vec3 spritePosition = { spriteXPosition, spriteYPosition, 0 };
-        glm_translate(model, spritePosition);
+        //mat4 model = {0};
+        //glm_mat4_copy(GLM_MAT4_IDENTITY, model);
 
-        vec3 spriteSize = { spriteWidth, spriteHeight, 0 };
-        glm_scale(model, spriteSize);
+        //vec3 spritePosition = { spriteXPosition, spriteYPosition, 0 };
+        //glm_translate(model, spritePosition);
 
-        mat4 projection = {0};
-        Camera_GetProjectionMatix(&camera, &projection);
+        //vec3 spriteSize = { spriteWidth, spriteHeight, 0 };
+        //glm_scale(model, spriteSize);
 
-        GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
-        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
+        //mat4 projection = {0};
+        //Camera_GetProjectionMatix(&camera, &projection);
 
-        GLDrawElements(&eb, &vb, va);
+        //GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
+        //GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
+
+        //GLDrawElements(&eb, &vb, va);
+
+        DrawEnd(&drawContext);
 
         WindowUpdate(window);
 

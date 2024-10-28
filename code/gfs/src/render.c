@@ -17,6 +17,8 @@
 
 #define RENDER_COMMAND_CAPACITY 1024
 
+#if 0
+
 Renderer
 RendererMake(Window *window, Color4BGRA clearColor) {
     Renderer r;
@@ -121,3 +123,5 @@ DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset) {
 
     // PUSH_RENDER_COMMAND(renderer, payload);
 }
+
+#endif // 0

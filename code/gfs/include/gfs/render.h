@@ -26,6 +26,8 @@ typedef struct {
     u8 a;
 } Color4RGBA;
 
+#if 0
+
 /*
  * @breaf Actual BitMap Renderer Renderer.
  */
@@ -60,5 +62,7 @@ void DrawRectangle(Renderer *renderer, u32 x, u32 y, u32 w, u32 h, Color4BGRA c)
 void DrawRectangleRec(Renderer *renderer, RectangleU16 r, Color4BGRA c);
 
 void DrawGradient(Renderer *renderer, u32 xOffset, u32 yOffset);
+
+#endif // 0
 
 #endif // GFS_RENDER_H_INCLUDED
