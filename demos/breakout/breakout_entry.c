@@ -38,6 +38,39 @@ static void GenerateTileGrid(
     u32 tileWidth, u32 tileHeight,
     f32 tileXPadding, f32 tileYPadding);
 
+
+typedef struct {
+    LARGE_INTEGER performanceCounterFrequency;
+} Clock;
+
+void
+Clock_Initialize(Clock *clock)
+{
+    ASSERT_NONZERO(QueryPerformanceFrequency(&clock->performanceCounterFrequency));
+}
+
+//
+// Reference: https://gamedev.net/forums/topic/687578-how-to-properly-get-delta-time-on-modern-hardware/5337741/
+//
+u64
+Clock_GetMilliseconds(Clock *clock)
+{
+    LARGE_INTEGER currentCounter;
+    ASSERT_NONZERO(QueryPerformanceCounter(&currentCounter));
+    u64 result = (1000LL * currentCounter.QuadPart) / clock->performanceCounterFrequency.QuadPart;
+    return result;
+}
+
+f32
+Clock_GetSeconds(Clock *clock)
+{
+    LARGE_INTEGER currentCounter;
+    ASSERT_NONZERO(QueryPerformanceCounter(&currentCounter));
+    f32 result = ((f32)currentCounter.QuadPart) / (f32)clock->performanceCounterFrequency.QuadPart;
+    return result;
+}
+
+
 void
 Entry(int argc, char *argv[])
 {
@@ -52,6 +85,9 @@ Entry(int argc, char *argv[])
     RectangleI32 windowRect = WindowGetRectangle(window);
     // SetMouseVisibility(MOUSEVISIBILITYSTATE_HIDDEN);
     SetMousePosition(window, windowRect.width / 2, windowRect.height / 2);
+
+    Clock runtimeClock = EMPTY_STRUCT(Clock);
+    Clock_Initialize(&runtimeClock);
 
     LARGE_INTEGER performanceCounterFrequency = {0};
     ASSERT_NONZERO(QueryPerformanceFrequency(&performanceCounterFrequency));
@@ -101,19 +137,26 @@ Entry(int argc, char *argv[])
     f32 playerHeight = 20;
     f32 playerXPosition = windowRect.width / 2 - playerWidth / 2;
     f32 playerYPosition = 30;
-    f32 playerSpeed = 3;
+    f32 playerSpeed = 300;
 
     bool doRenderGridBackground = false;
 
+    f32 startClockTime = Clock_GetSeconds(&runtimeClock);
+    f32 deltaTime = 0;
+
     while (!GameStateShouldStop()) {
+
+        deltaTime = Clock_GetSeconds(&runtimeClock) - startClockTime;
+        startClockTime = Clock_GetSeconds(&runtimeClock);
+
         PoolEvents(window);
 
         if (IsKeyDown(KEY_A)) {
-            playerXPosition -= playerSpeed;
+            playerXPosition -= playerSpeed * deltaTime;
         }
 
         if (IsKeyDown(KEY_D)) {
-            playerXPosition += playerSpeed;
+            playerXPosition += playerSpeed * deltaTime;
         }
 
         DrawBegin(&drawContext);
@@ -123,7 +166,6 @@ Entry(int argc, char *argv[])
             for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
                 u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
                 Vector2F32 *tilePosition = tilePositions + tileIndex;
-
                 DrawRectangle(&drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
             }
         }
@@ -150,8 +192,6 @@ Entry(int argc, char *argv[])
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
             LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
 
-            dt = (f32)(1000LL * endCounter.QuadPart) / performanceCounterFrequency.QuadPart;
-
             u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
             u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
@@ -159,9 +199,8 @@ Entry(int argc, char *argv[])
             char8 printBuffer[KILOBYTES(1)];
             sprintf(
                 printBuffer,
-                "%llums/f | %lluf/s | %llumc/f || camera yaw=%.3f pitch=%.3f\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, camera.yaw,
-                camera.pitch);
+                "%llums/f | %lluf/s | %llumc/f | dt: %f\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, deltaTime);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
