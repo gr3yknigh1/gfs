@@ -70,6 +70,8 @@ Clock_GetSeconds(Clock *clock)
     return result;
 }
 
+static bool IsOverlapped(f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight);
+
 
 void
 Entry(int argc, char *argv[])
@@ -118,6 +120,8 @@ Entry(int argc, char *argv[])
     f32 ballHeight = 10;
     f32 ballXPosition = windowRect.width / 2 - ballWidth / 2;
     f32 ballYPosition = windowRect.height / 3 - ballHeight / 3;
+    f32 ballXVelocity = 0;
+    f32 ballYVelocity = -100;
 
     f32 tileWidth = 120;
     f32 tileHeight = 30;
@@ -157,6 +161,14 @@ Entry(int argc, char *argv[])
 
         if (IsKeyDown(KEY_D)) {
             playerXPosition += playerSpeed * deltaTime;
+        }
+
+        ballXPosition += ballXVelocity * deltaTime;
+        ballYPosition += ballYVelocity * deltaTime;
+
+        if (IsOverlapped(playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+            ballXVelocity = 0;
+            ballYVelocity = 0;
         }
 
         DrawBegin(&drawContext);
@@ -211,6 +223,15 @@ Entry(int argc, char *argv[])
     ScratchDestroy(&runtimeScratch);
 
     free(tilePositions);
+}
+
+static bool
+IsOverlapped(f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight)
+{
+    return (aXPosition + aWidth) >= bXPosition
+        && (bXPosition + bWidth) >= aXPosition
+        && (aYPosition + aHeight) >= bYPosition
+        && (bYPosition + bHeight) >= aYPosition;
 }
 
 static void
