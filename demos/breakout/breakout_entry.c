@@ -27,6 +27,7 @@
 #include <gfs/render_opengl.h>
 #include <gfs/bmp.h>
 #include <gfs/string.h>
+#include <gfs/random.h>
 
 #include "breakout_render.h"
 #include "breakout_sound.h"
@@ -37,7 +38,6 @@ static void GenerateTileGrid(
     u32 gridWidth, u32 gridHeight,
     u32 tileWidth, u32 tileHeight,
     f32 tileXPadding, f32 tileYPadding);
-
 
 typedef struct {
     LARGE_INTEGER performanceCounterFrequency;
@@ -72,6 +72,12 @@ Clock_GetSeconds(Clock *clock)
 
 static bool IsOverlapped(f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight);
 
+static f32
+GetSign(f32 x)
+{
+    f32 ret = (x >= 0 ? 1 : -1);
+    return ret;
+}
 
 void
 Entry(int argc, char *argv[])
@@ -111,17 +117,17 @@ Entry(int argc, char *argv[])
 
     Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
-    f32 dt = 0.0f;  // XXX
     u64 lastCycleCount = __rdtsc();
 
     DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
     f32 ballWidth = 10;
     f32 ballHeight = 10;
+    f32 ballBaseSpeed = 350;
     f32 ballXPosition = windowRect.width / 2 - ballWidth / 2;
     f32 ballYPosition = windowRect.height / 3 - ballHeight / 3;
     f32 ballXVelocity = 0;
-    f32 ballYVelocity = -100;
+    f32 ballYVelocity = (-1) * ballBaseSpeed;
 
     f32 tileWidth = 120;
     f32 tileHeight = 30;
@@ -134,14 +140,21 @@ Entry(int argc, char *argv[])
     f32 gridXPosition = windowRect.width / 2 - gridWidth / 2;
     f32 gridYPosition = (f32)windowRect.height / 2;
     Vector2F32 *tilePositions = malloc(sizeof(Vector2F32) * gridTileCount);
+    bool *tileIsDisabled = malloc(sizeof(bool) * gridTileCount);
+    MemoryZero(tileIsDisabled, sizeof(bool) * gridTileCount);
 
     GenerateTileGrid(tilePositions, gridXPosition, gridYPosition, gridXTileCount, gridYTileCount, tileWidth, tileHeight, gridXPadding, gridYPadding);
 
+    f32 playerXVelocity = 0;
+    f32 playerYVelocity = 0;
     f32 playerWidth = 100;
     f32 playerHeight = 20;
     f32 playerXPosition = windowRect.width / 2 - playerWidth / 2;
     f32 playerYPosition = 30;
-    f32 playerSpeed = 300;
+    f32 playerSpeed = 700;
+
+    f32 playerPreviousXVelocity = 0; // NOTE: better name `direction`
+    f32 playerPreviousYVelocity = 0;
 
     bool doRenderGridBackground = false;
 
@@ -155,20 +168,85 @@ Entry(int argc, char *argv[])
 
         PoolEvents(window);
 
+        playerXVelocity = 0;
+        playerYVelocity = 0;
+
         if (IsKeyDown(KEY_A)) {
-            playerXPosition -= playerSpeed * deltaTime;
+            if (playerXVelocity != 0) {
+                playerPreviousXVelocity = playerXVelocity;
+            }
+            playerXVelocity = (-1) * playerSpeed;
         }
 
         if (IsKeyDown(KEY_D)) {
-            playerXPosition += playerSpeed * deltaTime;
+            if (playerXVelocity != 0) {
+                playerPreviousXVelocity = playerXVelocity;
+            }
+            playerXVelocity = (+1) * playerSpeed;
         }
 
-        ballXPosition += ballXVelocity * deltaTime;
-        ballYPosition += ballYVelocity * deltaTime;
 
-        if (IsOverlapped(playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
-            ballXVelocity = 0;
-            ballYVelocity = 0;
+        playerXPosition += playerXVelocity * deltaTime;
+        playerYPosition += playerYVelocity * deltaTime;
+
+        {
+            //
+            // Balls
+            //
+            ballXPosition += ballXVelocity * deltaTime;
+            ballYPosition += ballYVelocity * deltaTime;
+
+            if (!IsOverlapped(0, 0, windowRect.width, windowRect.height, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                f32 xVelocityMod = 1;
+                f32 yVelocityMod = 1;
+
+                if (ballXPosition + ballWidth >= windowRect.width || ballXPosition <= 0) {
+                    xVelocityMod = -xVelocityMod;
+                }
+
+                if (ballYPosition + ballHeight >= windowRect.height || ballYPosition <= 0) {
+                    yVelocityMod = -yVelocityMod;
+                }
+
+                ballXVelocity = ballBaseSpeed * xVelocityMod * GetSign(ballXVelocity);
+                ballYVelocity = ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
+            }
+
+
+            for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
+                for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
+                    u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
+
+                    if (tileIsDisabled[tileIndex]) {
+                        continue;
+                    }
+
+                    Vector2F32 *tilePosition = tilePositions + tileIndex;
+
+                    if (IsOverlapped(tilePosition->x, tilePosition->y, tileWidth, tileHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                        f32 xVelocityMod = 1;
+                        f32 yVelocityMod = 1;
+
+                        if (ballXPosition + ballWidth >= tilePosition->x + tileWidth || ballXPosition <= tilePosition->x) {
+                            xVelocityMod = -xVelocityMod;
+                        }
+
+                        if (ballYPosition + ballHeight >= tilePosition->y + tileHeight || ballYPosition <= tilePosition->y) {
+                            yVelocityMod = -yVelocityMod;
+                        }
+
+                        ballXVelocity = ballBaseSpeed * xVelocityMod * GetSign(ballXVelocity);
+                        ballYVelocity = ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
+
+                        tileIsDisabled[tileIndex] = true;
+                    }
+                }
+            }
+
+            if (IsOverlapped(playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                ballXVelocity = ballBaseSpeed * GetSign(playerXVelocity == 0 ? playerPreviousXVelocity : playerXVelocity);
+                ballYVelocity = ballBaseSpeed;
+            }
         }
 
         DrawBegin(&drawContext);
@@ -177,6 +255,11 @@ Entry(int argc, char *argv[])
         for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
             for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
                 u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
+
+                if (tileIsDisabled[tileIndex]) {
+                    continue;
+                }
+
                 Vector2F32 *tilePosition = tilePositions + tileIndex;
                 DrawRectangle(&drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
             }
@@ -223,6 +306,7 @@ Entry(int argc, char *argv[])
     ScratchDestroy(&runtimeScratch);
 
     free(tilePositions);
+    free(tileIsDisabled);
 }
 
 static bool
