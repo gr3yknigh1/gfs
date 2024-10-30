@@ -1,4 +1,5 @@
 
+find_package(freetype REQUIRED)
 find_package(cglm REQUIRED)
 
 add_executable(breakout
@@ -11,6 +12,7 @@ add_executable(breakout
 target_link_libraries(breakout
   PRIVATE
     cglm::cglm
+    Freetype::Freetype
     glad
     gfs
 )

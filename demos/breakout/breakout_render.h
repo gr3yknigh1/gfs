@@ -74,6 +74,7 @@ typedef struct {
     GLUniformLocation uniformLocationProjection;
 } DrawContextGLInfo;
 
+
 typedef struct {
     Camera *camera;
     GLShaderProgramID shader;
@@ -90,6 +91,7 @@ void DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f3
 void DrawSprite(DrawContext *context, f32 x, f32 y, Sprite *sprite, f32 scale, f32 rotate);
 
 void DrawEnd(DrawContext *context);
+
 
 
 #endif // BREAKOUT_RENDER_H_INCLUDED

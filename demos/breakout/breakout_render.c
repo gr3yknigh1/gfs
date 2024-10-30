@@ -226,10 +226,8 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     GL_CALL(glEnable(GL_DEPTH_TEST));
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
-
     return context;
 }
-
 
 void
 DrawBegin(DrawContext *context)
@@ -237,14 +235,12 @@ DrawBegin(DrawContext *context)
     UNUSED(context);
 }
 
-
 void
 DrawClear(DrawContext *context, f32 r, f32 g, f32 b)
 {
     UNUSED(context);
     GLClearEx(r, g, b, 1, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-
 
 void
 DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale, f32 rotate, Color4RGBA color)
@@ -278,7 +274,6 @@ DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 sca
 
     GLDrawElements(&context->glInfo.eb, &context->glInfo.vb, context->glInfo.va);
 }
-
 
 void
 DrawEnd(DrawContext *context)

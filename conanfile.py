@@ -15,7 +15,7 @@ class GFSRecipe(ConanFile):
 
     settings = "os", "arch", "compiler", "build_type"
 
-    requires = "cglm/0.9.1", "sdl/2.30.7", "glm/cci.20230113", "imgui/1.91.2"
+    requires = "cglm/0.9.1", "sdl/2.30.7", "glm/cci.20230113", "imgui/1.91.2", "freetype/2.13.3"
 
     def generate(self):
         # NOTE(gr3yknigh1): This is stupid

@@ -17,6 +17,9 @@
 
 #include <glad/glad.h>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H  // WTF?
+
 #include <gfs/entry.h>
 #include <gfs/game_state.h>
 #include <gfs/platform.h>
@@ -42,6 +45,13 @@ static void GenerateTileGrid(
 typedef struct {
     LARGE_INTEGER performanceCounterFrequency;
 } Clock;
+
+typedef struct {
+    GLTexture texture;
+    Vector2F32 size;
+    Vector2F32 bearing;
+    u32 xAdvance;
+} Character;
 
 void
 Clock_Initialize(Clock *clock)
@@ -160,6 +170,63 @@ Entry(int argc, char *argv[])
 
     f32 startClockTime = Clock_GetSeconds(&runtimeClock);
     f32 deltaTime = 0;
+
+    // --- FreeType library initialization ---
+    FT_Library ft = EMPTY_STRUCT(FT_Library);
+    ASSERT_ISOK(FT_Init_FreeType(&ft));
+
+    FT_Face face = EMPTY_STRUCT(FT_Face);
+    ASSERT_ISOK(FT_New_Face(ft, "P:\\gfs\\assets\\breakout\\IBMPlexMono.ttf", 0, &face));
+
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    u16 charactersCount = 128;
+    Character *characterTable = malloc(sizeof(Character) * charactersCount);
+
+    // --- FreeType character loading ---
+    {
+        Character *characterTableWriteCursor = characterTable;
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction.
+
+        for (char8 c = 0; c < charactersCount; ++c) {
+            ASSERT_ISOK(FT_Load_Char(face, c, FT_LOAD_RENDER));
+
+            glGenTextures(1, &characterTableWriteCursor->texture);
+            glBindTexture(GL_TEXTURE_2D, characterTableWriteCursor->texture);
+
+            glTexImage2D(
+                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            characterTableWriteCursor->size.x = face->glyph->bitmap.width;
+            characterTableWriteCursor->size.y = face->glyph->bitmap.rows;
+            characterTableWriteCursor->bearing.x = face->glyph->bitmap_left;
+            characterTableWriteCursor->bearing.y = face->glyph->bitmap_top;
+            characterTableWriteCursor->xAdvance = face->glyph->advance.x;
+
+            ++characterTableWriteCursor;
+        }
+    }
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+    // --- Setup OpenGL buffers for characters ---
+
+    GLVertexArray textVertexArray = GLVertexArrayMake();
+    GLVertexBuffer textVertexBuffer = GLVertexBufferMake(NULL, sizeof(float) * 6 * 4);
+    //                                                                         /   /
+    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex ___________/___/
+    // [2024/10/30]
+
+    GLVertexBufferLayout textVertexBufferLayout = GLVertexBufferLayoutMake(&runtimeScratch);
+    GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
+    GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
 
     while (!GameStateShouldStop()) {
 
@@ -305,6 +372,7 @@ Entry(int argc, char *argv[])
     WindowClose(window);
     ScratchDestroy(&runtimeScratch);
 
+    free(characterTable);
     free(tilePositions);
     free(tileIsDisabled);
 }
