@@ -235,6 +235,7 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
 void
 DrawBegin(DrawContext *context)
 {
+    GL_CALL(glUseProgram(context->shader));
     UNUSED(context);
 }
 

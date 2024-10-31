@@ -12,9 +12,9 @@ add_executable(breakout
 target_link_libraries(breakout
   PRIVATE
     cglm::cglm
-    Freetype::Freetype
     glad
     gfs
+    Freetype::Freetype
 )
 
 if(MSVC)

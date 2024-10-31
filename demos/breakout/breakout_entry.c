@@ -99,7 +99,7 @@ Entry(int argc, char *argv[])
     UNUSED(argc);
     UNUSED(argv);
 
-    Scratch runtimeScratch = ScratchMake(MEGABYTES(20));
+    Scratch runtimeScratch = ScratchMake(MEGABYTES(500));
 
     Window *window = WindowOpen(&runtimeScratch, 900, 600, "Breakout");
     ASSERT_NONNULL(window);
@@ -139,10 +139,11 @@ Entry(int argc, char *argv[])
         DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
     RectangleF32 ballRect = EMPTY_STRUCT(RectangleF32);
-    ballRect.width = 10;
-    ballRect.height = 10;
-    ball.x = windowRect.width / 2 - ballRect.width / 2;
-    ball.y = windowRect.height / 3 - ballRect.height / 3;
+    ballRect.width = 10.0;
+    ballRect.height = 10.0;
+    ballRect.x = (f32)windowRect.width / 2 - ballRect.width / 2;
+    ballRect.y = (f32)windowRect.height / 3 - ballRect.height / 3;
+
     f32 ballBaseSpeed = 350;
     f32 ballXVelocity = 0;
     f32 ballYVelocity = (-1) * ballBaseSpeed;
@@ -193,7 +194,7 @@ Entry(int argc, char *argv[])
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
-    u16 charactersCount = 128;
+    u16 charactersCount = 'z' - 'A';
     Character *characterTable = malloc(sizeof(Character) * charactersCount);
 
     // --- FreeType character loading ---
@@ -203,7 +204,7 @@ Entry(int argc, char *argv[])
         glPixelStorei(
             GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction.
 
-        for (char8 c = 0; c < charactersCount; ++c) {
+        for (char8 c = 'A'; c < 'z'; ++c) {
             ASSERT_ISOK(FT_Load_Char(face, c, FT_LOAD_RENDER));
 
             glGenTextures(1, &characterTableWriteCursor->texture);
@@ -246,6 +247,21 @@ Entry(int argc, char *argv[])
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
 
+
+    // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
+    GLShaderProgramID textShader = 0;
+    {
+        GLShaderProgramLinkData shaderLinkData = {0};
+        shaderLinkData.vertexShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.frag.glsl",
+            GL_SHADER_TYPE_FRAG);
+        shaderLinkData.fragmentShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.vert.glsl",
+            GL_SHADER_TYPE_VERT);
+        textShader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
+        ASSERT_NONZERO(textShader);
+    }
+
     while (!GameStateShouldStop()) {
 
         deltaTime = Clock_GetSeconds(&runtimeClock) - startClockTime;
@@ -277,22 +293,22 @@ Entry(int argc, char *argv[])
             //
             // Balls
             //
-            ballXPosition += ballXVelocity * deltaTime;
-            ballYPosition += ballYVelocity * deltaTime;
+            ballRect.x += ballXVelocity * deltaTime;
+            ballRect.y += ballYVelocity * deltaTime;
 
             if (!IsOverlapped(
-                    0, 0, windowRect.width, windowRect.height, ballXPosition,
-                    ballYPosition, ballWidth, ballHeight)) {
+                    0, 0, windowRect.width, windowRect.height, ballRect.x,
+                    ballRect.y, ballRect.width, ballRect.height)) {
                 f32 xVelocityMod = 1;
                 f32 yVelocityMod = 1;
 
-                if (ballXPosition + ballWidth >= windowRect.width ||
-                    ballXPosition <= 0) {
+                if (ballRect.x + ballRect.width >= windowRect.width ||
+                    ballRect.x <= 0) {
                     xVelocityMod = -xVelocityMod;
                 }
 
-                if (ballYPosition + ballHeight >= windowRect.height ||
-                    ballYPosition <= 0) {
+                if (ballRect.y + ballRect.height >= windowRect.height ||
+                    ballRect.y <= 0) {
                     yVelocityMod = -yVelocityMod;
                 }
 
@@ -317,20 +333,20 @@ Entry(int argc, char *argv[])
 
                     if (IsOverlapped(
                             tilePosition->x, tilePosition->y, tileWidth,
-                            tileHeight, ballXPosition, ballYPosition, ballWidth,
-                            ballHeight)) {
+                            tileHeight, ballRect.x, ballRect.y, ballRect.width,
+                            ballRect.height)) {
                         f32 xVelocityMod = 1;
                         f32 yVelocityMod = 1;
 
-                        if (ballXPosition + ballWidth >=
+                        if (ballRect.x + ballRect.width >=
                                 tilePosition->x + tileWidth ||
-                            ballXPosition <= tilePosition->x) {
+                            ballRect.x <= tilePosition->x) {
                             xVelocityMod = -xVelocityMod;
                         }
 
-                        if (ballYPosition + ballHeight >=
+                        if (ballRect.y + ballRect.height >=
                                 tilePosition->y + tileHeight ||
-                            ballYPosition <= tilePosition->y) {
+                            ballRect.y <= tilePosition->y) {
                             yVelocityMod = -yVelocityMod;
                         }
 
@@ -346,7 +362,7 @@ Entry(int argc, char *argv[])
 
             if (IsOverlapped(
                     playerXPosition, playerYPosition, playerWidth, playerHeight,
-                    ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                    ballRect.x, ballRect.y, ballRect.width, ballRect.height)) {
                 ballXVelocity =
                     ballBaseSpeed * GetSign(
                                         playerXVelocity == 0
@@ -354,6 +370,7 @@ Entry(int argc, char *argv[])
                                             : playerXVelocity);
                 ballYVelocity = ballBaseSpeed;
             }
+
         }
 
         DrawBegin(&drawContext);
@@ -376,20 +393,77 @@ Entry(int argc, char *argv[])
             }
         }
 
-        if (doRenderGridBackground)
+        if (doRenderGridBackground) {
             DrawRectangle(
                 &drawContext, gridXPosition, gridYPosition, gridWidth,
                 gridHeight, 1, 0, COLOR4RGBA_BLUE);
+        }
 
         DrawRectangle(
             &drawContext, playerXPosition, playerYPosition, playerWidth,
             playerHeight, 1, 0, COLOR4RGBA_RED);
 
         DrawRectangle(
-            &drawContext, ballXPosition, ballYPosition, ballWidth, ballHeight,
+            &drawContext, ballRect.x, ballRect.y, ballRect.width, ballRect.height,
             1, 0, COLOR4RGBA_WHITE);
 
         DrawEnd(&drawContext);
+
+        // Text render
+        {
+            static cstring8 text = "Hello world!";
+
+            char8 *textCursor = text;
+
+            GL_CALL(glUseProgram(textShader));
+
+            GLUniformLocation uniformLocationColor = GLShaderFindUniformLocation(textShader, "u_Color");
+            GLUniformLocation uniformLocationTexture = GLShaderFindUniformLocation(textShader, "u_Texture");
+            GLShaderSetUniformV3F32(textShader, uniformLocationColor, 1, 1, 1);
+            GLShaderSetUniformI32(textShader, uniformLocationTexture, 0);
+            GL_CALL(glBindVertexArray(textVertexArray));
+
+            f32 textXPosition = 10, textYPosition = 20;
+            f32 textScale = 1;
+
+
+            while (*textCursor != 0) {
+                if (*textCursor < 'A' || *textCursor > 'z') {
+                    ++textCursor;
+                    continue;
+                }
+
+                Character *character = characterTable + (*textCursor - 'A');
+
+                f32 xpos = textXPosition + character->bearing.x * textScale;
+                f32 ypos = textYPosition - (character->size.y - character->bearing.y) * textScale;
+
+                f32 w = character->size.x * textScale;
+                f32 h = character->size.y * textScale;
+                // update VBO for each character
+                f32 vertices[6][4] = {
+                    { xpos,     ypos + h,   0.0f, 0.0f },
+                    { xpos,     ypos,       0.0f, 1.0f },
+                    { xpos + w, ypos,       1.0f, 1.0f },
+
+                    { xpos,     ypos + h,   0.0f, 0.0f },
+                    { xpos + w, ypos,       1.0f, 1.0f },
+                    { xpos + w, ypos + h,   1.0f, 0.0f }
+                };
+                // render glyph texture over quad
+                glBindTexture(GL_TEXTURE_2D, character->texture);
+                glActiveTexture(GL_TEXTURE0);
+                // update content of VBO memory
+                GLVertexBufferSendData(&textVertexBuffer, vertices, sizeof(vertices));
+                GLDrawTriangles(&textVertexBuffer, &textVertexBufferLayout, textVertexArray);
+                // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+                textXPosition += (character->xAdvance >> 6) * textScale;
+                // bitshift by 6 to get value in pixels (2^6 = 64)
+                break;
+
+                ++textCursor;
+            }
+        }
 
         WindowUpdate(window);
 

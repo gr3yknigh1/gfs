@@ -59,7 +59,7 @@ typedef struct {
     u16 height;
 } RectangleU16;
 
-typedef union {
+typedef struct {
     f32 x;
     f32 y;
     f32 width;
