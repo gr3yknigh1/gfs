@@ -14,8 +14,8 @@ AlwaysBreakAfterReturnType: None
 #AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterDefinitionReturnType: All
 
-# ColumnLimit:     80
-ColumnLimit:     120
+ColumnLimit:     80
+# ColumnLimit:     120
 
 #IndentWidth:     2
 IndentWidth:     4
@@ -29,6 +29,9 @@ BreakBeforeBraces: Linux
 
 #SortIncludes:    CaseSensitive
 SortIncludes:    Never
+
+AlignEscapedNewlines: DontAlign
+#AlignEscapedNewlines: Right
 
 AlignArrayOfStructures: None
 AlignConsecutiveAssignments:
@@ -60,7 +63,6 @@ AlignConsecutiveShortCaseStatements:
   AcrossEmptyLines: false
   AcrossComments:  false
   AlignCaseColons: false
-AlignEscapedNewlines: Right
 AlignOperands:   Align
 AlignTrailingComments:
   Kind:            Always

@@ -76,14 +76,18 @@ IsPathExists(cstring8 path)
 }
 
 FileLoadResultCode
-FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded)
+FileLoadToBuffer(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded)
 {
-    return FileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
+    return FileLoadToBufferEx(
+        handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
 FileLoadResultCode
 FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset)
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded, usize loadOffset)
 {
 
     long origOffset = 0;
@@ -125,7 +129,8 @@ FileGetSize(FileHandle *handle)
 void *
 MemoryAllocate(usize size)
 {
-    void *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    void *data = mmap(
+        NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     return data;
 }
 

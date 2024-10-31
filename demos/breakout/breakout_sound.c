@@ -14,7 +14,8 @@
 #define PI32 3.14159265358979323846f
 
 void
-GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
+GameFillSoundBuffer(
+    SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
 {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
@@ -22,12 +23,15 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
     void *region0, *region1;
     u32 region0Size, region1Size;
 
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    SoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -38,7 +42,8 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
     u32 region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -51,7 +56,8 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
 
 static void
 GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite)
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
+    u32 byteToLock, u32 bytesToWrite)
 {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
@@ -61,13 +67,17 @@ GameFillSoundBufferWaveAsset(
     u32 region0Size, region1Size;
     byte *sampleOut;
 
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    SoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     sampleOut = (byte *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
         MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
@@ -77,7 +87,9 @@ GameFillSoundBufferWaveAsset(
     sampleOut = (byte *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region1SampleCount; ++sampleIndex) {
         MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;

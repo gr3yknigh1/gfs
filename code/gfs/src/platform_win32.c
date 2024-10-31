@@ -28,7 +28,8 @@
 #include "gfs/render_opengl.h"
 
 #define VCALL(S, M, ...) (S)->lpVtbl->M((S), __VA_ARGS__)
-#define ASSERT_VCALL(S, M, ...) ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
+#define ASSERT_VCALL(S, M, ...) \
+    ASSERT(SUCCEEDED((S)->lpVtbl->M((S), __VA_ARGS__)))
 
 // See https://gist.github.com/nickrolfe/1127313ed1dbf80254b614a721b3ee9c
 // See
@@ -63,8 +64,10 @@
 #define WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME "wglChoosePixelFormatARB"
 #define WIN32_GL_SWAPINTERVALEXT_PROCNAME "wglSwapIntervalEXT"
 
-typedef HGLRC WINAPI Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
-typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(HDC, const int *, const FLOAT *, UINT, int *, UINT *);
+typedef HGLRC WINAPI
+Win32_GL_CreateContextAttribARBType(HDC, HGLRC, const int *);
+typedef BOOL WINAPI Win32_GL_ChoosePixelFormatARBType(
+    HDC, const int *, const FLOAT *, UINT, int *, UINT *);
 typedef BOOL WINAPI Win32_GL_SwapIntervalExtType(int);
 
 static Win32_GL_CreateContextAttribARBType *Win32_GL_CreateContextAttribARBPtr;
@@ -76,7 +79,8 @@ static Win32_GL_SwapIntervalExtType *Win32_GL_SwapIntervalExtPtr;
 #define WIN32_XINPUT_DLL XINPUT_DLL
 
 typedef DWORD Win32_XInputGetStateType(DWORD dwUserIndex, XINPUT_STATE *pState);
-typedef DWORD Win32_XInputSetStateType(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
+typedef DWORD Win32_XInputSetStateType(
+    DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
 
 static Win32_XInputGetStateType *Win32_xInputGetStatePtr;
 static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
@@ -84,7 +88,8 @@ static Win32_XInputSetStateType *Win32_xInputSetStatePtr;
 #define WIN32_DIRECTSOUNDCREATE_PROCNAME "DirectSoundCreate"
 #define WIN32_DIRECTSOUND_DLL "dsound.dll"
 
-typedef HRESULT Win32_DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
+typedef HRESULT Win32_DirectSoundCreateType(
+    LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
 static Win32_DirectSoundCreateType *Win32_DirectSoundCreatePtr;
 
@@ -106,7 +111,8 @@ typedef struct SoundDevice {
 } SoundDevice;
 
 /*
- * @breaf Because currently we supporting only one window at the time, we can use just one single Window pointer.
+ * @breaf Because currently we supporting only one window at the time, we can
+ * use just one single Window pointer.
  * */
 static Window *gWindow = NULL;
 
@@ -203,8 +209,9 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions)
     // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
     DWORD shareMode = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 
-    HANDLE win32Handle =
-        CreateFileA(filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE win32Handle = CreateFileA(
+        filePath, desiredAccess, shareMode, NULL, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (win32Handle == INVALID_HANDLE_VALUE) {
         result.code = FILE_OPEN_FAILED_TO_OPEN;
@@ -231,9 +238,12 @@ FileClose(FileHandle *handle)
 }
 
 FileLoadResultCode
-FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded)
+FileLoadToBuffer(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded)
 {
-    return FileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
+    return FileLoadToBufferEx(
+        handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
 FileSetCursorResult
@@ -261,7 +271,8 @@ FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor)
     LARGE_INTEGER win32Offset;
     win32Offset.QuadPart = offset;
 
-    DWORD result = SetFilePointerEx(handle->win32Handle, win32Offset, NULL, moveMethod);
+    DWORD result =
+        SetFilePointerEx(handle->win32Handle, win32Offset, NULL, moveMethod);
 
     if (result == INVALID_SET_FILE_POINTER) {
         return FILE_SET_CURSOR_FAILED;
@@ -272,7 +283,8 @@ FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor)
 
 FileLoadResultCode
 FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset)
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded, usize loadOffset)
 {
     ASSERT_NONNULL(handle);
     ASSERT(FileHandleIsValid(handle));
@@ -282,7 +294,9 @@ FileLoadToBufferEx(
     ASSERT_ISOK(FileSetCursor(handle, loadOffset, FILE_CURSOR_ANCHOR_BEGIN));
 
     DWORD numberOfBytesRead = 0;
-    BOOL readFileResult = ReadFile(handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead, NULL);
+    BOOL readFileResult = ReadFile(
+        handle->win32Handle, buffer, numberOfBytesToLoad, &numberOfBytesRead,
+        NULL);
 
     if (readFileResult != TRUE) {
         return FILE_FAILED_TO_READ;
@@ -328,7 +342,8 @@ PutLastError(void)
 
     if (win32LastErrorCode != ERROR_SUCCESS) {
         char8 printBuffer[KILOBYTES(1)];
-        wsprintf(printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
+        wsprintf(
+            printBuffer, "E: Win32 GetLastError()=%i\n", win32LastErrorCode);
         OutputDebugString(printBuffer);
     }
 }
@@ -366,8 +381,10 @@ Win32_OpenGLContextExts_Init(void)
     ASSERT_NONZERO(RegisterClass(&dummyWindowClass));
 
     HWND dummyWindowHandle = CreateWindowExA(
-        0, dummyWindowClass.lpszClassName, "__dummy_window", WS_CLIPSIBLINGS | WS_CLIPSIBLINGS, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, dummyWindowClass.hInstance, NULL);
+        0, dummyWindowClass.lpszClassName, "__dummy_window",
+        WS_CLIPSIBLINGS | WS_CLIPSIBLINGS, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, dummyWindowClass.hInstance,
+        NULL);
     ASSERT_NONNULL(dummyWindowHandle);
 
     HDC dummyDeviceContext = GetDC(dummyWindowHandle);
@@ -396,14 +413,18 @@ Win32_OpenGLContextExts_Init(void)
     ASSERT_NONZERO(gladLoadWGL(dummyDeviceContext));
 
     Win32_GL_CreateContextAttribARBPtr =
-        (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
+        (Win32_GL_CreateContextAttribARBType *)wglGetProcAddress(
+            WIN32_GL_CREATECONTEXTATTRIBARB_PROCNAME);
     ASSERT_NONNULL(Win32_GL_CreateContextAttribARBPtr);
 
     Win32_GL_ChoosePixelFormatARBPtr =
-        (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
+        (Win32_GL_ChoosePixelFormatARBType *)wglGetProcAddress(
+            WIN32_GL_CHOOSEPIXELFORMATARB_PROCNAME);
     ASSERT_NONNULL(Win32_GL_ChoosePixelFormatARBPtr);
 
-    Win32_GL_SwapIntervalExtPtr = (Win32_GL_SwapIntervalExtType *)wglGetProcAddress(WIN32_GL_SWAPINTERVALEXT_PROCNAME);
+    Win32_GL_SwapIntervalExtPtr =
+        (Win32_GL_SwapIntervalExtType *)wglGetProcAddress(
+            WIN32_GL_SWAPINTERVALEXT_PROCNAME);
 
     wglMakeCurrent(dummyDeviceContext, 0);
     wglDeleteContext(dummyRenderContext);
@@ -435,13 +456,16 @@ Win32_OpenGLContext_Init(HDC deviceContext)
 
     int pixelFormat;
     UINT numFormats;
-    ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
+    ASSERT_ISTRUE(Win32_GL_ChoosePixelFormatARBPtr(
+        deviceContext, pixelFormatAttribs, 0, 1, &pixelFormat, &numFormats));
     ASSERT_NONZERO(numFormats);
 
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
-    ASSERT_NONZERO(
-        DescribePixelFormat(deviceContext, pixelFormat, sizeof(pixelFormatDescriptor), &pixelFormatDescriptor));
-    ASSERT_ISTRUE(SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
+    ASSERT_NONZERO(DescribePixelFormat(
+        deviceContext, pixelFormat, sizeof(pixelFormatDescriptor),
+        &pixelFormatDescriptor));
+    ASSERT_ISTRUE(
+        SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor));
 
     // Specify that we want to create an OpenGL 3.3 core profile context
     int glAttribs[] = {
@@ -458,7 +482,8 @@ Win32_OpenGLContext_Init(HDC deviceContext)
         0,
     };
 
-    HGLRC renderContext = Win32_GL_CreateContextAttribARBPtr(deviceContext, NULL, glAttribs);
+    HGLRC renderContext =
+        Win32_GL_CreateContextAttribARBPtr(deviceContext, NULL, glAttribs);
     ASSERT_NONNULL(renderContext);
 
     ASSERT_ISTRUE(wglMakeCurrent(deviceContext, renderContext));
@@ -507,7 +532,8 @@ Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk)
 }
 
 static LRESULT CALLBACK
-Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
+Win32_MainWindowProc(
+    HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LRESULT result = 0;
 
@@ -530,7 +556,8 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
          * have negative x- and y- coordinates, and LOWORD and HIWORD
          * treat the coordinates as unsigned quantities.
          *
-         * Reference: https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove?redirectedfrom=MSDN
+         * Reference:
+         * https://learn.microsoft.com/en-us/windows/win32/inputdev/wm-mousemove?redirectedfrom=MSDN
          * */
         i32 xPosition = GET_X_LPARAM(lParam);
         i32 yPosition = GET_Y_LPARAM(lParam);
@@ -570,7 +597,9 @@ Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lPar
 #if defined(WIN32)
 
 int WINAPI
-WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR commandLine, _In_ int showMode)
+WinMain(
+    _In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance,
+    _In_ LPSTR commandLine, _In_ int showMode)
 {
     UNUSED(instance);
     UNUSED(commandLine);
@@ -596,7 +625,10 @@ main(int argc, char *argv[])
 
 #endif
 
-typedef enum { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR } Win32_LoadXInputResult;
+typedef enum {
+    WIN32_LOADXINPUT_OK,
+    WIN32_LOADXINPUT_ERR
+} Win32_LoadXInputResult;
 
 static Win32_LoadXInputResult
 Win32_LoadXInput(void)
@@ -609,9 +641,11 @@ Win32_LoadXInput(void)
         return WIN32_LOADXINPUT_ERR;
     }
 
-    Win32_xInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(library, WIN32_XINPUTGETSTATE_PROCNAME);
+    Win32_xInputGetStatePtr = (Win32_XInputGetStateType *)GetProcAddress(
+        library, WIN32_XINPUTGETSTATE_PROCNAME);
 
-    Win32_xInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(library, WIN32_XINPUTSETSTATE_PROCNAME);
+    Win32_xInputSetStatePtr = (Win32_XInputSetStateType *)GetProcAddress(
+        library, WIN32_XINPUTSETSTATE_PROCNAME);
 
     if (Win32_xInputSetStatePtr == NULL || Win32_xInputGetStatePtr == NULL) {
         return WIN32_LOADXINPUT_ERR;
@@ -637,7 +671,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title)
 
     MemoryZero(window, sizeof(Window));
 
-    gWindow = window; // TODO(gr3yknigh1): Some day add support for multiple windows.
+    gWindow =
+        window; // TODO(gr3yknigh1): Some day add support for multiple windows.
 
     HINSTANCE instance = GetModuleHandle(NULL);
 
@@ -651,7 +686,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title)
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
     window->windowHandle = CreateWindowExA(
-        0, window->windowClass.lpszClassName, copiedTitle, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
+        0, window->windowClass.lpszClassName, copiedTitle,
+        WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
         CW_USEDEFAULT, // int x
         CW_USEDEFAULT, // int y
         width,         // int width
@@ -698,7 +734,8 @@ PoolEvents(Window *window)
         DispatchMessage(&message);
     }
 
-    for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT; ++xControllerIndex) {
+    for (DWORD xControllerIndex = 0; xControllerIndex < XUSER_MAX_COUNT;
+         ++xControllerIndex) {
         XINPUT_STATE xInputState = {0};
         DWORD result = Win32_xInputGetStatePtr(xControllerIndex, &xInputState);
 
@@ -747,7 +784,8 @@ PoolEvents(Window *window)
             // But it will be too frequent log, cause we have no plans on
             // multiple controllers.
         } else {
-            OutputDebugString("E: Some of xInput's device are not connected!\n");
+            OutputDebugString(
+                "E: Some of xInput's device are not connected!\n");
             ASSERT(false);
         }
     }
@@ -776,7 +814,8 @@ GetPageSize(void)
 void *
 MemoryAllocate(usize size)
 {
-    void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void *data =
+        VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but
     // accually `VirtualAlloc` will round up this number to next page.
@@ -817,7 +856,9 @@ typedef enum {
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_DirectSoundInitResult
-Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize)
+Win32_DirectSoundInit(
+    HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond,
+    usize bufferSize)
 {
     HMODULE library = LoadLibrary(WIN32_DIRECTSOUND_DLL);
 
@@ -825,8 +866,8 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
         return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
     }
 
-    Win32_DirectSoundCreatePtr =
-        (Win32_DirectSoundCreateType *)GetProcAddress(library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
+    Win32_DirectSoundCreatePtr = (Win32_DirectSoundCreateType *)GetProcAddress(
+        library, WIN32_DIRECTSOUNDCREATE_PROCNAME);
 
     if (Win32_DirectSoundCreatePtr == NULL) {
         return WIN32_DIRECTRSOUND_INIT_DLL_LOAD_ERR;
@@ -837,7 +878,8 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
-    if (!SUCCEEDED(VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY))) {
+    if (!SUCCEEDED(
+            VCALL(directSound, SetCooperativeLevel, window, DSSCL_PRIORITY))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
@@ -851,12 +893,15 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
 
     primaryBufferDesc.dwSize = sizeof(primaryBufferDesc);
     primaryBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-    primaryBufferDesc.dwBufferBytes = 0;  // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
+    primaryBufferDesc.dwBufferBytes =
+        0; // NOTE(ilya.a): Primary buffer size should be zero. [2024/05/25]
     primaryBufferDesc.lpwfxFormat = NULL; // NOTE(ilya.a): Primary buffer wfx
                                           // format should be NULL. [2024/05/25]
 
     LPDIRECTSOUNDBUFFER primarySoundbuffer;
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &primaryBufferDesc, &primarySoundbuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(
+            directSound, CreateSoundBuffer, &primaryBufferDesc,
+            &primarySoundbuffer, NULL))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
@@ -865,8 +910,11 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
     waveFormat.nChannels = 2;
     waveFormat.nSamplesPerSec = samplesPerSecond;
     waveFormat.wBitsPerSample = 16;
-    waveFormat.nBlockAlign = (waveFormat.nChannels * waveFormat.wBitsPerSample) / BYTE_BITS;
-    waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
+    waveFormat.nBlockAlign =
+        (waveFormat.nChannels * waveFormat.wBitsPerSample) / BYTE_BITS;
+    waveFormat.nAvgBytesPerSec =
+        waveFormat.nSamplesPerSec *
+        waveFormat.nBlockAlign; // NOTE(ilya.a): Redundant. Lol.
     waveFormat.cbSize = 0;
 
     if (!SUCCEEDED(VCALL(primarySoundbuffer, SetFormat, &waveFormat))) {
@@ -878,14 +926,17 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
     DSBUFFERDESC secondaryBufferDesc;
     MemoryZero(
         &secondaryBufferDesc,
-        sizeof(secondaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
-                                      // to zero buffer description. [2024/05/25]
+        sizeof(
+            secondaryBufferDesc)); // TODO(ilya.a): Checkout if we really need
+                                   // to zero buffer description. [2024/05/25]
     secondaryBufferDesc.dwSize = sizeof(secondaryBufferDesc);
     secondaryBufferDesc.dwFlags = 0;
     secondaryBufferDesc.dwBufferBytes = bufferSize;
     secondaryBufferDesc.lpwfxFormat = &waveFormat;
 
-    if (!SUCCEEDED(VCALL(directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer, NULL))) {
+    if (!SUCCEEDED(VCALL(
+            directSound, CreateSoundBuffer, &secondaryBufferDesc, soundBuffer,
+            NULL))) {
         return WIN32_DIRECTSOUND_INIT_ERR;
     }
 
@@ -911,9 +962,12 @@ SoundOutputMake(i32 samplesPerSecond)
 }
 
 SoundDeviceGetCurrentPositionResult
-SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor)
+SoundDeviceGetCurrentPosition(
+    SoundDevice *device, u32 *playCursor, u32 *writeCursor)
 {
-    if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
+    if (!SUCCEEDED(VCALL(
+            device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor,
+            (DWORD *)writeCursor))) {
         return SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
     }
     return SOUND_DEVICE_GET_CURRENT_POSITION_OK;
@@ -928,20 +982,24 @@ SoundOutputSetTone(SoundOutput *output, i32 toneHZ)
 
 void
 SoundDeviceLockBuffer(
-    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
-    u32 *region1Size)
+    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0,
+    u32 *region0Size, void **region1, u32 *region1Size)
 {
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but
     // lock are failing [2024/07/28]
     ASSERT_VCALL(
-        device->audioBuffer, Lock, offset, portionSizeToLock, region0, (LPDWORD)region0Size, region1,
-        (LPDWORD)region1Size, 0);
+        device->audioBuffer, Lock, offset, portionSizeToLock, region0,
+        (LPDWORD)region0Size, region1, (LPDWORD)region1Size, 0);
 }
 
 void
-SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size)
+SoundDeviceUnlockBuffer(
+    SoundDevice *device, void *region0, u32 region0Size, void *region1,
+    u32 region1Size)
 {
-    ASSERT_VCALL(device->audioBuffer, Unlock, region0, region0Size, region1, region1Size);
+    ASSERT_VCALL(
+        device->audioBuffer, Unlock, region0, region0Size, region1,
+        region1Size);
 }
 
 void
@@ -951,7 +1009,9 @@ SoundDevicePlay(SoundDevice *device)
 }
 
 SoundDevice *
-SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize)
+SoundDeviceOpen(
+    Scratch *scratch, Window *window, i32 samplesPerSecond,
+    usize audioBufferSize)
 {
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
@@ -960,8 +1020,9 @@ SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize au
     SoundDevice *device = ScratchAlloc(scratch, sizeof(SoundDevice));
     ASSERT_NONNULL(device);
 
-    Win32_DirectSoundInitResult result =
-        Win32_DirectSoundInit(window->windowHandle, &device->audioBuffer, samplesPerSecond, audioBufferSize);
+    Win32_DirectSoundInitResult result = Win32_DirectSoundInit(
+        window->windowHandle, &device->audioBuffer, samplesPerSecond,
+        audioBufferSize);
     ASSERT_ISOK(result);
 
     return device;

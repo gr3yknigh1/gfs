@@ -252,7 +252,9 @@ BlockAllocatorDestroy(BlockAllocator *allocator)
         previousBlock = currentBlock;
         currentBlock = currentBlock->next;
 
-        MemoryFree(previousBlock, previousBlock->arena.capacity + sizeof(AllocationBlock));
+        MemoryFree(
+            previousBlock,
+            previousBlock->arena.capacity + sizeof(AllocationBlock));
         //                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // NOTE(gr3yknigh1): This not properly tested [2024/10/21]
     }
@@ -273,7 +275,9 @@ TempScratchMake(Scratch *scratch, usize capacity)
 void
 TempScratchClean(Scratch *temp, Scratch *scratch)
 {
-    ASSERT_EQ(temp->data, ((byte *)scratch->data + scratch->occupied) - temp->capacity);
+    ASSERT_EQ(
+        temp->data,
+        ((byte *)scratch->data + scratch->occupied) - temp->capacity);
     scratch->occupied -= temp->capacity;
 
     temp->data = NULL;

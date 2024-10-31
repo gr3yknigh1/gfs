@@ -16,8 +16,10 @@ RectangleU16IsInside(RectangleU16 r, u16 x, u16 y)
 bool
 RectangleU16IsOverlapping(RectangleU16 r)
 {
-    return RectangleU16IsInside(r, r.x + 0, r.y + 0) || RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
-           RectangleU16IsInside(r, r.x + r.width, r.y + 0) || RectangleU16IsInside(r, r.x + 0, r.y + r.height);
+    return RectangleU16IsInside(r, r.x + 0, r.y + 0) ||
+           RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
+           RectangleU16IsInside(r, r.x + r.width, r.y + 0) ||
+           RectangleU16IsInside(r, r.x + 0, r.y + r.height);
 }
 
 u32
@@ -27,8 +29,8 @@ GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y)
 }
 
 /*
- * NOTE(gr3yknigh1): Thank you SJHowe for answer on Stackoverflow. It's hard to visualize
- * my self all this flattened 3D arrays. [2024/10/08]
+ * NOTE(gr3yknigh1): Thank you SJHowe for answer on Stackoverflow. It's hard to
+ * visualize my self all this flattened 3D arrays. [2024/10/08]
  *
  * Reference: <https://stackoverflow.com/a/51164817/12456897>
  *
@@ -50,7 +52,8 @@ GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y)
  */
 
 i32
-GetOffsetFromCoords3DGridArrayRM(i32 width, i32 height, i32 length, i32 x, i32 y, i32 z)
+GetOffsetFromCoords3DGridArrayRM(
+    i32 width, i32 height, i32 length, i32 x, i32 y, i32 z)
 {
     UNUSED(width);
     i32 ret = ((x * height + y) * length) + z;

@@ -54,13 +54,15 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset)
 glm::mat4
 CameraGetViewMatix(Camera *camera)
 {
-    return glm::lookAt(camera->position, camera->position + camera->front, camera->up);
+    return glm::lookAt(
+        camera->position, camera->position + camera->front, camera->up);
 }
 
 glm::mat4
 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight)
 {
     return glm::perspective(
-        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), camera->near,
-        camera->far);
+        glm::radians(camera->fov),
+        static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight),
+        camera->near, camera->far);
 }

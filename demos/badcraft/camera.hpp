@@ -31,4 +31,5 @@ Camera CameraMake(void);
 
 void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
 glm::mat4 CameraGetViewMatix(Camera *camera);
-glm::mat4 CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight);
+glm::mat4 CameraGetProjectionMatix(
+    Camera *camera, i32 viewportWidth, i32 viewportHeight);

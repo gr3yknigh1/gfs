@@ -122,13 +122,16 @@ Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
 
     if (camera->viewMode == CAMERA_VIEW_MODE_PERSPECTIVE) {
         glm_perspective(
-            glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height,
+            glm_rad(camera->fov),
+            (f32)windowRect.width / (f32)windowRect.height,
             //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             // NOTE(gr3yknigh1): Viewport width and height (not the window).
             // [2024/09/22]
             camera->near, camera->far, *projection);
     } else if (camera->viewMode == CAMERA_VIEW_MODE_ORTHOGONAL) {
-        glm_ortho(0, (f32)windowRect.width, 0, (f32)windowRect.height, camera->near, camera->far, *projection);
+        glm_ortho(
+            0, (f32)windowRect.width, 0, (f32)windowRect.height, camera->near,
+            camera->far, *projection);
     } else {
         ASSERT_ISTRUE(false);
     }
@@ -147,7 +150,8 @@ typedef struct {
 // };
 
 static void
-GenerateRectangleVertexes(Vertex *vertexes, f32 x, f32 y, f32 width, f32 height, Color3RGB color)
+GenerateRectangleVertexes(
+    Vertex *vertexes, f32 x, f32 y, f32 width, f32 height, Color3RGB color)
 {
     // top-right
     vertexes[0].position[0] = x + width;
@@ -192,8 +196,10 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     context.camera = camera;
     context.shader = shader;
 
-    context.glInfo.uniformLocationModel = GLShaderFindUniformLocation(shader, "u_Model");
-    context.glInfo.uniformLocationProjection = GLShaderFindUniformLocation(shader, "u_Projection");
+    context.glInfo.uniformLocationModel =
+        GLShaderFindUniformLocation(shader, "u_Model");
+    context.glInfo.uniformLocationProjection =
+        GLShaderFindUniformLocation(shader, "u_Projection");
 
     // static const f32 vertices[] = {
     //     // positions   // colors
@@ -205,13 +211,16 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     // static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
 
     context.glInfo.va = GLVertexArrayMake();
-    context.glInfo.vb = GLVertexBufferMake(NULL /* RECTANGLE_VERTEXES */, 0 /* sizeof(vertices) */);
-    context.glInfo.eb = GLElementBufferMake(NULL /* indicies */, 0 /* STATIC_ARRAY_LENGTH(indicies) */);
+    context.glInfo.vb = GLVertexBufferMake(
+        NULL /* RECTANGLE_VERTEXES */, 0 /* sizeof(vertices) */);
+    context.glInfo.eb = GLElementBufferMake(
+        NULL /* indicies */, 0 /* STATIC_ARRAY_LENGTH(indicies) */);
 
     context.glInfo.vbLayout = GLVertexBufferLayoutMake(scratch);
     GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
-    GLVertexArrayAddBuffer(context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
+    GLVertexArrayAddBuffer(
+        context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
 
     GL_CALL(glUseProgram(shader));
 
@@ -237,7 +246,9 @@ DrawClear(DrawContext *context, f32 r, f32 g, f32 b)
 }
 
 void
-DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale, f32 rotate, Color4RGBA color)
+DrawRectangle(
+    DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale,
+    f32 rotate, Color4RGBA color)
 {
     UNUSED(color);
     UNUSED(rotate);
@@ -249,7 +260,8 @@ DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 sca
     static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
 
     GLVertexBufferSendData(&context->glInfo.vb, vertexes, sizeof(Vertex) * 4);
-    GLElementBufferSendData(&context->glInfo.eb, indicies, STATIC_ARRAY_LENGTH(indicies));
+    GLElementBufferSendData(
+        &context->glInfo.eb, indicies, STATIC_ARRAY_LENGTH(indicies));
 
     mat4 model = {0};
     glm_mat4_copy(GLM_MAT4_IDENTITY, model);
@@ -263,10 +275,14 @@ DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 sca
     mat4 projection = {0};
     Camera_GetProjectionMatix(context->camera, &projection);
 
-    GLShaderSetUniformM4F32(context->shader, context->glInfo.uniformLocationModel, (f32 *)model);
-    GLShaderSetUniformM4F32(context->shader, context->glInfo.uniformLocationProjection, (f32 *)projection);
+    GLShaderSetUniformM4F32(
+        context->shader, context->glInfo.uniformLocationModel, (f32 *)model);
+    GLShaderSetUniformM4F32(
+        context->shader, context->glInfo.uniformLocationProjection,
+        (f32 *)projection);
 
-    GLDrawElements(&context->glInfo.eb, &context->glInfo.vb, context->glInfo.va);
+    GLDrawElements(
+        &context->glInfo.eb, &context->glInfo.vb, context->glInfo.va);
 }
 
 void

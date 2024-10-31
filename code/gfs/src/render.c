@@ -59,11 +59,12 @@ EndDrawing(Renderer *renderer) {
     renderer->commandCount = 0;
 }
 
-#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD)                                                                      \
-    do {                                                                                                               \
-        MemoryCopy((RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD)));                                    \
-        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD));                                                          \
-        (RENDERERPTR)->commandCount++;                                                                                 \
+#define PUSH_RENDER_COMMAND(RENDERERPTR, PAYLOAD) \
+    do { \
+        MemoryCopy( \
+            (RENDERERPTR)->commandQueue.end, &(PAYLOAD), sizeof((PAYLOAD))); \
+        (RENDERERPTR)->commandQueue.end += sizeof((PAYLOAD)); \
+        (RENDERERPTR)->commandCount++; \
     } while (0)
 
 void

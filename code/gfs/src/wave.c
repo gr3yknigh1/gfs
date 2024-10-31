@@ -11,7 +11,8 @@
 #include "gfs/string.h"
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut)
+WaveAssetLoadFromFile(
+    Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut)
 {
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(assetPath);
@@ -22,7 +23,8 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     }
 
     ///< Openning handle of assert.
-    FileOpenResult assetOpenResult = FileOpenEx(assetPath, scratchAllocator, PERMISSION_READ);
+    FileOpenResult assetOpenResult =
+        FileOpenEx(assetPath, scratchAllocator, PERMISSION_READ);
     if (assetOpenResult.code != FILE_OPEN_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_OPEN;
     }
@@ -50,8 +52,8 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     ///< Loading body of the asset.
     void *data = ScratchAlloc(scratchAllocator, header.dataSize);
     ASSERT_NONNULL(data);
-    FileLoadResultCode assertDataLoadResult =
-        FileLoadToBufferEx(assetFileHandle, data, header.dataSize, NULL, sizeof(header));
+    FileLoadResultCode assertDataLoadResult = FileLoadToBufferEx(
+        assetFileHandle, data, header.dataSize, NULL, sizeof(header));
     if (assertDataLoadResult != FILE_LOAD_OK) {
         return WAVEASSET_LOAD_ERR_FAILED_TO_READ;
     }
@@ -61,6 +63,7 @@ WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *
     return WAVEASSET_LOAD_OK;
 }
 
-WaveAssetLoadResult WaveAssetLoadFromMemory(Scratch *arena, const void *buffer, WaveAsset *waveAssetOut);
+WaveAssetLoadResult WaveAssetLoadFromMemory(
+    Scratch *arena, const void *buffer, WaveAsset *waveAssetOut);
 
 void WaveAssetFree(WaveAsset *wa);

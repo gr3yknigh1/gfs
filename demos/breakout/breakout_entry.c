@@ -36,8 +36,9 @@
 #include "breakout_sound.h"
 
 static void GenerateTileGrid(
-    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition, u32 gridWidth, u32 gridHeight, u32 tileWidth,
-    u32 tileHeight, f32 tileXPadding, f32 tileYPadding);
+    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition,
+    u32 gridWidth, u32 gridHeight, u32 tileWidth, u32 tileHeight,
+    f32 tileXPadding, f32 tileYPadding);
 
 typedef struct {
     LARGE_INTEGER performanceCounterFrequency;
@@ -53,18 +54,21 @@ typedef struct {
 void
 Clock_Initialize(Clock *clock)
 {
-    ASSERT_NONZERO(QueryPerformanceFrequency(&clock->performanceCounterFrequency));
+    ASSERT_NONZERO(
+        QueryPerformanceFrequency(&clock->performanceCounterFrequency));
 }
 
 //
-// Reference: https://gamedev.net/forums/topic/687578-how-to-properly-get-delta-time-on-modern-hardware/5337741/
+// Reference:
+// https://gamedev.net/forums/topic/687578-how-to-properly-get-delta-time-on-modern-hardware/5337741/
 //
 u64
 Clock_GetMilliseconds(Clock *clock)
 {
     LARGE_INTEGER currentCounter;
     ASSERT_NONZERO(QueryPerformanceCounter(&currentCounter));
-    u64 result = (1000LL * currentCounter.QuadPart) / clock->performanceCounterFrequency.QuadPart;
+    u64 result = (1000LL * currentCounter.QuadPart) /
+                 clock->performanceCounterFrequency.QuadPart;
     return result;
 }
 
@@ -73,12 +77,14 @@ Clock_GetSeconds(Clock *clock)
 {
     LARGE_INTEGER currentCounter;
     ASSERT_NONZERO(QueryPerformanceCounter(&currentCounter));
-    f32 result = ((f32)currentCounter.QuadPart) / (f32)clock->performanceCounterFrequency.QuadPart;
+    f32 result = ((f32)currentCounter.QuadPart) /
+                 (f32)clock->performanceCounterFrequency.QuadPart;
     return result;
 }
 
 static bool IsOverlapped(
-    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight);
+    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition,
+    f32 bYPosition, f32 bWidth, f32 bHeight);
 
 static f32
 GetSign(f32 x)
@@ -115,10 +121,12 @@ Entry(int argc, char *argv[])
     GLShaderProgramID shader = 0;
     {
         GLShaderProgramLinkData shaderLinkData = {0};
-        shaderLinkData.vertexShader =
-            GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
-        shaderLinkData.fragmentShader =
-            GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
+        shaderLinkData.vertexShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.frag.glsl",
+            GL_SHADER_TYPE_FRAG);
+        shaderLinkData.fragmentShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\basic.vert.glsl",
+            GL_SHADER_TYPE_VERT);
         shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
         ASSERT_NONZERO(shader);
     }
@@ -127,7 +135,8 @@ Entry(int argc, char *argv[])
 
     u64 lastCycleCount = __rdtsc();
 
-    DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
+    DrawContext drawContext =
+        DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
     RectangleF32 ballRect = EMPTY_STRUCT(RectangleF32);
     ballRect.width = 10;
@@ -144,8 +153,10 @@ Entry(int argc, char *argv[])
     f32 gridYPadding = 5;
     u32 gridXTileCount = 6, gridYTileCount = 3;
     u32 gridTileCount = gridXTileCount * gridYTileCount;
-    f32 gridWidth = gridXTileCount * tileWidth + (gridXPadding * (gridXTileCount - 1));
-    f32 gridHeight = gridYTileCount * tileHeight + (gridYPadding * (gridYTileCount - 1));
+    f32 gridWidth =
+        gridXTileCount * tileWidth + (gridXPadding * (gridXTileCount - 1));
+    f32 gridHeight =
+        gridYTileCount * tileHeight + (gridYPadding * (gridYTileCount - 1));
     f32 gridXPosition = windowRect.width / 2 - gridWidth / 2;
     f32 gridYPosition = (f32)windowRect.height / 2;
     Vector2F32 *tilePositions = malloc(sizeof(Vector2F32) * gridTileCount);
@@ -153,8 +164,8 @@ Entry(int argc, char *argv[])
     MemoryZero(tileIsDisabled, sizeof(bool) * gridTileCount);
 
     GenerateTileGrid(
-        tilePositions, gridXPosition, gridYPosition, gridXTileCount, gridYTileCount, tileWidth, tileHeight,
-        gridXPadding, gridYPadding);
+        tilePositions, gridXPosition, gridYPosition, gridXTileCount,
+        gridYTileCount, tileWidth, tileHeight, gridXPadding, gridYPadding);
 
     f32 playerXVelocity = 0;
     f32 playerYVelocity = 0;
@@ -177,7 +188,8 @@ Entry(int argc, char *argv[])
     ASSERT_ISOK(FT_Init_FreeType(&ft));
 
     FT_Face face = EMPTY_STRUCT(FT_Face);
-    ASSERT_ISOK(FT_New_Face(ft, "P:\\gfs\\assets\\breakout\\IBMPlexMono.ttf", 0, &face));
+    ASSERT_ISOK(FT_New_Face(
+        ft, "P:\\gfs\\assets\\breakout\\IBMPlexMono.ttf", 0, &face));
 
     FT_Set_Pixel_Sizes(face, 0, 48);
 
@@ -188,7 +200,8 @@ Entry(int argc, char *argv[])
     {
         Character *characterTableWriteCursor = characterTable;
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction.
+        glPixelStorei(
+            GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction.
 
         for (char8 c = 0; c < charactersCount; ++c) {
             ASSERT_ISOK(FT_Load_Char(face, c, FT_LOAD_RENDER));
@@ -197,8 +210,9 @@ Entry(int argc, char *argv[])
             glBindTexture(GL_TEXTURE_2D, characterTableWriteCursor->texture);
 
             glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED,
-                GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
+                face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
+                face->glyph->bitmap.buffer);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -221,12 +235,14 @@ Entry(int argc, char *argv[])
     // --- Setup OpenGL buffers for characters ---
 
     GLVertexArray textVertexArray = GLVertexArrayMake();
-    GLVertexBuffer textVertexBuffer = GLVertexBufferMake(NULL, sizeof(float) * 6 * 4);
-    //                                                                         /   /
-    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex ___________/___/
-    // [2024/10/30]
+    GLVertexBuffer textVertexBuffer =
+        GLVertexBufferMake(NULL, sizeof(float) * 6 * 4);
+    //                                           /   /
+    // _________________________________________/___/ [2024/10/30]
+    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex
 
-    GLVertexBufferLayout textVertexBufferLayout = GLVertexBufferLayoutMake(&runtimeScratch);
+    GLVertexBufferLayout textVertexBufferLayout =
+        GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
 
@@ -265,25 +281,33 @@ Entry(int argc, char *argv[])
             ballYPosition += ballYVelocity * deltaTime;
 
             if (!IsOverlapped(
-                    0, 0, windowRect.width, windowRect.height, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                    0, 0, windowRect.width, windowRect.height, ballXPosition,
+                    ballYPosition, ballWidth, ballHeight)) {
                 f32 xVelocityMod = 1;
                 f32 yVelocityMod = 1;
 
-                if (ballXPosition + ballWidth >= windowRect.width || ballXPosition <= 0) {
+                if (ballXPosition + ballWidth >= windowRect.width ||
+                    ballXPosition <= 0) {
                     xVelocityMod = -xVelocityMod;
                 }
 
-                if (ballYPosition + ballHeight >= windowRect.height || ballYPosition <= 0) {
+                if (ballYPosition + ballHeight >= windowRect.height ||
+                    ballYPosition <= 0) {
                     yVelocityMod = -yVelocityMod;
                 }
 
-                ballXVelocity = ballBaseSpeed * xVelocityMod * GetSign(ballXVelocity);
-                ballYVelocity = ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
+                ballXVelocity =
+                    ballBaseSpeed * xVelocityMod * GetSign(ballXVelocity);
+                ballYVelocity =
+                    ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
             }
 
-            for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
-                for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
-                    u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
+            for (u32 xTileIndex = 0; xTileIndex < gridXTileCount;
+                 ++xTileIndex) {
+                for (u32 yTileIndex = 0; yTileIndex < gridYTileCount;
+                     ++yTileIndex) {
+                    u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(
+                        gridXTileCount, xTileIndex, yTileIndex);
 
                     if (tileIsDisabled[tileIndex]) {
                         continue;
@@ -292,23 +316,28 @@ Entry(int argc, char *argv[])
                     Vector2F32 *tilePosition = tilePositions + tileIndex;
 
                     if (IsOverlapped(
-                            tilePosition->x, tilePosition->y, tileWidth, tileHeight, ballXPosition, ballYPosition,
-                            ballWidth, ballHeight)) {
+                            tilePosition->x, tilePosition->y, tileWidth,
+                            tileHeight, ballXPosition, ballYPosition, ballWidth,
+                            ballHeight)) {
                         f32 xVelocityMod = 1;
                         f32 yVelocityMod = 1;
 
-                        if (ballXPosition + ballWidth >= tilePosition->x + tileWidth ||
+                        if (ballXPosition + ballWidth >=
+                                tilePosition->x + tileWidth ||
                             ballXPosition <= tilePosition->x) {
                             xVelocityMod = -xVelocityMod;
                         }
 
-                        if (ballYPosition + ballHeight >= tilePosition->y + tileHeight ||
+                        if (ballYPosition + ballHeight >=
+                                tilePosition->y + tileHeight ||
                             ballYPosition <= tilePosition->y) {
                             yVelocityMod = -yVelocityMod;
                         }
 
-                        ballXVelocity = ballBaseSpeed * xVelocityMod * GetSign(ballXVelocity);
-                        ballYVelocity = ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
+                        ballXVelocity = ballBaseSpeed * xVelocityMod *
+                                        GetSign(ballXVelocity);
+                        ballYVelocity = ballBaseSpeed * yVelocityMod *
+                                        GetSign(ballYVelocity);
 
                         tileIsDisabled[tileIndex] = true;
                     }
@@ -316,10 +345,13 @@ Entry(int argc, char *argv[])
             }
 
             if (IsOverlapped(
-                    playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition,
-                    ballWidth, ballHeight)) {
+                    playerXPosition, playerYPosition, playerWidth, playerHeight,
+                    ballXPosition, ballYPosition, ballWidth, ballHeight)) {
                 ballXVelocity =
-                    ballBaseSpeed * GetSign(playerXVelocity == 0 ? playerPreviousXVelocity : playerXVelocity);
+                    ballBaseSpeed * GetSign(
+                                        playerXVelocity == 0
+                                            ? playerPreviousXVelocity
+                                            : playerXVelocity);
                 ballYVelocity = ballBaseSpeed;
             }
         }
@@ -328,8 +360,10 @@ Entry(int argc, char *argv[])
         DrawClear(&drawContext, 0, 0, 0);
 
         for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
-            for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
-                u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
+            for (u32 yTileIndex = 0; yTileIndex < gridYTileCount;
+                 ++yTileIndex) {
+                u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(
+                    gridXTileCount, xTileIndex, yTileIndex);
 
                 if (tileIsDisabled[tileIndex]) {
                     continue;
@@ -337,16 +371,23 @@ Entry(int argc, char *argv[])
 
                 Vector2F32 *tilePosition = tilePositions + tileIndex;
                 DrawRectangle(
-                    &drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
+                    &drawContext, tilePosition->x, tilePosition->y, tileWidth,
+                    tileHeight, 1, 0, COLOR4RGBA_GREEN);
             }
         }
 
         if (doRenderGridBackground)
-            DrawRectangle(&drawContext, gridXPosition, gridYPosition, gridWidth, gridHeight, 1, 0, COLOR4RGBA_BLUE);
+            DrawRectangle(
+                &drawContext, gridXPosition, gridYPosition, gridWidth,
+                gridHeight, 1, 0, COLOR4RGBA_BLUE);
 
-        DrawRectangle(&drawContext, playerXPosition, playerYPosition, playerWidth, playerHeight, 1, 0, COLOR4RGBA_RED);
+        DrawRectangle(
+            &drawContext, playerXPosition, playerYPosition, playerWidth,
+            playerHeight, 1, 0, COLOR4RGBA_RED);
 
-        DrawRectangle(&drawContext, ballXPosition, ballYPosition, ballWidth, ballHeight, 1, 0, COLOR4RGBA_WHITE);
+        DrawRectangle(
+            &drawContext, ballXPosition, ballYPosition, ballWidth, ballHeight,
+            1, 0, COLOR4RGBA_WHITE);
 
         DrawEnd(&drawContext);
 
@@ -362,16 +403,19 @@ Entry(int argc, char *argv[])
             // TODO(ilya.a): Display counter [2025/11/08]
 
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
-            LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
+            LONGLONG counterElapsed =
+                endCounter.QuadPart - lastCounter.QuadPart;
 
-            u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-            u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
+            u64 msPerFrame =
+                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds =
+                performanceCounterFrequency.QuadPart / counterElapsed;
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
             sprintf(
-                printBuffer, "%llums/f | %lluf/s | %llumc/f | dt: %f\n", msPerFrame, framesPerSeconds,
-                megaCyclesPerFrame, deltaTime);
+                printBuffer, "%llums/f | %lluf/s | %llumc/f | dt: %f\n",
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame, deltaTime);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
@@ -388,24 +432,31 @@ Entry(int argc, char *argv[])
 
 static bool
 IsOverlapped(
-    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight)
+    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition,
+    f32 bYPosition, f32 bWidth, f32 bHeight)
 {
-    return (aXPosition + aWidth) >= bXPosition && (bXPosition + bWidth) >= aXPosition &&
-           (aYPosition + aHeight) >= bYPosition && (bYPosition + bHeight) >= aYPosition;
+    return (aXPosition + aWidth) >= bXPosition &&
+           (bXPosition + bWidth) >= aXPosition &&
+           (aYPosition + aHeight) >= bYPosition &&
+           (bYPosition + bHeight) >= aYPosition;
 }
 
 static void
 GenerateTileGrid(
-    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition, u32 xTileCount, u32 yTileCount, u32 tileWidth,
-    u32 tileHeight, f32 tileXPadding, f32 tileYPadding)
+    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition,
+    u32 xTileCount, u32 yTileCount, u32 tileWidth, u32 tileHeight,
+    f32 tileXPadding, f32 tileYPadding)
 {
     for (u32 xTileIndex = 0; xTileIndex < xTileCount; ++xTileIndex) {
         for (u32 yTileIndex = 0; yTileIndex < yTileCount; ++yTileIndex) {
-            u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(xTileCount, xTileIndex, yTileIndex);
+            u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(
+                xTileCount, xTileIndex, yTileIndex);
             Vector2F32 *tilePosition = tilePositions + tileIndex;
 
-            tilePosition->x = gridXPosition + xTileIndex * (tileWidth + tileXPadding);
-            tilePosition->y = gridYPosition + yTileIndex * (tileHeight + tileYPadding);
+            tilePosition->x =
+                gridXPosition + xTileIndex * (tileWidth + tileXPadding);
+            tilePosition->y =
+                gridYPosition + yTileIndex * (tileHeight + tileYPadding);
         }
     }
 }

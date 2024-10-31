@@ -75,58 +75,72 @@ typedef enum { GL_CLOCK_WISE, GL_COUNTER_CLOCK_WISE } GLVertexesOrientation;
 
 /* TODO: Customize layout? */
 GFS_API Mesh *GLMeshMakeEx(
-    Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount);
+    Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize,
+    const u32 *indexBuffer, u64 indexesCount);
 
 /*
  * @breaf Returns identity cube mesh. Used only for testing perpuses.
  *
  * Example:
  *     ```c
- *          const Mesh *cubeMesh = GLGetCubeMesh(&runtimeScratch, GL_COUNTER_CLOCK_WISE);
+ *          const Mesh *cubeMesh = GLGetCubeMesh(&runtimeScratch,
+ * GL_COUNTER_CLOCK_WISE);
  *          // ...
  *          while (true) {
  *              // ...
  *              glm::mat4 model = glm::identity<glm::mat4>();
- *              GLShaderSetUniformM4F32(shader, uniformModelLocation, glm::value_ptr(model));
- *              GLDrawMesh(cubeMesh);
+ *              GLShaderSetUniformM4F32(shader, uniformModelLocation,
+ * glm::value_ptr(model)); GLDrawMesh(cubeMesh);
  *          }
  *     ```
  */
-GFS_API Mesh *GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation);
+GFS_API Mesh *GLGetCubeMesh(
+    Scratch *scratch, GLVertexesOrientation orientation);
 
 GFS_API GLVertexArray GLVertexArrayMake(void);
-GFS_API void GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout);
+GFS_API void GLVertexArrayAddBuffer(
+    GLVertexArray va, const GLVertexBuffer *vb,
+    const GLVertexBufferLayout *layout);
 
-GFS_API GLVertexBuffer GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
+GFS_API GLVertexBuffer
+GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize);
 
-GFS_API void GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize);
+GFS_API void GLVertexBufferSendData(
+    GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize);
 
 /*
  * @breaf Naive wrapper around element buffer.
  * @deprecated Use GLElementBuffer instead.
  * @cleanup
  */
-GFS_API GLIndexBuffer GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
+GFS_API GLIndexBuffer
+GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize);
 
 /*
- * @breaf Constructs element buffer, which doesn't owns indicies, which was passed in
+ * @breaf Constructs element buffer, which doesn't owns indicies, which was
+ * passed in
  *
  * TODO(gr3yknigh1): Copy indicies inside [2024/10/05]
  * TODO(gr3yknigh1): Add option for dynamic draw [2024/10/05]
  */
 GFS_API GLElementBuffer GLElementBufferMake(const u32 *indicies, u64 count);
 
-GFS_API void GLElementBufferSendData(GLElementBuffer *buffer, const u32 *indicies, u64 count);
+GFS_API void GLElementBufferSendData(
+    GLElementBuffer *buffer, const u32 *indicies, u64 count);
 
 GFS_API GLVertexBufferLayout GLVertexBufferLayoutMake(Scratch *scratch);
 
-GFS_API void GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count);
+GFS_API void GLVertexBufferLayoutPushAttributeF32(
+    GLVertexBufferLayout *layout, u32 count);
 
 GFS_API void GLClear(f32 r, f32 g, f32 b, f32 a);
 GFS_API void GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask);
 
-GFS_API void GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va);
-GFS_API void GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va);
+GFS_API void GLDrawElements(
+    const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va);
+GFS_API void GLDrawTriangles(
+    const GLVertexBuffer *vb, const GLVertexBufferLayout *layout,
+    GLVertexArray va);
 GFS_API void GLDrawMesh(const Mesh *mesh);
 
 typedef enum {
@@ -141,56 +155,67 @@ typedef enum {
  *
  * @return Shader ID
  * */
-GFS_API GLShaderID GLCompileShaderFromFile(Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
+GFS_API GLShaderID GLCompileShaderFromFile(
+    Scratch *scratch, cstring8 shaderFilePath, GLShaderType shaderType);
 
 /*
  * @breaf Compiles OpenGL shader.
  *
  * @return Shader ID
  * */
-GFS_API GLShaderID GLCompileShader(Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
+GFS_API GLShaderID GLCompileShader(
+    Scratch *scratch, cstring8 shaderSourceString, GLShaderType shaderType);
 
 typedef struct {
     GLShaderID vertexShader;
     GLShaderID fragmentShader;
 } GLShaderProgramLinkData;
 
-GFS_API GLShaderProgramID GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
+GFS_API GLShaderProgramID
+GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data);
 
-GFS_API GLTexture GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout);
+GFS_API GLTexture
+GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout);
 
 /*
  * @breaf Returns location of uniform.
  *
- * @param shader Shader program id which should be enabled with glUseProgram call.
+ * @param shader Shader program id which should be enabled with glUseProgram
+ * call.
  * @param name Name of uniform.
  * */
-GFS_API GLUniformLocation GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name);
+GFS_API GLUniformLocation
+GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name);
 
-GFS_API void GLShaderSetUniformF32(GLShaderProgramID shader, GLUniformLocation location, f32 value);
-GFS_API void GLShaderSetUniformV3F32(GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z);
-GFS_API void GLShaderSetUniformI32(GLShaderProgramID shader, GLUniformLocation location, i32 value);
-GFS_API void GLShaderSetUniformM4F32(GLShaderProgramID shader, GLUniformLocation location, f32 *value);
+GFS_API void GLShaderSetUniformF32(
+    GLShaderProgramID shader, GLUniformLocation location, f32 value);
+GFS_API void GLShaderSetUniformV3F32(
+    GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z);
+GFS_API void GLShaderSetUniformI32(
+    GLShaderProgramID shader, GLUniformLocation location, i32 value);
+GFS_API void GLShaderSetUniformM4F32(
+    GLShaderProgramID shader, GLUniformLocation location, f32 *value);
 
 GFS_API cstring8 GLGetErrorString(i32 errorCode);
 
 GFS_API void GLClearErrors(void);
-GFS_API void GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine);
+GFS_API void GLAssertNoErrors(
+    cstring8 expression, cstring8 sourceFile, u64 sourceLine);
 
 #if defined(GFS_OPENGL_DEBUG)
 
-#define GL_CALL(EXPR)                                                                                                  \
-    do {                                                                                                               \
-        GLClearErrors();                                                                                               \
-        (EXPR);                                                                                                        \
-        GLAssertNoErrors(STRINGIFY(EXPR), __FILE__, __LINE__);                                                         \
+#define GL_CALL(EXPR) \
+    do { \
+        GLClearErrors(); \
+        (EXPR); \
+        GLAssertNoErrors(STRINGIFY(EXPR), __FILE__, __LINE__); \
     } while (0)
 
-#define GL_CALL_O(EXPR, OUT)                                                                                           \
-    do {                                                                                                               \
-        GLClearErrors();                                                                                               \
-        *(OUT) = (EXPR);                                                                                               \
-        GLAssertNoErrors(STRINGIFY(EXPR), __FILE__, __LINE__);                                                         \
+#define GL_CALL_O(EXPR, OUT) \
+    do { \
+        GLClearErrors(); \
+        *(OUT) = (EXPR); \
+        GLAssertNoErrors(STRINGIFY(EXPR), __FILE__, __LINE__); \
     } while (0)
 
 #else

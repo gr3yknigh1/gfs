@@ -77,14 +77,18 @@ typedef struct {
     DrawContextGLInfo glInfo;
 } DrawContext;
 
-DrawContext DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader);
+DrawContext DrawContext_MakeEx(
+    Scratch *scratch, Camera *camera, GLShaderProgramID shader);
 
 void DrawBegin(DrawContext *context);
 
 void DrawClear(DrawContext *context, f32 r, f32 g, f32 b);
 
-void DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale, f32 rotate, Color4RGBA color);
-void DrawSprite(DrawContext *context, f32 x, f32 y, Sprite *sprite, f32 scale, f32 rotate);
+void DrawRectangle(
+    DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale,
+    f32 rotate, Color4RGBA color);
+void DrawSprite(
+    DrawContext *context, f32 x, f32 y, Sprite *sprite, f32 scale, f32 rotate);
 
 void DrawEnd(DrawContext *context);
 

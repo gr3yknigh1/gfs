@@ -46,9 +46,11 @@ typedef struct {
     Window *window;
 } Camera;
 
-static void GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
+static void GameFillSoundBuffer(
+    SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite);
 static void GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite);
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
+    u32 byteToLock, u32 bytesToWrite);
 
 static Camera CameraMake(Window *window);
 static void CameraRotate(Camera *camera, f32 xOffset, f32 yOffset);
@@ -79,10 +81,13 @@ Entry(int argc, char *argv[])
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 
     SoundOutput soundOutput = SoundOutputMake(48000);
-    SoundDevice *soundDevice =
-        SoundDeviceOpen(&runtimeScratch, window, soundOutput.samplesPerSecond, soundOutput.audioBufferSize);
+    SoundDevice *soundDevice = SoundDeviceOpen(
+        &runtimeScratch, window, soundOutput.samplesPerSecond,
+        soundOutput.audioBufferSize);
 
-    GameFillSoundBuffer(soundDevice, &soundOutput, 0, soundOutput.latencySampleCount * soundOutput.bytesPerSample);
+    GameFillSoundBuffer(
+        soundDevice, &soundOutput, 0,
+        soundOutput.latencySampleCount * soundOutput.bytesPerSample);
 
     SoundDevicePlay(soundDevice);
 
@@ -94,11 +99,14 @@ Entry(int argc, char *argv[])
 
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
     GLShaderProgramLinkData shaderLinkData = {0};
-    shaderLinkData.vertexShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.frag.glsl", GL_SHADER_TYPE_FRAG);
-    shaderLinkData.fragmentShader =
-        GLCompileShaderFromFile(&runtimeScratch, "P:\\gfs\\assets\\basic.vert.glsl", GL_SHADER_TYPE_VERT);
-    GLShaderProgramID shader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
+    shaderLinkData.vertexShader = GLCompileShaderFromFile(
+        &runtimeScratch, "P:\\gfs\\assets\\basic.frag.glsl",
+        GL_SHADER_TYPE_FRAG);
+    shaderLinkData.fragmentShader = GLCompileShaderFromFile(
+        &runtimeScratch, "P:\\gfs\\assets\\basic.vert.glsl",
+        GL_SHADER_TYPE_VERT);
+    GLShaderProgramID shader =
+        GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
     ASSERT_NONZERO(shader);
 
 #if 0
@@ -157,7 +165,8 @@ Entry(int argc, char *argv[])
 #endif
 
     BMPicture picture = {0};
-    ASSERT_ISOK(BMPictureLoadFromFile(&picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
+    ASSERT_ISOK(BMPictureLoadFromFile(
+        &picture, &runtimeScratch, "P:\\gfs\\assets\\kitty.bmp"));
 
     GLTexture texture = GLTextureMakeFromBMPicture(&picture, COLOR_LAYOUT_BGR);
 
@@ -174,16 +183,23 @@ Entry(int argc, char *argv[])
 
     GLVertexArrayAddBuffer(va, &vb, &vbLayout);
 
-    GLUniformLocation uniformVertexModifierLocation = GLShaderFindUniformLocation(shader, "u_VertexModifier");
-    GLUniformLocation uniformVertexOffsetLocation = GLShaderFindUniformLocation(shader, "u_VertexOffset");
-    GLUniformLocation uniformTextureLocation = GLShaderFindUniformLocation(shader, "u_Texture");
+    GLUniformLocation uniformVertexModifierLocation =
+        GLShaderFindUniformLocation(shader, "u_VertexModifier");
+    GLUniformLocation uniformVertexOffsetLocation =
+        GLShaderFindUniformLocation(shader, "u_VertexOffset");
+    GLUniformLocation uniformTextureLocation =
+        GLShaderFindUniformLocation(shader, "u_Texture");
 
-    GLUniformLocation uniformModelLocation = GLShaderFindUniformLocation(shader, "u_Model");
-    GLUniformLocation uniformViewLocation = GLShaderFindUniformLocation(shader, "u_View");
-    GLUniformLocation uniformProjectionLocation = GLShaderFindUniformLocation(shader, "u_Projection");
+    GLUniformLocation uniformModelLocation =
+        GLShaderFindUniformLocation(shader, "u_Model");
+    GLUniformLocation uniformViewLocation =
+        GLShaderFindUniformLocation(shader, "u_View");
+    GLUniformLocation uniformProjectionLocation =
+        GLShaderFindUniformLocation(shader, "u_Projection");
 
     GLShaderSetUniformF32(shader, uniformVertexModifierLocation, 1.0f);
-    GLShaderSetUniformV3F32(shader, uniformVertexOffsetLocation, 0.3f, 0.3f, 0.3f);
+    GLShaderSetUniformV3F32(
+        shader, uniformVertexOffsetLocation, 0.3f, 0.3f, 0.3f);
     GLShaderSetUniformI32(shader, uniformTextureLocation, 0);
 
     Camera camera = CameraMake(window);
@@ -196,8 +212,9 @@ Entry(int argc, char *argv[])
     i32 lastMouseYPosition = 0;
 
     GL_CALL(glUseProgram(shader));
-    GL_CALL(glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
-                                           // texture support. [2024/09/22]
+    GL_CALL(
+        glActiveTexture(GL_TEXTURE0)); // TODO(gr3yknigh1): Investigate in multi
+                                       // texture support. [2024/09/22]
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
 
     while (!GameStateShouldStop()) {
@@ -237,7 +254,8 @@ Entry(int argc, char *argv[])
 
         GLShaderSetUniformM4F32(shader, uniformModelLocation, (f32 *)model);
         GLShaderSetUniformM4F32(shader, uniformViewLocation, (f32 *)view);
-        GLShaderSetUniformM4F32(shader, uniformProjectionLocation, (f32 *)projection);
+        GLShaderSetUniformM4F32(
+            shader, uniformProjectionLocation, (f32 *)projection);
 
         GLDrawTriangles(&vb, &vbLayout, va);
 
@@ -247,10 +265,14 @@ Entry(int argc, char *argv[])
         u32 playCursor = 0;
         u32 writeCursor = 0;
 
-        ASSERT_ISOK(SoundDeviceGetCurrentPosition(soundDevice, &playCursor, &writeCursor));
-        u32 byteToLock = (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) % soundOutput.audioBufferSize;
-        u32 targetCursor =
-            (playCursor + (soundOutput.latencySampleCount * soundOutput.bytesPerSample)) % soundOutput.audioBufferSize;
+        ASSERT_ISOK(SoundDeviceGetCurrentPosition(
+            soundDevice, &playCursor, &writeCursor));
+        u32 byteToLock =
+            (soundOutput.runningSampleIndex * soundOutput.bytesPerSample) %
+            soundOutput.audioBufferSize;
+        u32 targetCursor = (playCursor + (soundOutput.latencySampleCount *
+                                          soundOutput.bytesPerSample)) %
+                           soundOutput.audioBufferSize;
         u32 bytesToWrite = 0;
 
         if (byteToLock > targetCursor) {
@@ -261,7 +283,8 @@ Entry(int argc, char *argv[])
         }
 
         if (bytesToWrite > 0) {
-            GameFillSoundBuffer(soundDevice, &soundOutput, byteToLock, bytesToWrite);
+            GameFillSoundBuffer(
+                soundDevice, &soundOutput, byteToLock, bytesToWrite);
         }
 
         ///< Perfomance
@@ -274,21 +297,28 @@ Entry(int argc, char *argv[])
             // TODO(ilya.a): Display counter [2025/11/08]
 
             u64 cyclesElapsed = endCycleCount - lastCycleCount;
-            LONGLONG counterElapsed = endCounter.QuadPart - lastCounter.QuadPart;
+            LONGLONG counterElapsed =
+                endCounter.QuadPart - lastCounter.QuadPart;
 
-            dt = (f32)(1000LL * endCounter.QuadPart) / performanceCounterFrequency.QuadPart;
+            dt = (f32)(1000LL * endCounter.QuadPart) /
+                 performanceCounterFrequency.QuadPart;
 
-            u64 msPerFrame = (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
-            u64 framesPerSeconds = performanceCounterFrequency.QuadPart / counterElapsed;
+            u64 msPerFrame =
+                (1000 * counterElapsed) / performanceCounterFrequency.QuadPart;
+            u64 framesPerSeconds =
+                performanceCounterFrequency.QuadPart / counterElapsed;
             u64 megaCyclesPerFrame = cyclesElapsed / (1000 * 1000);
 
             char8 printBuffer[KILOBYTES(1)];
             sprintf(
                 printBuffer,
-                "%llums/f | %lluf/s | %llumc/f || mouse x=%d y=%d || camera yaw=%.3f pitch=%.3f || mouseOffset=[%.3f "
+                "%llums/f | %lluf/s | %llumc/f || mouse x=%d y=%d || camera "
+                "yaw=%.3f pitch=%.3f || mouseOffset=[%.3f "
                 "%.3f] || lastPos=[%d %d]\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, mousePosition.x, mousePosition.y, camera.yaw,
-                camera.pitch, mouseXOffset, mouseYOffset, lastMouseXPosition, lastMouseYPosition);
+                msPerFrame, framesPerSeconds, megaCyclesPerFrame,
+                mousePosition.x, mousePosition.y, camera.yaw, camera.pitch,
+                mouseXOffset, mouseYOffset, lastMouseXPosition,
+                lastMouseYPosition);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
@@ -305,7 +335,8 @@ Entry(int argc, char *argv[])
 }
 
 static void
-GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
+GameFillSoundBuffer(
+    SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
 {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
@@ -313,12 +344,15 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
     void *region0, *region1;
     u32 region0Size, region1Size;
 
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    SoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     i16 *sampleOut = (i16 *)region0;
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -329,7 +363,8 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
     u32 region2SampleCount = region1Size / output->bytesPerSample;
     sampleOut = (i16 *)region1;
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
-        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex / (f32)output->wavePeriod;
+        f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
+                           (f32)output->wavePeriod;
         f32 sineValue = sinf(sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
@@ -342,7 +377,8 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
 
 static void
 GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite)
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset,
+    u32 byteToLock, u32 bytesToWrite)
 {
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
@@ -355,7 +391,9 @@ GameFillSoundBufferWaveAsset(
     u32 region0Size, region1Size;
     byte *sampleOut;
 
-    SoundDeviceLockBuffer(device, byteToLock, bytesToWrite, &region0, &region0Size, &region1, &region1Size);
+    SoundDeviceLockBuffer(
+        device, byteToLock, bytesToWrite, &region0, &region0Size, &region1,
+        &region1Size);
 
     u32 region0SampleCount = region0Size / output->bytesPerSample;
     sampleOut = (byte *)region0;
@@ -364,7 +402,9 @@ GameFillSoundBufferWaveAsset(
         //     output->runningSampleIndex = 0;
         // }
         MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
@@ -377,7 +417,9 @@ GameFillSoundBufferWaveAsset(
         //     output->runningSampleIndex = 0;
         // }
         MemoryCopy(
-            sampleOut, (byte *)waveAsset->data + output->runningSampleIndex * output->bytesPerSample,
+            sampleOut,
+            (byte *)waveAsset->data +
+                output->runningSampleIndex * output->bytesPerSample,
             output->bytesPerSample);
         sampleOut += output->bytesPerSample;
         output->runningSampleIndex++;
@@ -488,7 +530,8 @@ CameraGetProjectionMatix(Camera *camera, mat4 *projection)
 {
     RectangleI32 windowRect = WindowGetRectangle(camera->window);
     glm_perspective(
-        glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height, 0.1f,
+        glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height,
+        0.1f,
         //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         // NOTE(gr3yknigh1): Viewport width and height (not the window).
         // [2024/09/22]

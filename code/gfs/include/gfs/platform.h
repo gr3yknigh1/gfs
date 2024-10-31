@@ -105,7 +105,8 @@ typedef struct {
 
 // FileOpenResult FileOpen(cstring8 filePath);
 
-GFS_API FileOpenResult FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions);
+GFS_API FileOpenResult
+FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions);
 
 typedef enum {
     FILE_CLOSE_OK,
@@ -120,11 +121,13 @@ typedef enum {
     FILE_FAILED_TO_READ,
 } FileLoadResultCode;
 
-GFS_API FileLoadResultCode
-FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded);
+GFS_API FileLoadResultCode FileLoadToBuffer(
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded);
 
 GFS_API FileLoadResultCode FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset);
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad,
+    usize *numberOfBytesLoaded, usize loadOffset);
 
 GFS_API usize FileGetSize(FileHandle *handle);
 
@@ -140,12 +143,14 @@ typedef enum {
     FILE_CURSOR_ANCHOR_END,
 } FileCursorAnchor;
 
-FileSetCursorResult FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor);
+FileSetCursorResult FileSetCursor(
+    FileHandle *handle, usize offset, FileCursorAnchor anchor);
 
 /*
  * @breaf Opens window and initializes OpenGL render context.
  * */
-GFS_API Window *WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title);
+GFS_API Window *WindowOpen(
+    Scratch *scratch, i32 width, i32 height, cstring8 title);
 
 /*
  * @breaf Closes platform's window.
@@ -210,21 +215,24 @@ GFS_API SoundOutput SoundOutputMake(i32 samplesPerSecond);
 
 GFS_API void SoundOutputSetTone(SoundOutput *output, i32 toneHZ);
 
-GFS_API SoundDevice *SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize);
+GFS_API SoundDevice *SoundDeviceOpen(
+    Scratch *scratch, Window *window, i32 samplesPerSecond,
+    usize audioBufferSize);
 
 typedef enum {
     SOUND_DEVICE_GET_CURRENT_POSITION_OK,
     SOUND_DEVICE_GET_CURRENT_POSITION_ERR,
 } SoundDeviceGetCurrentPositionResult;
 
-GFS_API SoundDeviceGetCurrentPositionResult
-SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor);
+GFS_API SoundDeviceGetCurrentPositionResult SoundDeviceGetCurrentPosition(
+    SoundDevice *device, u32 *playCursor, u32 *writeCursor);
 
 GFS_API void SoundDeviceLockBuffer(
-    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
-    u32 *region1Size);
+    SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0,
+    u32 *region0Size, void **region1, u32 *region1Size);
 GFS_API void SoundDeviceUnlockBuffer(
-    SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size);
+    SoundDevice *device, void *region0, u32 region0Size, void *region1,
+    u32 region1Size);
 GFS_API void SoundDevicePlay(SoundDevice *device);
 
 GFS_API void SoundDeviceClose(SoundDevice *device);

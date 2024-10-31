@@ -40,10 +40,10 @@
 #endif
 
 #if defined(__cplusplus)
-#define INIT_EMPTY_STRUCT(X)                                                                                           \
+#define INIT_EMPTY_STRUCT(X) \
     LITERAL(X) {}
 #else
-#define INIT_EMPTY_STRUCT(X)                                                                                           \
+#define INIT_EMPTY_STRUCT(X) \
     LITERAL(X) { 0 }
 #endif
 

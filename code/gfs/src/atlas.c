@@ -10,7 +10,9 @@
 #include "gfs/memory.h"
 
 Atlas
-AtlasFromFile(Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight, ColorLayout colorLayout)
+AtlasFromFile(
+    Scratch *scratch, cstring8 filePath, u32 tileWidth, u32 tileHeight,
+    ColorLayout colorLayout)
 {
     Atlas atlas = INIT_EMPTY_STRUCT(Atlas);
 
@@ -43,14 +45,16 @@ AtlasGetYTileCount(Atlas *atlas)
 f32
 AtlasGetTileUVWidth(Atlas *atlas)
 {
-    f32 tileUVWidth = MapU32ValueRangeToF32(atlas->tileWidth, 0, atlas->picture->dibHeader.width, 0.0f, 1.0f);
+    f32 tileUVWidth = MapU32ValueRangeToF32(
+        atlas->tileWidth, 0, atlas->picture->dibHeader.width, 0.0f, 1.0f);
     return tileUVWidth;
 }
 
 f32
 AtlasGetTileUVHeight(Atlas *atlas)
 {
-    f32 tileUVHeight = MapU32ValueRangeToF32(atlas->tileHeight, 0, atlas->picture->dibHeader.height, 0.0f, 1.0f);
+    f32 tileUVHeight = MapU32ValueRangeToF32(
+        atlas->tileHeight, 0, atlas->picture->dibHeader.height, 0.0f, 1.0f);
     return tileUVHeight;
 }
 
@@ -58,7 +62,9 @@ TexCoords
 AtlasTileCoordsToUV(Atlas *atlas, Vector2U32 tileCoords)
 {
     TexCoords uv;
-    uv.t = MapU32ValueRangeToF32(tileCoords.x, 0, AtlasGetXTileCount(atlas), 0.0f, 1.0f);
-    uv.s = MapU32ValueRangeToF32(tileCoords.y, 0, AtlasGetYTileCount(atlas), 0.0f, 1.0f);
+    uv.t = MapU32ValueRangeToF32(
+        tileCoords.x, 0, AtlasGetXTileCount(atlas), 0.0f, 1.0f);
+    uv.s = MapU32ValueRangeToF32(
+        tileCoords.y, 0, AtlasGetYTileCount(atlas), 0.0f, 1.0f);
     return uv;
 }
