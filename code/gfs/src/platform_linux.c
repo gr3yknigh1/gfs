@@ -23,12 +23,14 @@ typedef struct FileHandle {
 } FileHandle;
 
 bool
-FileHandleIsValid(FileHandle *handle) {
+FileHandleIsValid(FileHandle *handle)
+{
     return handle->file != NULL;
 }
 
 FileOpenResult
-FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
+FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions)
+{
     FileOpenResult result = INIT_EMPTY_STRUCT(FileOpenResult);
 
     result.code = FILE_OPEN_OK;
@@ -55,7 +57,8 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
 }
 
 FileCloseResultCode
-FileClose(FileHandle *handle) {
+FileClose(FileHandle *handle)
+{
     int result = fclose(handle->file);
 
     if (result == EOF) {
@@ -66,19 +69,22 @@ FileClose(FileHandle *handle) {
 }
 
 bool
-IsPathExists(cstring8 path) {
+IsPathExists(cstring8 path)
+{
     struct stat fileStat = INIT_EMPTY_STRUCT(struct stat);
     return (stat(path, &fileStat) == 0);
 }
 
 FileLoadResultCode
-FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded) {
+FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded)
+{
     return FileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
 FileLoadResultCode
 FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset)
+{
 
     long origOffset = 0;
 
@@ -105,7 +111,8 @@ FileLoadToBufferEx(
 }
 
 usize
-FileGetSize(FileHandle *handle) {
+FileGetSize(FileHandle *handle)
+{
     usize size = 0;
 
     fseek(handle->file, 0, SEEK_END);
@@ -116,13 +123,15 @@ FileGetSize(FileHandle *handle) {
 }
 
 void *
-MemoryAllocate(usize size) {
+MemoryAllocate(usize size)
+{
     void *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     return data;
 }
 
 MemoryFreeResultCode
-MemoryFree(void *data, usize size) {
+MemoryFree(void *data, usize size)
+{
     if (munmap(data, size) != 0) {
         return MEMORY_FREE_ERR;
     }
@@ -130,13 +139,15 @@ MemoryFree(void *data, usize size) {
 }
 
 usize
-GetPageSize(void) {
+GetPageSize(void)
+{
     usize pageSize = getpagesize();
     return pageSize;
 }
 
 void
-PutLastError(void) {
+PutLastError(void)
+{
     cstring8 errorMessage = strerror(errno);
 
     if (errorMessage == NULL) {
@@ -147,16 +158,19 @@ PutLastError(void) {
 }
 
 void
-PutString(cstring8 s) {
+PutString(cstring8 s)
+{
     puts(s);
 }
 
 GFS_NORETURN void
-ProcessExit(u32 code) {
+ProcessExit(u32 code)
+{
     exit(code);
 }
 
 void
-ThrowDebugBreak(void) {
+ThrowDebugBreak(void)
+{
     raise(SIGTRAP);
 }

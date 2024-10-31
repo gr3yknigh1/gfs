@@ -23,6 +23,10 @@ IndentWidth:     4
 #PenaltyReturnTypeOnItsOwnLine: 60
 PenaltyReturnTypeOnItsOwnLine: 1000
 
+
+BreakBeforeBraces: Linux
+#BreakBeforeBraces: Attach
+
 #SortIncludes:    CaseSensitive
 SortIncludes:    Never
 
@@ -101,7 +105,6 @@ BreakAfterJavaFieldAnnotations: false
 BreakArrays:     true
 BreakBeforeBinaryOperators: None
 BreakBeforeConceptDeclarations: Always
-BreakBeforeBraces: Attach
 BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon

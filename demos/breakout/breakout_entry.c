@@ -18,7 +18,7 @@
 #include <glad/glad.h>
 
 #include <ft2build.h>
-#include FT_FREETYPE_H  // WTF?
+#include FT_FREETYPE_H // WTF?
 
 #include <gfs/entry.h>
 #include <gfs/game_state.h>
@@ -36,11 +36,8 @@
 #include "breakout_sound.h"
 
 static void GenerateTileGrid(
-    Vector2F32 *tilePositions,
-    f32 gridXPosition, f32 gridYPosition,
-    u32 gridWidth, u32 gridHeight,
-    u32 tileWidth, u32 tileHeight,
-    f32 tileXPadding, f32 tileYPadding);
+    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition, u32 gridWidth, u32 gridHeight, u32 tileWidth,
+    u32 tileHeight, f32 tileXPadding, f32 tileYPadding);
 
 typedef struct {
     LARGE_INTEGER performanceCounterFrequency;
@@ -80,7 +77,8 @@ Clock_GetSeconds(Clock *clock)
     return result;
 }
 
-static bool IsOverlapped(f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight);
+static bool IsOverlapped(
+    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight);
 
 static f32
 GetSign(f32 x)
@@ -131,11 +129,12 @@ Entry(int argc, char *argv[])
 
     DrawContext drawContext = DrawContext_MakeEx(&runtimeScratch, &camera, shader);
 
-    f32 ballWidth = 10;
-    f32 ballHeight = 10;
+    RectangleF32 ballRect = EMPTY_STRUCT(RectangleF32);
+    ballRect.width = 10;
+    ballRect.height = 10;
+    ball.x = windowRect.width / 2 - ballRect.width / 2;
+    ball.y = windowRect.height / 3 - ballRect.height / 3;
     f32 ballBaseSpeed = 350;
-    f32 ballXPosition = windowRect.width / 2 - ballWidth / 2;
-    f32 ballYPosition = windowRect.height / 3 - ballHeight / 3;
     f32 ballXVelocity = 0;
     f32 ballYVelocity = (-1) * ballBaseSpeed;
 
@@ -153,7 +152,9 @@ Entry(int argc, char *argv[])
     bool *tileIsDisabled = malloc(sizeof(bool) * gridTileCount);
     MemoryZero(tileIsDisabled, sizeof(bool) * gridTileCount);
 
-    GenerateTileGrid(tilePositions, gridXPosition, gridYPosition, gridXTileCount, gridYTileCount, tileWidth, tileHeight, gridXPadding, gridYPadding);
+    GenerateTileGrid(
+        tilePositions, gridXPosition, gridYPosition, gridXTileCount, gridYTileCount, tileWidth, tileHeight,
+        gridXPadding, gridYPadding);
 
     f32 playerXVelocity = 0;
     f32 playerYVelocity = 0;
@@ -196,7 +197,8 @@ Entry(int argc, char *argv[])
             glBindTexture(GL_TEXTURE_2D, characterTableWriteCursor->texture);
 
             glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width, face->glyph->bitmap.rows, 0, GL_RED,
+                GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -252,7 +254,6 @@ Entry(int argc, char *argv[])
             playerXVelocity = (+1) * playerSpeed;
         }
 
-
         playerXPosition += playerXVelocity * deltaTime;
         playerYPosition += playerYVelocity * deltaTime;
 
@@ -263,7 +264,8 @@ Entry(int argc, char *argv[])
             ballXPosition += ballXVelocity * deltaTime;
             ballYPosition += ballYVelocity * deltaTime;
 
-            if (!IsOverlapped(0, 0, windowRect.width, windowRect.height, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+            if (!IsOverlapped(
+                    0, 0, windowRect.width, windowRect.height, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
                 f32 xVelocityMod = 1;
                 f32 yVelocityMod = 1;
 
@@ -279,7 +281,6 @@ Entry(int argc, char *argv[])
                 ballYVelocity = ballBaseSpeed * yVelocityMod * GetSign(ballYVelocity);
             }
 
-
             for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
                 for (u32 yTileIndex = 0; yTileIndex < gridYTileCount; ++yTileIndex) {
                     u32 tileIndex = GetOffsetFromCoords2DGridArrayRM(gridXTileCount, xTileIndex, yTileIndex);
@@ -290,15 +291,19 @@ Entry(int argc, char *argv[])
 
                     Vector2F32 *tilePosition = tilePositions + tileIndex;
 
-                    if (IsOverlapped(tilePosition->x, tilePosition->y, tileWidth, tileHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
+                    if (IsOverlapped(
+                            tilePosition->x, tilePosition->y, tileWidth, tileHeight, ballXPosition, ballYPosition,
+                            ballWidth, ballHeight)) {
                         f32 xVelocityMod = 1;
                         f32 yVelocityMod = 1;
 
-                        if (ballXPosition + ballWidth >= tilePosition->x + tileWidth || ballXPosition <= tilePosition->x) {
+                        if (ballXPosition + ballWidth >= tilePosition->x + tileWidth ||
+                            ballXPosition <= tilePosition->x) {
                             xVelocityMod = -xVelocityMod;
                         }
 
-                        if (ballYPosition + ballHeight >= tilePosition->y + tileHeight || ballYPosition <= tilePosition->y) {
+                        if (ballYPosition + ballHeight >= tilePosition->y + tileHeight ||
+                            ballYPosition <= tilePosition->y) {
                             yVelocityMod = -yVelocityMod;
                         }
 
@@ -310,8 +315,11 @@ Entry(int argc, char *argv[])
                 }
             }
 
-            if (IsOverlapped(playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition, ballWidth, ballHeight)) {
-                ballXVelocity = ballBaseSpeed * GetSign(playerXVelocity == 0 ? playerPreviousXVelocity : playerXVelocity);
+            if (IsOverlapped(
+                    playerXPosition, playerYPosition, playerWidth, playerHeight, ballXPosition, ballYPosition,
+                    ballWidth, ballHeight)) {
+                ballXVelocity =
+                    ballBaseSpeed * GetSign(playerXVelocity == 0 ? playerPreviousXVelocity : playerXVelocity);
                 ballYVelocity = ballBaseSpeed;
             }
         }
@@ -328,11 +336,13 @@ Entry(int argc, char *argv[])
                 }
 
                 Vector2F32 *tilePosition = tilePositions + tileIndex;
-                DrawRectangle(&drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
+                DrawRectangle(
+                    &drawContext, tilePosition->x, tilePosition->y, tileWidth, tileHeight, 1, 0, COLOR4RGBA_GREEN);
             }
         }
 
-        if (doRenderGridBackground) DrawRectangle(&drawContext, gridXPosition, gridYPosition, gridWidth, gridHeight, 1, 0, COLOR4RGBA_BLUE);
+        if (doRenderGridBackground)
+            DrawRectangle(&drawContext, gridXPosition, gridYPosition, gridWidth, gridHeight, 1, 0, COLOR4RGBA_BLUE);
 
         DrawRectangle(&drawContext, playerXPosition, playerYPosition, playerWidth, playerHeight, 1, 0, COLOR4RGBA_RED);
 
@@ -360,9 +370,8 @@ Entry(int argc, char *argv[])
 
             char8 printBuffer[KILOBYTES(1)];
             sprintf(
-                printBuffer,
-                "%llums/f | %lluf/s | %llumc/f | dt: %f\n",
-                msPerFrame, framesPerSeconds, megaCyclesPerFrame, deltaTime);
+                printBuffer, "%llums/f | %lluf/s | %llumc/f | dt: %f\n", msPerFrame, framesPerSeconds,
+                megaCyclesPerFrame, deltaTime);
             OutputDebugString(printBuffer);
             lastCounter = endCounter;
             lastCycleCount = endCycleCount;
@@ -378,21 +387,17 @@ Entry(int argc, char *argv[])
 }
 
 static bool
-IsOverlapped(f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight)
+IsOverlapped(
+    f32 aXPosition, f32 aYPosition, f32 aWidth, f32 aHeight, f32 bXPosition, f32 bYPosition, f32 bWidth, f32 bHeight)
 {
-    return (aXPosition + aWidth) >= bXPosition
-        && (bXPosition + bWidth) >= aXPosition
-        && (aYPosition + aHeight) >= bYPosition
-        && (bYPosition + bHeight) >= aYPosition;
+    return (aXPosition + aWidth) >= bXPosition && (bXPosition + bWidth) >= aXPosition &&
+           (aYPosition + aHeight) >= bYPosition && (bYPosition + bHeight) >= aYPosition;
 }
 
 static void
 GenerateTileGrid(
-    Vector2F32 *tilePositions,
-    f32 gridXPosition, f32 gridYPosition,
-    u32 xTileCount, u32 yTileCount,
-    u32 tileWidth, u32 tileHeight,
-    f32 tileXPadding, f32 tileYPadding)
+    Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition, u32 xTileCount, u32 yTileCount, u32 tileWidth,
+    u32 tileHeight, f32 tileXPadding, f32 tileYPadding)
 {
     for (u32 xTileIndex = 0; xTileIndex < xTileCount; ++xTileIndex) {
         for (u32 yTileIndex = 0; yTileIndex < yTileCount; ++yTileIndex) {

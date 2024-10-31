@@ -111,7 +111,8 @@ typedef struct SoundDevice {
 static Window *gWindow = NULL;
 
 static void
-Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
+Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height)
+{
     UNUSED(windowHandle);
 
     if (glad_glViewport != NULL) {
@@ -120,13 +121,15 @@ Win32_OnWindowResize(HWND windowHandle, UINT width, UINT height) {
 }
 
 Vector2I32
-GetMousePosition(Window *window) {
+GetMousePosition(Window *window)
+{
     UNUSED(window);
     return INIT_EMPTY_STRUCT(Vector2I32);
 }
 
 void
-SetMouseVisibility(MouseVisibilityState newState) {
+SetMouseVisibility(MouseVisibilityState newState)
+{
     switch (newState) {
     case MOUSEVISIBILITYSTATE_SHOWN:
         ShowCursor(true);
@@ -138,7 +141,8 @@ SetMouseVisibility(MouseVisibilityState newState) {
 }
 
 void
-SetMousePosition(Window *window, i32 x, i32 y) {
+SetMousePosition(Window *window, i32 x, i32 y)
+{
     UNUSED(window);
     UNUSED(x);
     UNUSED(y);
@@ -148,20 +152,23 @@ typedef i32 KeyStateMask;
 KeyStateMask gKeysStateTable[KEY_COUNT] = {0};
 
 bool
-IsKeyDown(Key key) {
+IsKeyDown(Key key)
+{
     ASSERT_ISTRUE(key > KEY_NONE && key < KEY_COUNT);
     KeyStateMask state = gKeysStateTable[key];
     return state == KEY_STATE_DOWN;
 }
 
 static inline void
-Win32_GetRectSize(const RECT *r, i32 *width, i32 *height) {
+Win32_GetRectSize(const RECT *r, i32 *width, i32 *height)
+{
     *width = r->right - r->left;
     *height = r->bottom - r->top;
 }
 
 static inline RectangleI32
-Win32_ConvertRECTToRect32(RECT rect) {
+Win32_ConvertRECTToRect32(RECT rect)
+{
     RectangleI32 result;
     result.x = rect.left;
     result.y = rect.top;
@@ -170,12 +177,14 @@ Win32_ConvertRECTToRect32(RECT rect) {
 }
 
 bool
-FileHandleIsValid(FileHandle *handle) {
+FileHandleIsValid(FileHandle *handle)
+{
     return handle->win32Handle != INVALID_HANDLE_VALUE;
 }
 
 FileOpenResult
-FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
+FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions)
+{
     ASSERT_NONNULL(filePath);
     ASSERT(!CString8IsEmpty(filePath));
 
@@ -209,7 +218,8 @@ FileOpenEx(cstring8 filePath, Scratch *allocator, Permissions permissions) {
 }
 
 FileCloseResultCode
-FileClose(FileHandle *handle) {
+FileClose(FileHandle *handle)
+{
     ASSERT_NONNULL(handle);
     ASSERT_ISTRUE(FileHandleIsValid(handle));
 
@@ -221,12 +231,14 @@ FileClose(FileHandle *handle) {
 }
 
 FileLoadResultCode
-FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded) {
+FileLoadToBuffer(FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded)
+{
     return FileLoadToBufferEx(handle, buffer, numberOfBytesToLoad, numberOfBytesLoaded, 0);
 }
 
 FileSetCursorResult
-FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor) {
+FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor)
+{
     ASSERT_NONNULL(handle);
     ASSERT(FileHandleIsValid(handle));
 
@@ -260,7 +272,8 @@ FileSetCursor(FileHandle *handle, usize offset, FileCursorAnchor anchor) {
 
 FileLoadResultCode
 FileLoadToBufferEx(
-    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset) {
+    FileHandle *handle, void *buffer, usize numberOfBytesToLoad, usize *numberOfBytesLoaded, usize loadOffset)
+{
     ASSERT_NONNULL(handle);
     ASSERT(FileHandleIsValid(handle));
     ASSERT_NONNULL(buffer);
@@ -283,29 +296,34 @@ FileLoadToBufferEx(
 }
 
 usize
-FileGetSize(FileHandle *handle) {
+FileGetSize(FileHandle *handle)
+{
     LARGE_INTEGER result;
     ASSERT_NONZERO(GetFileSizeEx(handle->win32Handle, &result));
     return result.QuadPart;
 }
 
 GFS_NORETURN void
-ProcessExit(u32 code) {
+ProcessExit(u32 code)
+{
     ExitProcess(code);
 }
 
 void
-PutString(cstring8 s) {
+PutString(cstring8 s)
+{
     OutputDebugString(s);
 }
 
 void
-ThrowDebugBreak(void) {
+ThrowDebugBreak(void)
+{
     DebugBreak();
 }
 
 void
-PutLastError(void) {
+PutLastError(void)
+{
     DWORD win32LastErrorCode = GetLastError();
 
     if (win32LastErrorCode != ERROR_SUCCESS) {
@@ -316,12 +334,14 @@ PutLastError(void) {
 }
 
 bool
-IsPathExists(cstring8 path) {
+IsPathExists(cstring8 path)
+{
     return PathFileExistsA(path);
 }
 
 RectangleI32
-WindowGetRectangle(Window *window) {
+WindowGetRectangle(Window *window)
+{
     RECT win32WindowRect;
     ASSERT_NONZERO(GetClientRect(window->windowHandle, &win32WindowRect));
     RectangleI32 windowRect = Win32_ConvertRECTToRect32(win32WindowRect);
@@ -329,12 +349,14 @@ WindowGetRectangle(Window *window) {
 }
 
 void
-WindowUpdate(Window *window) {
+WindowUpdate(Window *window)
+{
     ASSERT_ISTRUE(SwapBuffers(window->deviceContext));
 }
 
 static void
-Win32_OpenGLContextExts_Init(void) {
+Win32_OpenGLContextExts_Init(void)
+{
 
     WNDCLASSA dummyWindowClass = {0};
     dummyWindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -388,7 +410,8 @@ Win32_OpenGLContextExts_Init(void) {
 }
 
 static HGLRC
-Win32_OpenGLContext_Init(HDC deviceContext) {
+Win32_OpenGLContext_Init(HDC deviceContext)
+{
     Win32_OpenGLContextExts_Init();
 
     int pixelFormatAttribs[] = {
@@ -457,7 +480,8 @@ typedef enum {
 } Win32_VirtualKey;
 
 static Key
-Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk) {
+Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk)
+{
     Key key = KEY_NONE;
 
     switch (win32Vk) {
@@ -483,7 +507,8 @@ Win32_TranslateVirtualKey(Win32_VirtualKey win32Vk) {
 }
 
 static LRESULT CALLBACK
-Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
+Win32_MainWindowProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
+{
     LRESULT result = 0;
 
     switch (message) {
@@ -553,7 +578,8 @@ WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR com
     UNUSED(prevInstance);
     Entry(__argc, __argv);
     //    ^^^^^^^^^^^^^^
-    // NOTE(gr3yknigh1): Reference - https://learn.microsoft.com/en-us/cpp/c-runtime-library/argc-argv-wargv?view=msvc-170&redirectedfrom=MSDN
+    // NOTE(gr3yknigh1): Reference -
+    // https://learn.microsoft.com/en-us/cpp/c-runtime-library/argc-argv-wargv?view=msvc-170&redirectedfrom=MSDN
     // [2024/10/28]
     return 0;
 }
@@ -573,7 +599,8 @@ main(int argc, char *argv[])
 typedef enum { WIN32_LOADXINPUT_OK, WIN32_LOADXINPUT_ERR } Win32_LoadXInputResult;
 
 static Win32_LoadXInputResult
-Win32_LoadXInput(void) {
+Win32_LoadXInput(void)
+{
     // TODO(ilya.a): Handle different versions of xinput. Check for newer. If
     // fails, use older one. [2024/05/24]
     HMODULE library = LoadLibrary(WIN32_XINPUT_DLL);
@@ -594,7 +621,8 @@ Win32_LoadXInput(void) {
 }
 
 Window *
-WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
+WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title)
+{
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(title);
 
@@ -623,8 +651,7 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
     ASSERT_NONZERO(RegisterClass(&window->windowClass));
 
     window->windowHandle = CreateWindowExA(
-        0, window->windowClass.lpszClassName, copiedTitle,
-        WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
+        0, window->windowClass.lpszClassName, copiedTitle, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
         CW_USEDEFAULT, // int x
         CW_USEDEFAULT, // int y
         width,         // int width
@@ -656,7 +683,8 @@ WindowOpen(Scratch *scratch, i32 width, i32 height, cstring8 title) {
 }
 
 void
-PoolEvents(Window *window) {
+PoolEvents(Window *window)
+{
     UNUSED(window);
 
     MSG message = {0};
@@ -726,13 +754,15 @@ PoolEvents(Window *window) {
 }
 
 void
-WindowClose(Window *window) {
+WindowClose(Window *window)
+{
     ReleaseDC(window->windowHandle, window->deviceContext);
     CloseWindow(window->windowHandle);
 }
 
 usize
-GetPageSize(void) {
+GetPageSize(void)
+{
     usize pageSize;
 
     SYSTEM_INFO systemInfo = {0};
@@ -744,7 +774,8 @@ GetPageSize(void) {
 }
 
 void *
-MemoryAllocate(usize size) {
+MemoryAllocate(usize size)
+{
     void *data = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     //                              ^^^^
     // NOTE(ilya.a): So, here I am reserving `size` amount of bytes, but
@@ -756,7 +787,8 @@ MemoryAllocate(usize size) {
 }
 
 MemoryFreeResultCode
-MemoryFree(void *data, usize size) {
+MemoryFree(void *data, usize size)
+{
     UNUSED(size);
 
     if (VirtualFree(data, 0, MEM_RELEASE) == 0) {
@@ -785,7 +817,8 @@ typedef enum {
  * TODO(ilya.a): Check this out. [2024/05/25]
  */
 static Win32_DirectSoundInitResult
-Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize) {
+Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samplesPerSecond, usize bufferSize)
+{
     HMODULE library = LoadLibrary(WIN32_DIRECTSOUND_DLL);
 
     if (library == NULL) {
@@ -860,7 +893,8 @@ Win32_DirectSoundInit(HWND window, LPDIRECTSOUNDBUFFER *soundBuffer, i32 samples
 }
 
 SoundOutput
-SoundOutputMake(i32 samplesPerSecond) {
+SoundOutputMake(i32 samplesPerSecond)
+{
     SoundOutput ret;
 
     ret.samplesPerSecond = samplesPerSecond;
@@ -877,7 +911,8 @@ SoundOutputMake(i32 samplesPerSecond) {
 }
 
 SoundDeviceGetCurrentPositionResult
-SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor) {
+SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCursor)
+{
     if (!SUCCEEDED(VCALL(device->audioBuffer, GetCurrentPosition, (DWORD *)playCursor, (DWORD *)writeCursor))) {
         return SOUND_DEVICE_GET_CURRENT_POSITION_ERR;
     }
@@ -885,7 +920,8 @@ SoundDeviceGetCurrentPosition(SoundDevice *device, u32 *playCursor, u32 *writeCu
 }
 
 void
-SoundOutputSetTone(SoundOutput *output, i32 toneHZ) {
+SoundOutputSetTone(SoundOutput *output, i32 toneHZ)
+{
     output->toneHZ = toneHZ;
     output->wavePeriod = output->samplesPerSecond / output->toneHZ;
 }
@@ -893,7 +929,8 @@ SoundOutputSetTone(SoundOutput *output, i32 toneHZ) {
 void
 SoundDeviceLockBuffer(
     SoundDevice *device, u32 offset, u32 portionSizeToLock, void **region0, u32 *region0Size, void **region1,
-    u32 *region1Size) {
+    u32 *region1Size)
+{
     // TODO(ilya.a): Check why it's failed to lock buffer. Sound is nice, but
     // lock are failing [2024/07/28]
     ASSERT_VCALL(
@@ -902,17 +939,20 @@ SoundDeviceLockBuffer(
 }
 
 void
-SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size) {
+SoundDeviceUnlockBuffer(SoundDevice *device, void *region0, u32 region0Size, void *region1, u32 region1Size)
+{
     ASSERT_VCALL(device->audioBuffer, Unlock, region0, region0Size, region1, region1Size);
 }
 
 void
-SoundDevicePlay(SoundDevice *device) {
+SoundDevicePlay(SoundDevice *device)
+{
     ASSERT_VCALL(device->audioBuffer, Play, 0, 0, DSBPLAY_LOOPING);
 }
 
 SoundDevice *
-SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize) {
+SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize audioBufferSize)
+{
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(window);
     ASSERT_NONNULL(window->windowHandle);
@@ -928,6 +968,7 @@ SoundDeviceOpen(Scratch *scratch, Window *window, i32 samplesPerSecond, usize au
 }
 
 void
-SoundDeviceClose(SoundDevice *device) {
+SoundDeviceClose(SoundDevice *device)
+{
     UNUSED(device);
 }

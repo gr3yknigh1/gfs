@@ -16,7 +16,8 @@
 #include "gfs/types.h"
 
 GLVertexArray
-GLVertexArrayMake(void) {
+GLVertexArrayMake(void)
+{
     GLuint vao = 0;
     GL_CALL(glGenVertexArrays(1, &vao));
     GL_CALL(glBindVertexArray(vao));
@@ -24,7 +25,8 @@ GLVertexArrayMake(void) {
 }
 
 void
-GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout) {
+GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVertexBufferLayout *layout)
+{
 
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vb->id));
@@ -44,7 +46,8 @@ GLVertexArrayAddBuffer(GLVertexArray va, const GLVertexBuffer *vb, const GLVerte
 }
 
 GLVertexBuffer
-GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
+GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize)
+{
     GLVertexBuffer buffer = {0};
 
     buffer.id = 0;
@@ -58,9 +61,9 @@ GLVertexBufferMake(const void *dataBuffer, usize dataBufferSize) {
     return buffer;
 }
 
-
 void
-GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize) {
+GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dataBufferSize)
+{
     buffer->data = dataBuffer;
     buffer->size = dataBufferSize;
 
@@ -68,9 +71,9 @@ GLVertexBufferSendData(GLVertexBuffer *buffer, const void *dataBuffer, usize dat
     GL_CALL(glBufferData(GL_ARRAY_BUFFER, buffer->size, buffer->data, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
 }
 
-
 GLIndexBuffer
-GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
+GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize)
+{
     GLuint ebo = 0;
 
     GL_CALL(glGenBuffers(1, &ebo));
@@ -81,14 +84,16 @@ GLIndexBufferMake(const void *indexBuffer, usize indexBufferSize) {
 }
 
 GLElementBuffer
-GLElementBufferMake(const u32 *elements, u64 count) {
+GLElementBufferMake(const u32 *elements, u64 count)
+{
     GLElementBuffer eb;
 
     usize elementsBufferSize = sizeof(elements[0]) * count;
 
     GL_CALL(glGenBuffers(1, &(eb.id)));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id));
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)elements, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
+    GL_CALL(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)elements, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb.id)); // @cleanup
 
     eb.elements = elements;
@@ -98,20 +103,22 @@ GLElementBufferMake(const u32 *elements, u64 count) {
 }
 
 void
-GLElementBufferSendData(GLElementBuffer *buffer, const u32 *indicies, u64 count) {
+GLElementBufferSendData(GLElementBuffer *buffer, const u32 *indicies, u64 count)
+{
     buffer->elements = indicies;
     buffer->count = count;
 
     usize elementsBufferSize = sizeof(buffer->elements[0]) * buffer->count;
 
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->id));
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)buffer->elements, GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
-
+    GL_CALL(glBufferData(
+        GL_ELEMENT_ARRAY_BUFFER, elementsBufferSize, (const void *)buffer->elements,
+        GL_DYNAMIC_DRAW /* GL_STATIC_DRAW */));
 }
 
-
 GLVertexBufferLayout
-GLVertexBufferLayoutMake(Scratch *scratch) {
+GLVertexBufferLayoutMake(Scratch *scratch)
+{
     GLVertexBufferLayout layout = {0};
 
     layout.scratch = scratch;
@@ -124,7 +131,8 @@ GLVertexBufferLayoutMake(Scratch *scratch) {
 }
 
 void
-GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count) {
+GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count)
+{
     usize attributeSize = sizeof(f32);
 
     GLAttribute *attribute = layout->attributes + layout->attributesCount;
@@ -138,19 +146,22 @@ GLVertexBufferLayoutPushAttributeF32(GLVertexBufferLayout *layout, u32 count) {
 }
 
 void
-GLClear(f32 r, f32 g, f32 b, f32 a) {
+GLClear(f32 r, f32 g, f32 b, f32 a)
+{
     GL_CALL(glClearColor(r, g, b, a));
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 void
-GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask) {
+GLClearEx(f32 r, f32 g, f32 b, f32 a, i32 clearMask)
+{
     GL_CALL(glClearColor(r, g, b, a));
     GL_CALL(glClear(clearMask));
 }
 
 void
-GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va) {
+GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArray va)
+{
     UNUSED(vb);
 
     GL_CALL(glBindVertexArray(va));
@@ -159,18 +170,21 @@ GLDrawElements(const GLElementBuffer *eb, const GLVertexBuffer *vb, GLVertexArra
 }
 
 void
-GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va) {
+GLDrawTriangles(const GLVertexBuffer *vb, const GLVertexBufferLayout *layout, GLVertexArray va)
+{
     GL_CALL(glBindVertexArray(va));
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, vb->size / layout->stride));
 }
 
 void
-GLDrawMesh(const Mesh *mesh) {
+GLDrawMesh(const Mesh *mesh)
+{
     GLDrawElements(&mesh->elementBuffer, &mesh->vertexBuffer, mesh->vertexArray);
 }
 
 GLShaderID
-GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType) {
+GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType shaderType)
+{
     ASSERT_ISTRUE(IsPathExists(sourceFilePath));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
 
@@ -201,7 +215,8 @@ GLCompileShaderFromFile(Scratch *scratch, cstring8 sourceFilePath, GLShaderType 
 }
 
 static GLenum
-OpenGL_ConvertShaderTypeToGLEnum(GLShaderType type) {
+OpenGL_ConvertShaderTypeToGLEnum(GLShaderType type)
+{
     if (type == GL_SHADER_TYPE_VERT) {
         return GL_VERTEX_SHADER;
     }
@@ -214,7 +229,8 @@ OpenGL_ConvertShaderTypeToGLEnum(GLShaderType type) {
 }
 
 GLShaderID
-GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType) {
+GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType)
+{
     ASSERT_NONNULL(shaderSource);
     ASSERT_ISFALSE(CString8IsEmpty(shaderSource));
     ASSERT_NOTEQ(shaderType, GL_SHADER_TYPE_NONE);
@@ -239,7 +255,6 @@ GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType
             char8 *compilationInfoLog = ScratchAlloc(scratch, compilationLogLength); // @cleanup XXX
             GL_CALL(glGetShaderInfoLog(shaderId, GL_INFO_LOG_LENGTH, NULL, compilationInfoLog));
             PutString(compilationInfoLog);
-
         }
 
         ThrowDebugBreak(); // @cleanup Hack
@@ -250,7 +265,8 @@ GLCompileShader(Scratch *scratch, cstring8 shaderSource, GLShaderType shaderType
 }
 
 GLShaderProgramID
-GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
+GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data)
+{
     ASSERT_NONNULL(data);
     ASSERT_NONZERO(data->vertexShader);
     ASSERT_NONZERO(data->fragmentShader);
@@ -272,7 +288,7 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
         GL_CALL(glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &linkLogLength));
 
         if (linkLogLength > 0) {
-            char8 *linkInfoLog = ScratchAlloc(scratch, linkLogLength);  // @cleanup XXX
+            char8 *linkInfoLog = ScratchAlloc(scratch, linkLogLength); // @cleanup XXX
             GL_CALL(glGetProgramInfoLog(programID, GL_INFO_LOG_LENGTH, NULL, linkInfoLog));
 
             PutString(linkInfoLog);
@@ -286,7 +302,8 @@ GLLinkShaderProgram(Scratch *scratch, const GLShaderProgramLinkData *data) {
 }
 
 static inline GLenum
-OpenGL_ConvertColorLayoutToOpenGLValues(ColorLayout layout) {
+OpenGL_ConvertColorLayoutToOpenGLValues(ColorLayout layout)
+{
     if (layout == COLOR_LAYOUT_BGR) {
         return GL_BGR;
     }
@@ -307,7 +324,8 @@ OpenGL_ConvertColorLayoutToOpenGLValues(ColorLayout layout) {
 }
 
 GLTexture
-GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout) {
+GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout)
+{
     GLuint texture;
     GL_CALL(glGenTextures(1, &texture));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, texture));
@@ -329,38 +347,44 @@ GLTextureMakeFromBMPicture(const BMPicture *picture, ColorLayout colorLayout) {
 }
 
 GFS_API GLUniformLocation
-GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name) {
+GLShaderFindUniformLocation(GLShaderProgramID shader, cstring8 name)
+{
     u32 uniformLocation = 0;
     GL_CALL_O(glGetUniformLocation(shader, name), &uniformLocation);
     return uniformLocation;
 }
 
 void
-GLShaderSetUniformF32(GLShaderProgramID shader, GLUniformLocation location, f32 value) {
+GLShaderSetUniformF32(GLShaderProgramID shader, GLUniformLocation location, f32 value)
+{
     UNUSED(shader);
     GL_CALL(glUniform1f(location, value));
 }
 
 void
-GLShaderSetUniformV3F32(GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z) {
+GLShaderSetUniformV3F32(GLShaderProgramID shader, GLUniformLocation location, f32 x, f32 y, f32 z)
+{
     UNUSED(shader);
     GL_CALL(glUniform3f(location, x, y, z));
 }
 
 void
-GLShaderSetUniformI32(GLShaderProgramID shader, GLUniformLocation location, i32 value) {
+GLShaderSetUniformI32(GLShaderProgramID shader, GLUniformLocation location, i32 value)
+{
     UNUSED(shader);
     GL_CALL(glUniform1i(location, value));
 }
 
 void
-GLShaderSetUniformM4F32(GLShaderProgramID shader, GLUniformLocation location, f32 *items) {
+GLShaderSetUniformM4F32(GLShaderProgramID shader, GLUniformLocation location, f32 *items)
+{
     UNUSED(shader);
     GL_CALL(glUniformMatrix4fv(location, 1, GL_FALSE, items));
 }
 
 cstring8
-GLGetErrorString(i32 errorCode) {
+GLGetErrorString(i32 errorCode)
+{
     switch (errorCode) {
     case GL_NO_ERROR:
         return STRINGIFY(GL_NO_ERROR);
@@ -384,13 +408,15 @@ GLGetErrorString(i32 errorCode) {
 }
 
 void
-GLClearErrors(void) {
+GLClearErrors(void)
+{
     while (glGetError() != GL_NO_ERROR) {
     }
 }
 
 void
-GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
+GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine)
+{
     GLenum errorCode = GL_NO_ERROR;
     while ((errorCode = glGetError()) != GL_NO_ERROR) {
         char8 printBuffer[KILOBYTES(1)];
@@ -402,10 +428,11 @@ GLAssertNoErrors(cstring8 expression, cstring8 sourceFile, u64 sourceLine) {
 }
 
 Mesh *
-GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
+GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation)
+{
     ASSERT_EQ(orientation, GL_COUNTER_CLOCK_WISE); // TODO: Implement clockwise mesh.
 
-    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));  // XXX
+    Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh)); // XXX
 
     // NOTE(gr3yknigh1) Counter Clock-wise. [2024/10/03]
     // NOTE(gr3yknigh1): Our UVs messed up. So leave that for later, when texture atlas will be implemented.
@@ -454,7 +481,7 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
     mesh->vertexArray = GLVertexArrayMake();
     mesh->vertexBuffer = GLVertexBufferMake(vertexes, sizeof(vertexes));
 
-    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);  // XXX
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch); // XXX
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
@@ -491,7 +518,8 @@ GLGetCubeMesh(Scratch *scratch, GLVertexesOrientation orientation) {
 
 Mesh *
 GLMeshMakeEx(
-    Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount) {
+    Scratch *scratch, const f32 *vertexBuffer, usize vertexBufferSize, const u32 *indexBuffer, u64 indexesCount)
+{
 
     // TODO: Do we need to allocate mesh on the heap?
     Mesh *mesh = ScratchAllocZero(scratch, sizeof(Mesh));
@@ -500,7 +528,7 @@ GLMeshMakeEx(
     mesh->vertexBuffer = GLVertexBufferMake(vertexBuffer, vertexBufferSize);
 
     // TODO: Customize layout?
-    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch);  // XXX
+    mesh->vertexLayout = GLVertexBufferLayoutMake(scratch); // XXX
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&mesh->vertexLayout, 3);

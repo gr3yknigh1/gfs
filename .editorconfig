@@ -25,4 +25,3 @@ indent_style = space
 
 [{CMakeLists.txt,*.cmake,meson.build}]
 indent_size = 2
-

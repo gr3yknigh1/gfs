@@ -11,7 +11,8 @@
 #include "gfs/assert.h"
 
 usize
-Align2PageSize(usize size) {
+Align2PageSize(usize size)
+{
     usize pageSize = GetPageSize();
     return size + (pageSize - size % pageSize);
 }
@@ -19,14 +20,16 @@ Align2PageSize(usize size) {
 // TODO(ilya.a): Use SIMD [2024/05/19]
 
 void
-MemoryCopy(void *destination, const void *source, usize size) {
+MemoryCopy(void *destination, const void *source, usize size)
+{
     for (usize i = 0; i < size; ++i) {
         ((byte *)destination)[i] = ((byte *)source)[i];
     }
 }
 
 void
-MemorySet(void *data, byte value, usize size) {
+MemorySet(void *data, byte value, usize size)
+{
     if (size % 4 == 0) {
         for (usize i = 0; i < size / 4; i += 4) {
             ((byte *)data)[i] = value;
@@ -42,7 +45,8 @@ MemorySet(void *data, byte value, usize size) {
 }
 
 void
-MemoryZero(void *data, usize size) {
+MemoryZero(void *data, usize size)
+{
     for (usize i = 0; i < size; ++i) {
         ((byte *)data)[i] = 0;
     }
@@ -55,7 +59,8 @@ typedef struct {
 EXPECT_TYPE_SIZE(AllocationInfo, 8);
 
 StackAllocator
-StackAllocatorMake(usize size) {
+StackAllocatorMake(usize size)
+{
     StackAllocator allocator = {0};
 
     allocator.data = MemoryAllocate(size);
@@ -66,7 +71,8 @@ StackAllocatorMake(usize size) {
 }
 
 void *
-StackAllocatorAlloc(StackAllocator *allocator, usize size) {
+StackAllocatorAlloc(StackAllocator *allocator, usize size)
+{
     ASSERT_NONNULL(allocator);
     ASSERT_NONNULL(allocator->data);
 
@@ -92,7 +98,8 @@ StackAllocatorAlloc(StackAllocator *allocator, usize size) {
 }
 
 void
-StackAllocatorPop(StackAllocator *allocator) {
+StackAllocatorPop(StackAllocator *allocator)
+{
     ASSERT_NONNULL(allocator);
     ASSERT_NONNULL(allocator->data);
 
@@ -101,7 +108,8 @@ StackAllocatorPop(StackAllocator *allocator) {
 }
 
 Scratch
-ScratchMake(usize size) {
+ScratchMake(usize size)
+{
     Scratch ret = {0};
 
     ret.data = MemoryAllocate(size);
@@ -112,7 +120,8 @@ ScratchMake(usize size) {
 }
 
 void *
-ScratchAlloc(Scratch *scratch, usize size) {
+ScratchAlloc(Scratch *scratch, usize size)
+{
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(scratch->data);
 
@@ -126,7 +135,8 @@ ScratchAlloc(Scratch *scratch, usize size) {
 }
 
 void *
-ScratchAllocZero(Scratch *scratch, usize size) {
+ScratchAllocZero(Scratch *scratch, usize size)
+{
     void *data = ScratchAlloc(scratch, size);
 
     if (data != NULL) {
@@ -137,7 +147,8 @@ ScratchAllocZero(Scratch *scratch, usize size) {
 }
 
 void
-ScratchDestroy(Scratch *scratch) {
+ScratchDestroy(Scratch *scratch)
+{
     ASSERT_NONNULL(scratch);
     ASSERT_NONNULL(scratch->data);
 
@@ -149,12 +160,14 @@ ScratchDestroy(Scratch *scratch) {
 }
 
 bool
-ScratchHasSpaceFor(const Scratch *scratch, usize extraSize) {
+ScratchHasSpaceFor(const Scratch *scratch, usize extraSize)
+{
     return scratch->occupied + extraSize <= scratch->capacity;
 }
 
 AllocationBlock *
-BlockMake(usize size) {
+BlockMake(usize size)
+{
     usize bytesAllocated = Align2PageSize(size + sizeof(AllocationBlock));
     void *allocatedData = MemoryAllocate(bytesAllocated);
 
@@ -175,21 +188,24 @@ BlockMake(usize size) {
 }
 
 BlockAllocator
-BlockAllocatorMake() {
+BlockAllocatorMake()
+{
     BlockAllocator allocator;
     allocator.head = NULL;
     return allocator;
 }
 
 BlockAllocator
-BlockAllocatorMakeEx(usize size) {
+BlockAllocatorMakeEx(usize size)
+{
     BlockAllocator allocator = {0};
     allocator.head = BlockMake(size);
     return allocator;
 }
 
 void *
-BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
+BlockAllocatorAlloc(BlockAllocator *allocator, usize size)
+{
     ASSERT_NONNULL(allocator);
 
     AllocationBlock *previousBlock = NULL;
@@ -216,14 +232,16 @@ BlockAllocatorAlloc(BlockAllocator *allocator, usize size) {
 }
 
 void *
-BlockAllocatorAllocZ(BlockAllocator *allocator, usize size) {
+BlockAllocatorAllocZ(BlockAllocator *allocator, usize size)
+{
     void *data = BlockAllocatorAlloc(allocator, size);
     MemoryZero(data, size);
     return data;
 }
 
 void
-BlockAllocatorDestroy(BlockAllocator *allocator) {
+BlockAllocatorDestroy(BlockAllocator *allocator)
+{
     ASSERT_NONNULL(allocator);
     ASSERT_NONNULL(allocator->head);
 
@@ -242,9 +260,9 @@ BlockAllocatorDestroy(BlockAllocator *allocator) {
     allocator->head = NULL;
 }
 
-
 Scratch
-TempScratchMake(Scratch *scratch, usize capacity) {
+TempScratchMake(Scratch *scratch, usize capacity)
+{
     Scratch tempScratch = INIT_EMPTY_STRUCT(Scratch);
     tempScratch.data = ScratchAlloc(scratch, capacity);
     tempScratch.capacity = capacity;
@@ -253,7 +271,8 @@ TempScratchMake(Scratch *scratch, usize capacity) {
 }
 
 void
-TempScratchClean(Scratch *temp, Scratch *scratch) {
+TempScratchClean(Scratch *temp, Scratch *scratch)
+{
     ASSERT_EQ(temp->data, ((byte *)scratch->data + scratch->occupied) - temp->capacity);
     scratch->occupied -= temp->capacity;
 

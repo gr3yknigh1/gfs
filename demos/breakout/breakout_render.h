@@ -57,10 +57,7 @@ typedef struct {
     SpriteGLInfo glInfo;
 } Sprite;
 
-typedef enum {
-    FILE_TYPE_NONE,
-    FILE_TYPE_BMPICTURE
-} FileType;
+typedef enum { FILE_TYPE_NONE, FILE_TYPE_BMPICTURE } FileType;
 
 void Sprite_LoadFromFile(Sprite *out, cstring8 filePath, FileType type);
 
@@ -73,7 +70,6 @@ typedef struct {
     GLUniformLocation uniformLocationModel;
     GLUniformLocation uniformLocationProjection;
 } DrawContextGLInfo;
-
 
 typedef struct {
     Camera *camera;
@@ -91,7 +87,5 @@ void DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f3
 void DrawSprite(DrawContext *context, f32 x, f32 y, Sprite *sprite, f32 scale, f32 rotate);
 
 void DrawEnd(DrawContext *context);
-
-
 
 #endif // BREAKOUT_RENDER_H_INCLUDED

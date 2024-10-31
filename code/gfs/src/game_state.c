@@ -9,11 +9,13 @@
 static volatile bool gGameShouldStop = false;
 
 bool
-GameStateShouldStop(void) {
+GameStateShouldStop(void)
+{
     return gGameShouldStop == true;
 }
 
 void
-GameStateStop(void) {
+GameStateStop(void)
+{
     gGameShouldStop = true;
 }

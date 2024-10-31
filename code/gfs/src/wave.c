@@ -11,7 +11,8 @@
 #include "gfs/string.h"
 
 WaveAssetLoadResult
-WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut) {
+WaveAssetLoadFromFile(Scratch *scratchAllocator, cstring8 assetPath, WaveAsset *waveAssetOut)
+{
     ASSERT_NONNULL(scratchAllocator);
     ASSERT_NONNULL(assetPath);
     ASSERT(!CString8IsEmpty(assetPath));

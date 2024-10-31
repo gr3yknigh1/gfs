@@ -17,12 +17,11 @@
 
 #define RENDER_COMMAND_CAPACITY 1024
 
-const extern Color4RGBA COLOR4RGBA_WHITE = { 1, 1, 1, 1 };
-const extern Color4RGBA COLOR4RGBA_BLACK = { 0, 0, 0, 1 };
-const extern Color4RGBA COLOR4RGBA_RED   = { 1, 0, 0, 1 };
-const extern Color4RGBA COLOR4RGBA_GREEN = { 0, 1, 0, 1 };
-const extern Color4RGBA COLOR4RGBA_BLUE  = { 0, 0, 1, 1 };
-
+const extern Color4RGBA COLOR4RGBA_WHITE = {1, 1, 1, 1};
+const extern Color4RGBA COLOR4RGBA_BLACK = {0, 0, 0, 1};
+const extern Color4RGBA COLOR4RGBA_RED = {1, 0, 0, 1};
+const extern Color4RGBA COLOR4RGBA_GREEN = {0, 1, 0, 1};
+const extern Color4RGBA COLOR4RGBA_BLUE = {0, 0, 1, 1};
 
 #if 0
 

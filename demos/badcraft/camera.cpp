@@ -8,7 +8,8 @@
 #include <gfs/macros.h>
 
 Camera
-CameraMake(void) {
+CameraMake(void)
+{
     Camera camera = INIT_EMPTY_STRUCT(Camera);
 
     camera.position = {0, 0, 3.0f};
@@ -29,7 +30,8 @@ CameraMake(void) {
 }
 
 void
-CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
+CameraRotate(Camera *camera, f32 xOffset, f32 yOffset)
+{
     xOffset *= camera->sensitivity;
     yOffset *= camera->sensitivity;
 
@@ -50,12 +52,15 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
 }
 
 glm::mat4
-CameraGetViewMatix(Camera *camera) {
+CameraGetViewMatix(Camera *camera)
+{
     return glm::lookAt(camera->position, camera->position + camera->front, camera->up);
 }
 
 glm::mat4
-CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight) {
+CameraGetProjectionMatix(Camera *camera, i32 viewportWidth, i32 viewportHeight)
+{
     return glm::perspective(
-        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), camera->near, camera->far);
+        glm::radians(camera->fov), static_cast<f32>(viewportWidth) / static_cast<f32>(viewportHeight), camera->near,
+        camera->far);
 }

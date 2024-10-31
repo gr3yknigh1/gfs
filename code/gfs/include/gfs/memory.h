@@ -41,7 +41,6 @@ GFS_API void *StackAllocatorAlloc(StackAllocator *allocator, usize size);
 
 GFS_API void StackAllocatorPop(StackAllocator *allocator);
 
-
 /*
  * @breaf Scratch Allocator.
  */

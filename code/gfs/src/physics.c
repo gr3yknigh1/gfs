@@ -7,19 +7,22 @@
 #include "gfs/types.h"
 
 bool
-RectangleU16IsInside(RectangleU16 r, u16 x, u16 y) {
+RectangleU16IsInside(RectangleU16 r, u16 x, u16 y)
+{
     return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
 }
 
 // TODO(ilya.a): Fix bug when `r` is bigger than `this`.
 bool
-RectangleU16IsOverlapping(RectangleU16 r) {
+RectangleU16IsOverlapping(RectangleU16 r)
+{
     return RectangleU16IsInside(r, r.x + 0, r.y + 0) || RectangleU16IsInside(r, r.x + r.width, r.y + r.height) ||
            RectangleU16IsInside(r, r.x + r.width, r.y + 0) || RectangleU16IsInside(r, r.x + 0, r.y + r.height);
 }
 
 u32
-GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y) {
+GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y)
+{
     return width * y + x;
 }
 
@@ -47,14 +50,16 @@ GetOffsetFromCoords2DGridArrayRM(u32 width, u32 x, u32 y) {
  */
 
 i32
-GetOffsetFromCoords3DGridArrayRM(i32 width, i32 height, i32 length, i32 x, i32 y, i32 z) {
+GetOffsetFromCoords3DGridArrayRM(i32 width, i32 height, i32 length, i32 x, i32 y, i32 z)
+{
     UNUSED(width);
     i32 ret = ((x * height + y) * length) + z;
     return ret;
 }
 
 Vector3U32
-GetCoordsFrom3DGridArrayOffsetRM(i32 width, i32 height, i32 length, i32 offset) {
+GetCoordsFrom3DGridArrayOffsetRM(i32 width, i32 height, i32 length, i32 offset)
+{
     UNUSED(width);
 
     Vector3U32 ret;
@@ -66,6 +71,7 @@ GetCoordsFrom3DGridArrayOffsetRM(i32 width, i32 height, i32 length, i32 offset) 
 }
 
 f32
-MapU32ValueRangeToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax) {
+MapU32ValueRangeToF32(u32 value, u32 inMin, u32 inMax, f32 outMin, f32 outMax)
+{
     return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }

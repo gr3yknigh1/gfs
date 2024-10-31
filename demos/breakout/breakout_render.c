@@ -16,7 +16,6 @@
 #include <gfs/types.h>
 #include <gfs/assert.h>
 
-
 Camera
 Camera_Make(Window *window, f32 near, f32 far, CameraViewMode viewMode)
 {
@@ -50,7 +49,6 @@ Camera_Make(Window *window, f32 near, f32 far, CameraViewMode viewMode)
     return camera;
 }
 
-
 void
 Camera_Rotate(Camera *camera, f32 xOffset, f32 yOffset)
 {
@@ -72,7 +70,6 @@ Camera_Rotate(Camera *camera, f32 xOffset, f32 yOffset)
 
     glm_normalize_to(direction, camera->front);
 }
-
 
 void
 Camera_HandleInput(Camera *camera)
@@ -118,7 +115,6 @@ Camera_HandleInput(Camera *camera)
     }
 }
 
-
 void
 Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
 {
@@ -132,8 +128,7 @@ Camera_GetProjectionMatix(Camera *camera, mat4 *projection)
             // [2024/09/22]
             camera->near, camera->far, *projection);
     } else if (camera->viewMode == CAMERA_VIEW_MODE_ORTHOGONAL) {
-        glm_ortho(
-            0, (f32)windowRect.width, 0, (f32)windowRect.height, camera->near, camera->far, *projection);
+        glm_ortho(0, (f32)windowRect.width, 0, (f32)windowRect.height, camera->near, camera->far, *projection);
     } else {
         ASSERT_ISTRUE(false);
     }
@@ -216,8 +211,7 @@ DrawContext_MakeEx(Scratch *scratch, Camera *camera, GLShaderProgramID shader)
     context.glInfo.vbLayout = GLVertexBufferLayoutMake(scratch);
     GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&context.glInfo.vbLayout, 3);
-    GLVertexArrayAddBuffer(
-        context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
+    GLVertexArrayAddBuffer(context.glInfo.va, &context.glInfo.vb, &context.glInfo.vbLayout);
 
     GL_CALL(glUseProgram(shader));
 
@@ -250,7 +244,7 @@ DrawRectangle(DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 sca
     UNUSED(scale);
 
     Vertex vertexes[4] = {};
-    Color3RGB rectangleColor = { color.r, color.g, color.b };
+    Color3RGB rectangleColor = {color.r, color.g, color.b};
     GenerateRectangleVertexes(vertexes, x, y, width, height, rectangleColor);
     static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
 

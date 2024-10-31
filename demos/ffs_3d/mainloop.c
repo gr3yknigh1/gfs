@@ -59,7 +59,8 @@ static void CameraGetProjectionMatix(Camera *camera, mat4 *projection);
 static f32 ClampF32(f32 value, f32 min, f32 max);
 
 void
-Entry(int argc, char *argv[]) {
+Entry(int argc, char *argv[])
+{
     UNUSED(argc);
     UNUSED(argv);
 
@@ -304,7 +305,8 @@ Entry(int argc, char *argv[]) {
 }
 
 static void
-GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite) {
+GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u32 bytesToWrite)
+{
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
 
@@ -340,7 +342,8 @@ GameFillSoundBuffer(SoundDevice *device, SoundOutput *output, u32 byteToLock, u3
 
 static void
 GameFillSoundBufferWaveAsset(
-    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite) {
+    SoundDevice *device, SoundOutput *output, WaveAsset *waveAsset, u32 byteToLock, u32 bytesToWrite)
+{
     ASSERT_NONNULL(device);
     ASSERT_NONNULL(output);
     ASSERT_NONNULL(waveAsset);
@@ -384,7 +387,8 @@ GameFillSoundBufferWaveAsset(
 }
 
 static Camera
-CameraMake(Window *window) {
+CameraMake(Window *window)
+{
     UNUSED(window);
 
     Camera camera = {
@@ -405,7 +409,8 @@ CameraMake(Window *window) {
 }
 
 static void
-CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
+CameraRotate(Camera *camera, f32 xOffset, f32 yOffset)
+{
     xOffset *= camera->sensitivity;
     yOffset *= camera->sensitivity;
 
@@ -426,7 +431,8 @@ CameraRotate(Camera *camera, f32 xOffset, f32 yOffset) {
 }
 
 static void
-CameraHandleInput(Camera *camera) {
+CameraHandleInput(Camera *camera)
+{
     if (IsKeyDown(KEY_W)) {
         vec3 v = {0};
         glm_vec3_fill(v, camera->speed);
@@ -469,7 +475,8 @@ CameraHandleInput(Camera *camera) {
 }
 
 static void
-CameraGetViewMatix(Camera *camera, mat4 *view) {
+CameraGetViewMatix(Camera *camera, mat4 *view)
+{
     vec3 center = {0};
     glm_vec3_add(camera->position, camera->front, center);
 
@@ -477,7 +484,8 @@ CameraGetViewMatix(Camera *camera, mat4 *view) {
 }
 
 static void
-CameraGetProjectionMatix(Camera *camera, mat4 *projection) {
+CameraGetProjectionMatix(Camera *camera, mat4 *projection)
+{
     RectangleI32 windowRect = WindowGetRectangle(camera->window);
     glm_perspective(
         glm_rad(camera->fov), (f32)windowRect.width / (f32)windowRect.height, 0.1f,
@@ -488,7 +496,8 @@ CameraGetProjectionMatix(Camera *camera, mat4 *projection) {
 }
 
 static f32
-ClampF32(f32 value, f32 min, f32 max) {
+ClampF32(f32 value, f32 min, f32 max)
+{
     if (value > max) {
         return max;
     }

@@ -10,7 +10,8 @@
 #include "gfs/render.h"
 
 BMPictureLoadFromFileRC
-BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {
+BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath)
+{
     FileOpenResult result = FileOpenEx(filePath, scratch, PERMISSION_READ);
     ASSERT_ISOK(result.code);
 
@@ -18,7 +19,8 @@ BMPictureLoadFromFile(BMPicture *picture, Scratch *scratch, cstring8 filePath) {
     ASSERT_ISTRUE(FileHandleIsValid(fileHandle));
 
     ASSERT_ISOK(FileLoadToBufferEx(fileHandle, &picture->header, sizeof(picture->header), NULL, 0));
-    ASSERT_ISOK(FileLoadToBufferEx(fileHandle, &picture->dibHeader, sizeof(picture->dibHeader), NULL, sizeof(picture->header)));
+    ASSERT_ISOK(
+        FileLoadToBufferEx(fileHandle, &picture->dibHeader, sizeof(picture->dibHeader), NULL, sizeof(picture->header)));
 
     picture->data = ScratchAlloc(scratch, picture->dibHeader.imageSize);
     ASSERT_NONNULL(picture->data);
