@@ -154,66 +154,18 @@ class Package:
         return target
 
 
-# class msvc:
-#
-#     @staticmethod
-#     def detect_cl_exe():
-#         return MSVCENV_194_X64.executables["cl"][0]  # XXX
-#
-#     @staticmethod
-#     def compile(
-#         source_path: str,
-#         output_path: Optional[str]=None,
-#         compiler_path: Optional[str]=None,
-#     ):
-#         if compiler_path is None:
-#             compiler_path = detect_cl_exe()
-#         ...
-
-def msvc_compile(logger: logging.Logger, source: str, object: str, configuration: Configuration):
-    logger.debug(f"MSVC Compile: {source!r} -> {object!r} with {configuration!r}")
-
-    msvc_path = MSVCENV_194_X64.executables["cl"][0]  # XXX
-    msvc_command = [
-        msvc_path, "/c", "/W4", "/Wall", "/TC", "/std:c11", source, f"/Fo:{object!s}"
-        #                                 ^^^
-        # NOTE: All sources a C.
-    ]
-    logger.debug(f"MSVC command: {' '.join(msvc_command)!r}")
-    subprocess.run(msvc_command)
-
-
-def msvc_link(logger: logging.Logger, output_path: str, objects: List[str], configuration: Configuration):
-    logger.debug(f"MSVC Link: {objects!r} -> {output_path!r} with {configuration!r}")
-
-
-
-def _target_build(logger: logging.Logger, target: Target, target_root: str, package: Package, configuration: Configuration):
-    objects = []
-    for source in target.sources:
-        source_path_noext, ext = os.path.splitext(source)
-        source_name = os.path.basename(source_path_noext)
-        object_path = os.path.join(target_root, source_name + ".obj")  # XXX
-        msvc_compile(logger, source, object_path, configuration)
-        objects.append(object_path)
-
-    output_path = os.path.join(target_root, target.name + ".exe")
-
-    msvc_link(logger, output_path, objects, configuration)
+def _target_build(
+    logger: logging.Logger,
+    target: Target,
+    target_root: str,
+    package: Package,
+    configuration: Configuration
+):
+    ...
 
 
 def _execute_build(logger: logging.Logger, build_root: str, package: Package):
-    if not os.path.exists(build_root):
-        os.mkdir(build_root)
-
-    configuration = DEFAULT_DEBUG_X86_64_CONFIUGRATION  # XXX
-    configuration_root = os.path.join(build_root, configuration.name, configuration.arch.to_str())
-    os.makedirs(configuration_root, exist_ok=True)  # XXX
-
-    for target in package.targets:
-        target_root = os.path.join(configuration_root, target.name)
-        os.makedirs(target_root, exist_ok=True)
-        _target_build(logger, target, target_root, package, configuration)
+    ...
 
 
 def _handle_print_help(logger: logging.Logger, args: Namespace):

@@ -45,9 +45,11 @@ pushd %project_path%
 :: Preparing virtualenv...
 :: NOTE(gr3yknigh1): Uncomment code below this if you need to make separate virtual
 :: environment for build. [2024/10/25]
-:: python -m venv %build_venv_path%
-:: call %build_venv_path%\Scripts\activate.bat
-:: python -m pip install -r build-requirements.txt.lock
+python -m venv %build_venv_path%
+call %build_venv_path%\Scripts\activate.bat
+python -m pip install -r build-requirements.txt
+::                       ^^^^^^^^^^^^^^^^^^^^^^.lock
+:: TODO(gr3yknigh1): Change to `.lock` file when done with simplebuild [2024/11/01]
 
 :: Compiling project...
 
