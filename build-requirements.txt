@@ -1,2 +1,4 @@
 conan
 meson
+
+--editable ./tools/simplebuild
