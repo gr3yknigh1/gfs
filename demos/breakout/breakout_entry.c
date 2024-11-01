@@ -133,6 +133,7 @@ Entry(int argc, char *argv[])
 
     Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
+
     u64 lastCycleCount = __rdtsc();
 
     DrawContext drawContext =
@@ -237,7 +238,7 @@ Entry(int argc, char *argv[])
 
     GLVertexArray textVertexArray = GLVertexArrayMake();
     GLVertexBuffer textVertexBuffer =
-        GLVertexBufferMake(NULL, sizeof(float) * 6 * 4);
+        GLVertexBufferMake(NULL, sizeof(f32) * 6 * 4);
     //                                           /   /
     // _________________________________________/___/ [2024/10/30]
     // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex
@@ -246,6 +247,8 @@ Entry(int argc, char *argv[])
         GLVertexBufferLayoutMake(&runtimeScratch);
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
     GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
+
+    GLVertexArrayAddBuffer(textVertexArray, &textVertexBuffer, &textVertexBufferLayout);
 
 
     // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
@@ -261,6 +264,14 @@ Entry(int argc, char *argv[])
         textShader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
         ASSERT_NONZERO(textShader);
     }
+
+    GL_CALL(glUseProgram(textShader));
+
+    GLUniformLocation uniformLocationColor = GLShaderFindUniformLocation(textShader, "u_Color");
+    GLUniformLocation uniformLocationTexture = GLShaderFindUniformLocation(textShader, "u_Texture");
+    GLUniformLocation uniformLocationProjection = GLShaderFindUniformLocation(textShader, "u_Projection");
+    GLShaderSetUniformV3F32(textShader, uniformLocationColor, 1, 1, 1);
+    GLShaderSetUniformI32(textShader, uniformLocationTexture, 0);
 
     while (!GameStateShouldStop()) {
 
@@ -411,16 +422,17 @@ Entry(int argc, char *argv[])
 
         // Text render
         {
-            static cstring8 text = "Hello world!";
+            GL_CALL(glUseProgram(textShader));
+
+            mat4 projection = {0};
+            Camera_GetProjectionMatix(&camera, &projection);
+            GLShaderSetUniformM4F32(textShader, uniformLocationProjection, (f32 *)projection);
+
+            static cstring8 text = "This is Breakout Game";
 
             char8 *textCursor = text;
 
-            GL_CALL(glUseProgram(textShader));
-
-            GLUniformLocation uniformLocationColor = GLShaderFindUniformLocation(textShader, "u_Color");
-            GLUniformLocation uniformLocationTexture = GLShaderFindUniformLocation(textShader, "u_Texture");
-            GLShaderSetUniformV3F32(textShader, uniformLocationColor, 1, 1, 1);
-            GLShaderSetUniformI32(textShader, uniformLocationTexture, 0);
+            GL_CALL(glActiveTexture(GL_TEXTURE0));
             GL_CALL(glBindVertexArray(textVertexArray));
 
             f32 textXPosition = 10, textYPosition = 20;
@@ -428,6 +440,13 @@ Entry(int argc, char *argv[])
 
 
             while (*textCursor != 0) {
+                if (*textCursor == ' ') {
+                    static const f32 SPACE_SIZE = 20;
+                    textXPosition += SPACE_SIZE; // XXX
+                    ++textCursor;
+                    continue;
+                }
+
                 if (*textCursor < 'A' || *textCursor > 'z') {
                     ++textCursor;
                     continue;
@@ -451,15 +470,15 @@ Entry(int argc, char *argv[])
                     { xpos + w, ypos + h,   1.0f, 0.0f }
                 };
                 // render glyph texture over quad
-                glBindTexture(GL_TEXTURE_2D, character->texture);
-                glActiveTexture(GL_TEXTURE0);
+                GL_CALL(glBindTexture(GL_TEXTURE_2D, character->texture));
                 // update content of VBO memory
+
                 GLVertexBufferSendData(&textVertexBuffer, vertices, sizeof(vertices));
                 GLDrawTriangles(&textVertexBuffer, &textVertexBufferLayout, textVertexArray);
+
                 // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
                 textXPosition += (character->xAdvance >> 6) * textScale;
                 // bitshift by 6 to get value in pixels (2^6 = 64)
-                break;
 
                 ++textCursor;
             }
