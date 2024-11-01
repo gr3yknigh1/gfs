@@ -1,7 +1,7 @@
 /*
  * Breakout Game.
  *
- * FILE      demos\breakout\breakout_entry.c
+ * FILE      demos\breakout\entry.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
@@ -32,8 +32,8 @@
 #include <gfs/string.h>
 #include <gfs/random.h>
 
-#include "breakout_render.h"
-#include "breakout_sound.h"
+#include "render.h"
+#include "sound.h"
 
 static void GenerateTileGrid(
     Vector2F32 *tilePositions, f32 gridXPosition, f32 gridYPosition,

@@ -1,9 +1,9 @@
 /*
- * FILE      demos\breakout\breakout_render.c
+ * FILE      demos\breakout\render.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "breakout_render.h"
+#include "render.h"
 
 #include <glad/glad.h>
 

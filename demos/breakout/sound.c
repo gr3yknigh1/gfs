@@ -1,9 +1,9 @@
 /*
- * FILE      demos\breakout\breakout_sound.c
+ * FILE      demos\breakout\sound.c
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
-#include "breakout_sound.h"
+#include "sound.h"
 
 #include <math.h> // sinf cosf
                   // TODO(ilya.a): Replace with custom code [2024/06/08]

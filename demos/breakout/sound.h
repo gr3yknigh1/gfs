@@ -1,6 +1,6 @@
 #if !defined(BREAKOUT_SOUND_H_INCLUDED)
 /*
- * FILE      demos\breakout\breakout_sound.h
+ * FILE      demos\breakout\sound.h
  * AUTHOR    Ilya Akkuzin <gr3yknigh1@gmail.com>
  * COPYRIGHT (c) 2024 Ilya Akkuzin
  * */
