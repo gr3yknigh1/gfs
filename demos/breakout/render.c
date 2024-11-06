@@ -307,9 +307,9 @@ DrawContext_MakeEx(
 
     context.textDrawInfo.va = GLVertexArrayMake();
     context.textDrawInfo.vb = GLVertexBufferMake(NULL, sizeof(f32) * 6 * 4);
-    //                      /   /
-    // ____________________/___/ [2024/10/30]
-    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex
+    //                                                              /___/
+    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex /
+    // [2024/10/30]
 
     context.textDrawInfo.layout = GLVertexBufferLayoutMake(scratch);
     GLVertexBufferLayoutPushAttributeF32(&context.textDrawInfo.layout, 2);
@@ -424,6 +424,11 @@ DrawString(
         shader, ctx->textDrawInfo.uniformLocationProjection,
         (f32 *)ctx->projection);
 
+    GLShaderSetUniformV3F32(
+        shader, ctx->textDrawInfo.uniformLocationColor,
+        color.r, color.g, color.b);
+
+
     const char8 *sCursor = s;
 
     Font *font = ctx->textDrawInfo.selectedFont;
@@ -436,7 +441,10 @@ DrawString(
             continue;
         }
 
-        if (*sCursor < 'A' || *sCursor > 'z') {
+        static const char8 firstASCIIAlpha = 'A';
+        static const char8 lastASCIIAlpha = 'z';
+
+        if (*sCursor < firstASCIIAlpha || *sCursor > lastASCIIAlpha) {
             ++sCursor;
             continue;
         }
