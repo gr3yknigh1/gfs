@@ -353,7 +353,7 @@ GameFillSoundBuffer(
     for (u32 sampleIndex = 0; sampleIndex < region0SampleCount; ++sampleIndex) {
         f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
                            (f32)output->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
+        f32 sineValue = sinf(100 * sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;
@@ -365,7 +365,7 @@ GameFillSoundBuffer(
     for (u32 sampleIndex = 0; sampleIndex < region2SampleCount; ++sampleIndex) {
         f32 sinePosition = 2.0f * PI32 * (f32)output->runningSampleIndex /
                            (f32)output->wavePeriod;
-        f32 sineValue = sinf(sinePosition);
+        f32 sineValue = sinf(100 * sinePosition);
         i16 sampleValue = (i16)(sineValue * output->toneVolume);
         *sampleOut++ = sampleValue;
         *sampleOut++ = sampleValue;

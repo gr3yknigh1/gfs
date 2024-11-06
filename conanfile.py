@@ -27,7 +27,7 @@ class GFSRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
 
-        tc = CMakeToolchain(self)
+        tc = CMakeToolchain(self, generator="Ninja Multi-Config")
         tc.generate()
 
     def build(self):

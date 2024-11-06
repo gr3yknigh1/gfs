@@ -9,7 +9,7 @@
 #include "gfs/types.h"
 #include "gfs/memory.h"
 
-typedef enum {
+typedef enum BMPictureHeaderType {
     BMP_HEADER_TYPE_BITMAPCOREHEADER = 12,
     BMP_HEADER_TYPE_OS22XBITMAPHEADER_S = 16,
     BMP_HEADER_TYPE_BITMAPINFOHEADER = 40,
@@ -22,7 +22,7 @@ typedef enum {
 
 typedef u32 BMPictureHeaderTypeTag;
 
-typedef enum {
+typedef enum BMPictureCompressionMethod {
     BMP_COMPRESSION_METHOD_RGB = 0,
     BMP_COMPRESSION_METHOD_RLE8 = 1,
     BMP_COMPRESSION_METHOD_RLE4 = 2,
@@ -38,7 +38,7 @@ typedef enum {
 typedef u32 BMPictureCompressionMethodTag;
 
 #pragma pack(push, 1)
-typedef struct {
+typedef struct BMPictureHeader {
     u16 type;
     u32 fileSize;
     u16 reserved[2];
@@ -47,7 +47,7 @@ typedef struct {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-typedef struct {
+typedef struct BMPictureDIBHeader {
     BMPictureHeaderTypeTag headerSize;
     u32 width;
     u32 height;
@@ -62,13 +62,13 @@ typedef struct {
 } BMPictureDIBHeader;
 #pragma pack(pop)
 
-typedef struct {
+typedef struct BMPicture {
     BMPictureHeader header;
     BMPictureDIBHeader dibHeader;
     void *data;
 } BMPicture;
 
-typedef enum {
+typedef enum BMPictureLoadFromFileRC {
     BMP_LOAD_FROM_FILE_OK,
     BMP_LOAD_FROM_FILE_ERR,
 } BMPictureLoadFromFileRC;

@@ -50,7 +50,7 @@ EXPECT_TYPE_SIZE(byte, 1);
 EXPECT_TYPE_SIZE(usize, POINTER_SIZE);
 
 typedef char char8;
-typedef const char *cstring8; // NOTE(ilya.a): Explicitly distiguasing C style
+typedef const char8 *cstring8; // NOTE(ilya.a): Explicitly distiguasing C style
                               // string (null terminated).  [2024/05/26]
 
 EXPECT_TYPE_SIZE(char8, 1);

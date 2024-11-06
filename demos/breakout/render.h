@@ -45,40 +45,65 @@ void Camera_HandleInput(Camera *camera);
 
 void Camera_GetProjectionMatix(Camera *camera, mat4 *projection);
 
-typedef struct {
+typedef struct Glyph {
     GLTexture texture;
-} SpriteGLInfo;
+    Vector2F32 size;
+    Vector2F32 bearing;
+    u32 xAdvance;
+} Glyph;
 
-typedef struct {
-    void *data;
-    i32 width;
-    i32 height;
+typedef struct Font {
+    Glyph *glyphs;
+    usize glyphsCount;
 
-    SpriteGLInfo glInfo;
-} Sprite;
+    u32 pixelWidth;
+    u32 pixelHeight;
+} Font;
 
-typedef enum { FILE_TYPE_NONE, FILE_TYPE_BMPICTURE } FileType;
+Font *Font_Make(cstring8 fontPath, u32 pixelWidth, u32 pixelHeight);
+void Font_Destroy(Font *font);
 
-void Sprite_LoadFromFile(Sprite *out, cstring8 filePath, FileType type);
-
-typedef struct {
-    GLVertexArray va;
-    GLVertexBuffer vb;
-    GLElementBuffer eb;
-    GLVertexBufferLayout vbLayout;
-
-    GLUniformLocation uniformLocationModel;
-    GLUniformLocation uniformLocationProjection;
-} DrawContextGLInfo;
-
-typedef struct {
+/*
+ * @breaf 2D Draw context.
+ */
+typedef struct DrawContext {
     Camera *camera;
-    GLShaderProgramID shader;
-    DrawContextGLInfo glInfo;
+    GLShaderProgramID defaultShader;
+
+    mat4 model;
+    mat4 projection;
+
+    struct {
+        GLVertexArray va;
+        GLVertexBuffer vb;
+        GLElementBuffer eb;
+        GLShaderProgramID shader;
+        GLVertexBufferLayout layout;
+
+        GLUniformLocation uniformLocationModel;
+        GLUniformLocation uniformLocationColor;
+        GLUniformLocation uniformLocationProjection;
+    } rectDrawInfo;
+
+    struct {
+        GLVertexArray va;
+        GLVertexBuffer vb;
+        GLShaderProgramID shader;
+        GLVertexBufferLayout layout;
+
+        Font *selectedFont;
+
+        GLUniformLocation uniformLocationTexture;
+        GLUniformLocation uniformLocationColor;
+        GLUniformLocation uniformLocationProjection;
+    } textDrawInfo;
 } DrawContext;
 
 DrawContext DrawContext_MakeEx(
-    Scratch *scratch, Camera *camera, GLShaderProgramID shader);
+    Scratch *scratch, Camera *camera, GLShaderProgramID rectangleShader,
+    GLShaderProgramID textShader);
+
+void DrawContext_SelectFont(DrawContext *context, Font *font);
 
 void DrawBegin(DrawContext *context);
 
@@ -87,8 +112,10 @@ void DrawClear(DrawContext *context, f32 r, f32 g, f32 b);
 void DrawRectangle(
     DrawContext *context, f32 x, f32 y, f32 width, f32 height, f32 scale,
     f32 rotate, Color4RGBA color);
-void DrawSprite(
-    DrawContext *context, f32 x, f32 y, Sprite *sprite, f32 scale, f32 rotate);
+
+void DrawString(
+    DrawContext *context, f32 x, f32 y, cstring8 s, f32 scale,
+    Color4RGBA color);
 
 void DrawEnd(DrawContext *context);
 

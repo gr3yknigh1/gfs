@@ -17,9 +17,6 @@
 
 #include <glad/glad.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H // WTF?
-
 #include <gfs/entry.h>
 #include <gfs/game_state.h>
 #include <gfs/platform.h>
@@ -43,13 +40,6 @@ static void GenerateTileGrid(
 typedef struct {
     LARGE_INTEGER performanceCounterFrequency;
 } Clock;
-
-typedef struct {
-    GLTexture texture;
-    Vector2F32 size;
-    Vector2F32 bearing;
-    u32 xAdvance;
-} Character;
 
 void
 Clock_Initialize(Clock *clock)
@@ -131,13 +121,25 @@ Entry(int argc, char *argv[])
         ASSERT_NONZERO(shader);
     }
 
-    Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
+    GLShaderProgramID textShader = 0;
+    {
+        GLShaderProgramLinkData shaderLinkData = {0};
+        shaderLinkData.vertexShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.frag.glsl",
+            GL_SHADER_TYPE_FRAG);
+        shaderLinkData.fragmentShader = GLCompileShaderFromFile(
+            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.vert.glsl",
+            GL_SHADER_TYPE_VERT);
+        textShader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
+        ASSERT_NONZERO(textShader);
+    }
 
+    Camera camera = Camera_Make(window, -1, 1, CAMERA_VIEW_MODE_ORTHOGONAL);
 
     u64 lastCycleCount = __rdtsc();
 
     DrawContext drawContext =
-        DrawContext_MakeEx(&runtimeScratch, &camera, shader);
+        DrawContext_MakeEx(&runtimeScratch, &camera, shader, textShader);
 
     RectangleF32 ballRect = EMPTY_STRUCT(RectangleF32);
     ballRect.width = 10.0;
@@ -159,7 +161,7 @@ Entry(int argc, char *argv[])
         gridXTileCount * tileWidth + (gridXPadding * (gridXTileCount - 1));
     f32 gridHeight =
         gridYTileCount * tileHeight + (gridYPadding * (gridYTileCount - 1));
-    f32 gridXPosition = windowRect.width / 2 - gridWidth / 2;
+    f32 gridXPosition = (f32)windowRect.width / 2 - gridWidth / 2;
     f32 gridYPosition = (f32)windowRect.height / 2;
     Vector2F32 *tilePositions = malloc(sizeof(Vector2F32) * gridTileCount);
     bool *tileIsDisabled = malloc(sizeof(bool) * gridTileCount);
@@ -173,7 +175,7 @@ Entry(int argc, char *argv[])
     f32 playerYVelocity = 0;
     f32 playerWidth = 100;
     f32 playerHeight = 20;
-    f32 playerXPosition = windowRect.width / 2 - playerWidth / 2;
+    f32 playerXPosition = (f32)windowRect.width / 2 - playerWidth / 2;
     f32 playerYPosition = 30;
     f32 playerSpeed = 700;
 
@@ -185,93 +187,9 @@ Entry(int argc, char *argv[])
     f32 startClockTime = Clock_GetSeconds(&runtimeClock);
     f32 deltaTime = 0;
 
-    // --- FreeType library initialization ---
-    FT_Library ft = EMPTY_STRUCT(FT_Library);
-    ASSERT_ISOK(FT_Init_FreeType(&ft));
-
-    FT_Face face = EMPTY_STRUCT(FT_Face);
-    ASSERT_ISOK(FT_New_Face(
-        ft, "P:\\gfs\\assets\\breakout\\IBMPlexMono.ttf", 0, &face));
-
-    FT_Set_Pixel_Sizes(face, 0, 48);
-
-    u16 charactersCount = 'z' - 'A';
-    Character *characterTable = malloc(sizeof(Character) * charactersCount);
-
-    // --- FreeType character loading ---
-    {
-        Character *characterTableWriteCursor = characterTable;
-
-        glPixelStorei(
-            GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction.
-
-        for (char8 c = 'A'; c < 'z'; ++c) {
-            ASSERT_ISOK(FT_Load_Char(face, c, FT_LOAD_RENDER));
-
-            glGenTextures(1, &characterTableWriteCursor->texture);
-            glBindTexture(GL_TEXTURE_2D, characterTableWriteCursor->texture);
-
-            glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
-                face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
-                face->glyph->bitmap.buffer);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            characterTableWriteCursor->size.x = face->glyph->bitmap.width;
-            characterTableWriteCursor->size.y = face->glyph->bitmap.rows;
-            characterTableWriteCursor->bearing.x = face->glyph->bitmap_left;
-            characterTableWriteCursor->bearing.y = face->glyph->bitmap_top;
-            characterTableWriteCursor->xAdvance = face->glyph->advance.x;
-
-            ++characterTableWriteCursor;
-        }
-    }
-
-    FT_Done_Face(face);
-    FT_Done_FreeType(ft);
-
-    // --- Setup OpenGL buffers for characters ---
-
-    GLVertexArray textVertexArray = GLVertexArrayMake();
-    GLVertexBuffer textVertexBuffer =
-        GLVertexBufferMake(NULL, sizeof(f32) * 6 * 4);
-    //                                           /   /
-    // _________________________________________/___/ [2024/10/30]
-    // NOTE(gr3yknigh1): 6 - Count of vertexes, 4 - size of vertex
-
-    GLVertexBufferLayout textVertexBufferLayout =
-        GLVertexBufferLayoutMake(&runtimeScratch);
-    GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
-    GLVertexBufferLayoutPushAttributeF32(&textVertexBufferLayout, 2);
-
-    GLVertexArrayAddBuffer(textVertexArray, &textVertexBuffer, &textVertexBufferLayout);
-
-
-    // TODO(gr3yknigh1): Destroy shaders after they are linked [2024/09/15]
-    GLShaderProgramID textShader = 0;
-    {
-        GLShaderProgramLinkData shaderLinkData = {0};
-        shaderLinkData.vertexShader = GLCompileShaderFromFile(
-            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.frag.glsl",
-            GL_SHADER_TYPE_FRAG);
-        shaderLinkData.fragmentShader = GLCompileShaderFromFile(
-            &runtimeScratch, "P:\\gfs\\assets\\breakout\\text.vert.glsl",
-            GL_SHADER_TYPE_VERT);
-        textShader = GLLinkShaderProgram(&runtimeScratch, &shaderLinkData);
-        ASSERT_NONZERO(textShader);
-    }
-
-    GL_CALL(glUseProgram(textShader));
-
-    GLUniformLocation uniformLocationColor = GLShaderFindUniformLocation(textShader, "u_Color");
-    GLUniformLocation uniformLocationTexture = GLShaderFindUniformLocation(textShader, "u_Texture");
-    GLUniformLocation uniformLocationProjection = GLShaderFindUniformLocation(textShader, "u_Projection");
-    GLShaderSetUniformV3F32(textShader, uniformLocationColor, 1, 1, 1);
-    GLShaderSetUniformI32(textShader, uniformLocationTexture, 0);
+    Font *font = Font_Make(
+        "P:\\gfs\\assets\\breakout\\IBMPlexMono.ttf", 0, 48);
+    DrawContext_SelectFont(&drawContext, font);
 
     while (!GameStateShouldStop()) {
 
@@ -381,7 +299,6 @@ Entry(int argc, char *argv[])
                                             : playerXVelocity);
                 ballYVelocity = ballBaseSpeed;
             }
-
         }
 
         DrawBegin(&drawContext);
@@ -415,74 +332,13 @@ Entry(int argc, char *argv[])
             playerHeight, 1, 0, COLOR4RGBA_RED);
 
         DrawRectangle(
-            &drawContext, ballRect.x, ballRect.y, ballRect.width, ballRect.height,
-            1, 0, COLOR4RGBA_WHITE);
+            &drawContext, ballRect.x, ballRect.y, ballRect.width,
+            ballRect.height, 1, 0, COLOR4RGBA_WHITE);
+
+        DrawString(&drawContext, 10, 20, "Hello sailor", 1, COLOR4RGBA_BLUE);
 
         DrawEnd(&drawContext);
 
-        // Text render
-        {
-            GL_CALL(glUseProgram(textShader));
-
-            mat4 projection = {0};
-            Camera_GetProjectionMatix(&camera, &projection);
-            GLShaderSetUniformM4F32(textShader, uniformLocationProjection, (f32 *)projection);
-
-            static cstring8 text = "This is Breakout Game";
-
-            char8 *textCursor = text;
-
-            GL_CALL(glActiveTexture(GL_TEXTURE0));
-            GL_CALL(glBindVertexArray(textVertexArray));
-
-            f32 textXPosition = 10, textYPosition = 20;
-            f32 textScale = 1;
-
-
-            while (*textCursor != 0) {
-                if (*textCursor == ' ') {
-                    static const f32 SPACE_SIZE = 20;
-                    textXPosition += SPACE_SIZE; // XXX
-                    ++textCursor;
-                    continue;
-                }
-
-                if (*textCursor < 'A' || *textCursor > 'z') {
-                    ++textCursor;
-                    continue;
-                }
-
-                Character *character = characterTable + (*textCursor - 'A');
-
-                f32 xpos = textXPosition + character->bearing.x * textScale;
-                f32 ypos = textYPosition - (character->size.y - character->bearing.y) * textScale;
-
-                f32 w = character->size.x * textScale;
-                f32 h = character->size.y * textScale;
-                // update VBO for each character
-                f32 vertices[6][4] = {
-                    { xpos,     ypos + h,   0.0f, 0.0f },
-                    { xpos,     ypos,       0.0f, 1.0f },
-                    { xpos + w, ypos,       1.0f, 1.0f },
-
-                    { xpos,     ypos + h,   0.0f, 0.0f },
-                    { xpos + w, ypos,       1.0f, 1.0f },
-                    { xpos + w, ypos + h,   1.0f, 0.0f }
-                };
-                // render glyph texture over quad
-                GL_CALL(glBindTexture(GL_TEXTURE_2D, character->texture));
-                // update content of VBO memory
-
-                GLVertexBufferSendData(&textVertexBuffer, vertices, sizeof(vertices));
-                GLDrawTriangles(&textVertexBuffer, &textVertexBufferLayout, textVertexArray);
-
-                // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-                textXPosition += (character->xAdvance >> 6) * textScale;
-                // bitshift by 6 to get value in pixels (2^6 = 64)
-
-                ++textCursor;
-            }
-        }
 
         WindowUpdate(window);
 
@@ -518,7 +374,6 @@ Entry(int argc, char *argv[])
     WindowClose(window);
     ScratchDestroy(&runtimeScratch);
 
-    free(characterTable);
     free(tilePositions);
     free(tileIsDisabled);
 }

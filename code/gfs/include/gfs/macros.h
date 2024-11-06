@@ -32,6 +32,7 @@
 #define HASANYBIT(MASK, FLAG) ((MASK) | (FLAG))
 
 #define EXPAND(X) (X)
+#define UNWRAPED(X) X
 
 #if defined(__cplusplus)
 #define LITERAL(X) X
@@ -40,11 +41,15 @@
 #endif
 
 #if defined(__cplusplus)
-#define INIT_EMPTY_STRUCT(X) \
-    LITERAL(X) {}
+#define INIT_EMPTY_STRUCT(X) LITERAL(X) UNWRAPED({})
 #else
-#define INIT_EMPTY_STRUCT(X) \
-    LITERAL(X) { 0 }
+#define INIT_EMPTY_STRUCT(X) LITERAL(X) UNWRAPED({0})
+#endif
+
+#if defined(__cplusplus)
+#define EMPTY_STACK_ARRAY UNWRAPED({})
+#else
+#define EMPTY_STACK_ARRAY UNWRAPED({0})
 #endif
 
 // @cleanup Replace `INIT_EMPTY_STRUCT` with `EMPTY_STRUCT`.

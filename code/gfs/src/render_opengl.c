@@ -215,9 +215,11 @@ GLCompileShaderFromFile(
     usize sourceFileSize = FileGetSize(sourceHandle);
     ASSERT_NONZERO(sourceFileSize);
 
-    Scratch tempScratch = TempScratchMake(scratch, sourceFileSize);
+    usize sourceBufferSize = sourceFileSize + 1;
 
-    void *sourceBuffer = ScratchAllocZero(&tempScratch, sourceFileSize);
+    Scratch tempScratch = TempScratchMake(scratch, sourceBufferSize);
+
+    void *sourceBuffer = ScratchAllocZero(&tempScratch, sourceBufferSize);
     ASSERT_NONNULL(sourceBuffer);
 
     FileLoadResultCode sourceLoadResult =
@@ -225,6 +227,10 @@ GLCompileShaderFromFile(
     ASSERT_ISOK(sourceLoadResult);
 
     ASSERT_ISOK(FileClose(sourceHandle));
+
+    // NOTE(gr3yknigh1): GLCompilerShader cares about null-termination.
+    // Note that `sourceBuffer` should be c-string. [2024/11/06]
+    ((char8 *)sourceBuffer)[sourceBufferSize - 1] = 0;
 
     GLShaderID shaderID = GLCompileShader(scratch, sourceBuffer, shaderType);
 
