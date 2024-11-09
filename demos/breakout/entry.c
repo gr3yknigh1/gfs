@@ -304,6 +304,10 @@ Entry(int argc, char *argv[])
         DrawBegin(&drawContext);
         DrawClear(&drawContext, 0, 0, 0);
 
+        GLShaderProgramID shader = drawContext.rectDrawInfo.shader;
+        GL_CALL(glUseProgram(shader));
+        GL_CALL(glBindVertexArray(drawContext.rectDrawInfo.va));
+
         for (u32 xTileIndex = 0; xTileIndex < gridXTileCount; ++xTileIndex) {
             for (u32 yTileIndex = 0; yTileIndex < gridYTileCount;
                  ++yTileIndex) {

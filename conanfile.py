@@ -27,14 +27,14 @@ class GFSRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
 
-        tc = CMakeToolchain(self, generator="Ninja Multi-Config")
+        tc = CMakeToolchain(self)
         tc.generate()
 
     def build(self):
         cmake = CMake(self)
         cmake.configure(variables={
             "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-            "GFS_OPENGL_DEBUG": "ON" if self.settings.build_type == "Debug" else "OFF",
+            # "GFS_OPENGL_DEBUG": "ON" if self.settings.build_type == "Debug" else "OFF",
         })
         cmake.build()
 

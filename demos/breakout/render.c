@@ -354,8 +354,7 @@ DrawBegin(DrawContext *ctx)
     GL_CALL(glUseProgram(rectShader));
 
     GLShaderSetUniformM4F32(
-        rectShader, ctx->rectDrawInfo.uniformLocationModel,
-        (f32 *)ctx->model);
+        rectShader, ctx->rectDrawInfo.uniformLocationModel, (f32 *)ctx->model);
     GLShaderSetUniformM4F32(
         rectShader, ctx->rectDrawInfo.uniformLocationProjection,
         (f32 *)ctx->projection);
@@ -384,14 +383,6 @@ DrawRectangle(
     UNUSED(scale);
     UNUSED(rotate);
 
-    GLShaderProgramID shader = ctx->rectDrawInfo.shader;
-    GL_CALL(glBindVertexArray(ctx->rectDrawInfo.va));
-    GL_CALL(glUseProgram(shader));
-
-    GLShaderSetUniformM4F32(
-        shader, ctx->rectDrawInfo.uniformLocationProjection,
-        (f32 *)ctx->projection);
-
     // --- Generate vertexes ---
     Vertex vertexes[4] = EMPTY_STACK_ARRAY;
     Color3RGB rectangleColor = {color.r, color.g, color.b};
@@ -399,14 +390,12 @@ DrawRectangle(
     static const u32 indicies[] = {0, 1, 2, 0, 2, 3};
 
     // --- Sending geometry ---
-    GLVertexBufferSendData(
-        &ctx->rectDrawInfo.vb, vertexes, sizeof(Vertex) * 4);
+    GLVertexBufferSendData(&ctx->rectDrawInfo.vb, vertexes, sizeof(Vertex) * 4);
     GLElementBufferSendData(
         &ctx->rectDrawInfo.eb, indicies, STATIC_ARRAY_LENGTH(indicies));
 
     GLDrawElements(
-        &ctx->rectDrawInfo.eb, &ctx->rectDrawInfo.vb,
-        ctx->rectDrawInfo.va);
+        &ctx->rectDrawInfo.eb, &ctx->rectDrawInfo.vb, ctx->rectDrawInfo.va);
 }
 
 void
@@ -420,14 +409,9 @@ DrawString(
     GL_CALL(glActiveTexture(GL_TEXTURE0));
     GL_CALL(glBindVertexArray(ctx->textDrawInfo.va));
 
-    GLShaderSetUniformM4F32(
-        shader, ctx->textDrawInfo.uniformLocationProjection,
-        (f32 *)ctx->projection);
-
     GLShaderSetUniformV3F32(
-        shader, ctx->textDrawInfo.uniformLocationColor,
-        color.r, color.g, color.b);
-
+        shader, ctx->textDrawInfo.uniformLocationColor, color.r, color.g,
+        color.b);
 
     const char8 *sCursor = s;
 
